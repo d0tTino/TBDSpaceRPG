@@ -1,0 +1,29 @@
+1. Overview
+===========
+
+1.1 Game Vision
+---------------
+In this hard sci-fi, multi-generational space opera RPG, players step into the role of a spaceship captain tasked with shaping humanity’s future among the stars. Set in a meticulously crafted, realistic depiction of our solar system, the game blends deep role-playing mechanics with a narrative that spans generations. Every decision—whether managing the crew, navigating interstellar challenges, or forging alliances—carries profound consequences, influencing not just the immediate mission but the trajectory of human civilization as it ventures into space.
+
+1.2 Narrative Themes
+--------------------
+The game weaves a rich narrative tapestry around the following core themes:
+- **Sacrifice:** Players must weigh what they are willing to give up—resources, relationships, or even lives—for the sake of survival or progress.
+- **Legacy:** Choices ripple across generations, as the actions of today’s crew determine the world their descendants will inherit.
+- **Competition vs. Cooperation:** Amid a backdrop of rival factions (notably the US and China), players decide whether to pursue unity or rivalry, balancing personal ambition against collective survival.
+- **Defining the Future:** The game underscores that "the choices we make now will define who we are in the future," challenging players to think beyond short-term gains.
+- **Moral Complexity:** "The right answers aren’t always the ones presented to you." Players will face morally ambiguous dilemmas where outcomes are uncertain, and the full impact of their decisions may only emerge over time.
+
+1.3 Inspirations
+----------------
+The game draws from a diverse array of influences, each shaping its narrative and thematic depth:
+- **For All Mankind (TV series):** A geopolitical space race and alternate history lens on humanity’s cosmic ambitions.
+- **The Expanse (TV series and books):** Hard sci-fi realism, political intrigue, and the gritty realities of space colonization.
+- **Rimworld (game):** Emergent storytelling through crew dynamics and survival in unforgiving environments.
+- **Sunshine (film):** High-stakes space missions infused with psychological tension and existential stakes.
+- **The Sims (game):** Interpersonal relationships and emergent drama among a diverse crew.
+- **Crusader Kings (game):** Generational succession, political strategy, and the long-term impact of leadership.
+- **Mass Effect (game):** Choice-driven storytelling, crew bonds, and morally complex decisions.
+- **Fallout (game series):** Player agency in shaping a fractured world, with a focus on survival and societal consequences.
+
+These inspirations combine to create a narrative experience that is immersive, emotionally resonant, and intellectually engaging, inviting players to leave their mark on humanity’s future.

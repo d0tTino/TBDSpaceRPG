@@ -1,0 +1,55 @@
+7. Appendices
+=============
+
+## 7.1 Glossary
+This glossary defines key narrative and lore-related terms used throughout the document, ensuring clarity and consistency for the creative team.
+
+- **Macro Story:** The overarching narrative focused on the geopolitical competition between the US and China in the space race, shaped by player decisions and mission outcomes.
+- **Micro Story:** The personal narratives and relationships of the crew members, driven by their traits, backstories, and interactions.
+- **Chapter:** A distinct mission or phase in the game, each with its own objectives, challenges, and narrative arc, contributing to the broader story.
+- **Time Skip:** A narrative device where decades pass between chapters, allowing the game to depict generational changes and the long-term impact of player choices.
+- **Artemis Coalition:** A fragile alliance led by the United States, bound by the Artemis Accords, which governs lunar and space cooperation but is strained by internal dissent and geopolitical rivalry.
+- **Endeavor:** The player’s spacecraft in Chapter 1, a chemically propelled vessel built for the Mars mission, symbolizing humanity’s grit and ingenuity.
+- **Tianlong:** The Chinese rival spacecraft in Chapter 1, representing China’s disciplined and state-driven approach to space exploration.
+- **Traits:** Personality characteristics (e.g., "Hot-headed," "Genius") that influence crew behavior, task performance, and interactions.
+- **Delta-V (Δv):** A measure of the change in velocity required for spacecraft maneuvers, crucial for understanding fuel and trajectory planning.
+- **Aerobraking:** A maneuver using a planet’s atmosphere to reduce spacecraft velocity, requiring precise control to avoid catastrophic failure.
+
+## 7.2 Inspirational References
+This section lists media and games that have influenced the narrative and thematic elements of the game, providing context for the creative vision.
+
+- **For All Mankind (TV series):** A geopolitical space race with alternate history elements, inspiring the US-China rivalry and mission structures.  
+  [Apple TV+ For All Mankind Show Page](https://tv.apple.com/us/show/for-all-mankind/umc.cmc.41m2w4brni1ks1z7u9m5aw5cp)
+- **The Expanse (TV series and books):** Hard sci-fi realism, political intrigue, and the gritty realities of space colonization, influencing the game’s scientific accuracy and narrative depth.  
+  [Prime Video The Expanse Series Page](https://www.primevideo.com/detail/The-Expanse/0H20QJ1AFJ3Q0K8D8K0K8D8K8D)
+- **Rimworld (game):** Emergent storytelling through crew dynamics and survival mechanics, serving as a model for the game’s interpersonal systems.  
+  [Steam RimWorld Game Page](https://store.steampowered.com/app/294100/RimWorld/)
+- **Sunshine (film):** High-stakes space missions with psychological tension, inspiring the game’s crisis events and crew dilemmas.  
+  [Prime Video Sunshine](https://www.primevideo.com/detail/Sunshine/0H20QJ1AFJ3Q0K8D8K0K8D8K8D)
+- **The Sims (game):** Life simulation mechanics that inspired the game’s crew relationships and personal development systems.  
+  [EA The Sims 4 Game Page](https://www.ea.com/games/the-sims/the-sims-4)
+- **Crusader Kings (game):** Generational succession and political strategy, influencing the game’s long-term narrative arcs and crew lineage mechanics.  
+  [Steam Crusader Kings III Game Page](https://store.steampowered.com/app/1158310/Crusader_Kings_III/)
+- **Mass Effect (game):** Choice-driven storytelling and crew bonds, shaping the game’s narrative branching and character-driven dilemmas.  
+  [EA Mass Effect Legendary Edition](https://www.ea.com/games/mass-effect/mass-effect-legendary-edition)
+- **Fallout (game series):** Player agency in a fractured world, with survival and societal consequences, influencing the game’s post-war setting and moral ambiguity.  
+  [Bethesda Fallout Series](https://fallout.bethesda.net/en/games)
+
+## 7.3 Open Story Questions
+This section lists areas of the narrative and lore that require further clarification or development. These questions will be addressed in future iterations.
+
+- How will crew traits narratively influence personal arcs and mission outcomes? (e.g., how does a "Hot-headed" trait manifest in dialogue or choices?)
+- What specific backstory elements will be tied to each crew role? (e.g., defining the Scientist’s obsession with alien life)
+- How will the geopolitical balance shift in response to player choices in early chapters? (e.g., quantifying the impact of the missile decision)
+- What narrative mechanisms will be used to track and display crew relationships and generational succession? (e.g., family trees, relationship meters)
+- How will notable NPCs like Captain Li Wei evolve across chapters based on player interactions? (e.g., becoming an ally or recurring antagonist)
+- What are the specific endgame scenarios for each major narrative path? (e.g., detailing the war or peace outcomes)
+
+## 7.4 Timeline (Optional)
+This optional timeline provides a chronological framework for the game’s events, helping to contextualize the narrative progression across chapters.
+
+- **2045:** Chapter 1 - "Race to the Red Planet" - The *Endeavor* and *Tianlong* compete to be the first to land on Mars.
+- **2065:** Chapter 2 - "Lunar Accord" - A diplomatic summit on the Moon tests the fragile peace between the US and China.
+- **2090:** Chapter 3 - "The Belt Rebellion" - Tensions in the asteroid belt erupt into rebellion, forcing the player to choose sides.
+- **2115:** Chapter 4 - "Outer Reaches" - Exploration of Jupiter’s moons reveals new opportunities and dangers.
+- **2140:** Chapter 5 - "Endgame" - The final chapter, where the cumulative impact of player choices determines humanity’s fate in the solar system.
