@@ -1,0 +1,510 @@
+3. Crew System
+==============
+
+3.1 Crew Design
+---------------
+Each crew member is defined by three core components: roles, traits, and attributes. These elements determine how crew members perform tasks, interact with each other, and evolve over time.
+
+- Roles: Crew members are assigned specific roles that tie directly to ship systems and tasks. Roles include:
+  - Pilot: Responsible for navigation and maneuvering the spacecraft.
+  - Engineer: Manages repairs, maintenance, and system upgrades.
+  - Scientist: Conducts research and handles scientific equipment.
+  - Medic: Maintains crew health and manages medical emergencies.
+  - Communications Officer: Handles external communications and diplomacy.
+
+- Traits: Each crew member has one or more personality traits that influence their behavior and task performance. Traits are static and do not change. Examples include:
+  - Hot-headed: Increases the likelihood of conflicts but boosts performance under pressure.
+  - Genius: Enhances problem-solving, increasing the success rate of complex tasks.
+  - Calm: Reduces stress during crises, improving decision-making.
+  - Empathetic: Boosts morale of nearby crew members but may reduce efficiency in high-stress situations.
+
+- Attributes: Crew members have dynamic attributes that change based on gameplay:
+  - Skills: Proficiency in role-specific tasks, which improves with experience (e.g., successful repairs increase an Engineer's repair skill).
+  - Health: Physical condition, affected by injuries or illnesses, which impacts task performance.
+  - Morale: Emotional state, influenced by relationships, workload, and mission outcomes. Low morale reduces task efficiency.
+  - Relationships: Bonds with other crew members, ranging from friendships to rivalries, which affect cooperation and task outcomes.
+
+Mechanical Impact:
+- Task Success: A crew member's skill level, morale, and relevant traits determine the success rate of assigned tasks. For example, a Genius Engineer has a higher chance of successfully repairing a critical system.
+- Crisis Resolution: During critical moments (e.g., solar flares), crew members suggest solutions based on their role and traits. The player's choice of solution is influenced by the crew member's status (e.g., a Calm Pilot's suggestion is more reliable).
+
+3.2 Crew Dynamics
+------------------
+Crew dynamics are driven by relationships and interpersonal interactions, which directly impact task performance and mission outcomes.
+
+- Relationship Types:
+  - Friendships: Boost morale and increase cooperation when crew members work together on tasks.
+  - Rivalries: Decrease morale and reduce efficiency when rival crew members are assigned to the same task.
+  - Romances: Can boost morale but may cause complications (e.g., jealousy) if not managed properly.
+
+- Mechanics:
+  - Relationship Meter: Each pair of crew members has a relationship value (e.g., -100 to +100), which evolves based on shared tasks, events, and player interventions.
+  - Task Impact: Crew members with positive relationships gain a performance bonus when working together (e.g., +10% task speed). Negative relationships incur penalties (e.g., -15% task success rate).
+  - Player Intervention: Players can mediate conflicts or encourage bonds by assigning compatible crew members to tasks or using dialogue options during events.
+
+- Stress and Morale:
+  - Stress accumulates during crises or overwork, reducing morale and increasing the likelihood of conflicts.
+  - Morale affects overall task efficiency: high morale grants bonuses, low morale incurs penalties.
+
+3.3 Recruitment Mechanics
+-------------------------
+New crew members are added to the team through two primary methods: recruitment from Earth and offspring from existing crew members.
+
+- Recruitment from Earth:
+  - After each chapter, players can select new crew members from a pool of candidates.
+  - The candidate pool is influenced by the geopolitical situation:
+    - US dominance: Recruits have traits aligned with American training (e.g., Charismatic, Innovative).
+    - Chinese dominance: Recruits have traits reflecting Chinese values (e.g., Disciplined, Efficient).
+  - Players choose recruits based on their roles, traits, and skills to fit the team's needs.
+
+- Offspring:
+  - Crew members in romantic relationships may have children, who join the crew after a time skip (e.g., 20-50 years).
+  - Offspring inherit traits from their parents, with a chance for new traits based on a combination (e.g., Hot-headed + Calm = Stubborn).
+  - Offspring join as young adults with basic skills, which can be developed over time.
+
+- Integration:
+  - New recruits and offspring are integrated into the crew roster at the start of a new chapter.
+  - Their traits and relationships are initialized based on their background (Earth recruits) or parentage (offspring).
+  - Players must manage the integration process, as new crew members may disrupt existing dynamics.
+
+3.4 AI Director for Narrative Dynamics
+-----------------------------------
+The AI Director manages emergent narrative elements, creating dynamic storylines based on player choices, crew interactions, and mission parameters.
+
+3.4.5 AI Director Testing Framework
+-----------------------------------
+A comprehensive testing framework ensures the AI Director functions reliably across various gameplay scenarios, maintaining narrative coherence and performance optimization.
+
+- **Character Arc Testing:**
+  - Automated tests verify character development over multiple chapters.
+  - Stress testing ensures realistic reactions to extreme scenarios (e.g., ship damage, rival encounters).
+
+- **Confrontation Testing:**
+  - Validation of dialogue trees for logical branching and coherent faction reactions.
+  - Performance testing for multiple simultaneous confrontations with minimal CPU usage (<5%).
+
+- **Faction-Influenced Event Validation:**
+  - Parametric tests verify appropriate events based on faction influence combinations (US/China/Coalition dominance).
+  - Edge case testing ensures system stability during faction collapse scenarios.
+
+- **Chapter Structure Testing:** Scripts simulate a full chapter arc, forcing transitions between phases (setup, development, climax, resolution) to verify narrative coherence (e.g., ensuring a climax confrontation occurs after development events, with resolution reflecting player choices).
+
+- **Performance Validation:**
+  - Memory profiling ensures AI Director operations stay within budget (15MB RAM, 5% CPU).
+  - Long-term stability testing for generational gameplay (10+ chapters without narrative anomalies).
+
+- **Player Engagement Metrics:**
+  - A/B testing framework compares narrative strategies for player engagement and decision involvement.
+  - Heat maps track player focus during confrontations, informing UI and event timing refinements.
+
+3.4.6 Chapter Structure and Narrative Arc Management
+---------------------------------------------------
+The AI Director structures each chapter as a cohesive narrative arc, akin to a season of a TV show, with four distinct phases—setup, development, climax, and resolution—ensuring a dynamic, player-driven story that spans generations.
+
+- **Setup Phase:**
+  - Introduces the chapter's mission, characters, and stakes, setting the narrative tone.
+  - For example, in a colonization chapter, the director presents a briefing about settling Europa, with crew reactions based on traits (e.g., a "Cautious" Medic voicing concerns about radiation, +5% stress).
+  - Establishes key plot threads (2-3 per chapter) that will develop throughout the mission.
+  - **Implementation Details:**
+    ```csharp
+    void InitializeChapterSetup(ChapterData chapter) {
+        // Set chapter baseline variables
+        worldState.SetCurrentPhase(NarrativePhase.Setup);
+        
+        // Generate mission briefing based on mission type
+        BriefingData briefing = briefingGenerator.CreateBriefing(
+            chapter.missionType,
+            chapter.primaryLocation,
+            worldState.GetFactionInfluences(),
+            chapter.chapterNumber
+        );
+        
+        // Schedule crew reactions based on traits
+        foreach (CrewMember crew in crewManager.GetActiveCrew()) {
+            // Get most relevant trait for this mission type
+            Trait relevantTrait = traitAnalyzer.GetMostRelevantTrait(
+                crew, 
+                chapter.missionType
+            );
+            
+            // Schedule reaction event
+            float reactionDelay = INITIAL_REACTION_DELAY + 
+                                Random.Range(0f, MAX_REACTION_VARIANCE);
+            
+            scheduler.ScheduleEvent(
+                currentTime + reactionDelay,
+                () => GenerateCrewReactionToMission(crew, relevantTrait, briefing)
+            );
+            
+            // Apply initial stress/morale effects based on compatibility
+            float missionCompatibility = CalculateMissionCompatibility(
+                crew, 
+                chapter.missionType
+            );
+            
+            if (missionCompatibility < LOW_COMPATIBILITY_THRESHOLD) {
+                crew.AddStress(INCOMPATIBLE_MISSION_STRESS);
+                
+                // Log for narrative callback later
+                narrativeMemory.LogEvent(
+                    EventType.MissionDiscomfort,
+                    crew.crewID,
+                    currentTime,
+                    new Dictionary<string, object> {
+                        { "missionType", chapter.missionType },
+                        { "compatibility", missionCompatibility }
+                    }
+                );
+            } else if (missionCompatibility > HIGH_COMPATIBILITY_THRESHOLD) {
+                crew.AddMorale(COMPATIBLE_MISSION_MORALE);
+            }
+        }
+        
+        // Establish 2-3 plot threads for this chapter
+        List<PlotThread> availableThreads = plotThreadDatabase.GetThreadsForMission(
+            chapter.missionType, 
+            worldState.GetFactionInfluences()
+        );
+        
+        // Select threads based on current narrative needs and crew composition
+        activeThreads = threadSelector.SelectOptimalThreads(
+            availableThreads, 
+            crewManager.GetActiveCrew(),
+            chapter.targetToneIndex
+        );
+        
+        // Schedule initial thread events
+        foreach (PlotThread thread in activeThreads) {
+            thread.ScheduleSetupEvents(scheduler, currentTime + THREAD_SETUP_DELAY);
+        }
+    }
+    ```
+  - *Cross-Reference:* Section 2.1 (Core Loop) for mission briefing mechanics.
+
+- **Development Phase:**
+  - Builds tension through challenges and crew interactions, using side events and environmental storytelling.
+  - For instance, a solar flare event during transit forces tough choices, deepening crew relationships (±10 points, Section 3.2).
+  - Integrates mission-specific mechanics (Section 2.6) with character development, such as a science officer discovering unexpected planetary data that creates moral dilemmas.
+  - The phase typically spans 50-60% of the chapter's playtime, with tension increasing steadily toward the climax.
+  - **Implementation Details:**
+    ```csharp
+    void ProgressToDevPhase(ChapterData chapter) {
+        worldState.SetCurrentPhase(NarrativePhase.Development);
+        
+        // Calculate available tension budget for this phase
+        float tensionBudget = CalculateTensionBudget(
+            chapter.targetIntensity,
+            chapter.length,
+            activeThreads.Count
+        );
+        
+        // Distribute tension across mission segments
+        TensionCurve tensionMap = tensionDistributor.CreateDistribution(
+            tensionBudget,
+            DEV_PHASE_RELATIVE_LENGTH,
+            TENSION_DISTRIBUTION_STYLE.GradualBuild
+        );
+        
+        // For each active plot thread, schedule development events
+        foreach (PlotThread thread in activeThreads) {
+            // Get appropriate event timing based on thread type
+            float[] eventTimings = tensionMap.GetOptimalEventTimings(
+                thread.threadType,
+                thread.requiredEventCount
+            );
+            
+            // Schedule each development event
+            for (int i = 0; i < eventTimings.Length; i++) {
+                float eventTime = currentTime + eventTimings[i];
+                
+                // Create event based on thread and current progress
+                PlotEvent plotEvent = thread.CreateDevelopmentEvent(
+                    i,
+                    worldState.GetFactionInfluences(),
+                    crewManager.GetCrewRelationshipMap()
+                );
+                
+                // Register event with scheduler
+                scheduler.ScheduleEvent(
+                    eventTime,
+                    () => ExecutePlotEvent(plotEvent)
+                );
+                
+                // Add environmental storytelling elements to follow event
+                if (plotEvent.hasEnvironmentalImpact) {
+                    scheduler.ScheduleEvent(
+                        eventTime + ENVIRONMENTAL_FOLLOW_UP_DELAY,
+                        () => CreateEnvironmentalElements(plotEvent)
+                    );
+                }
+            }
+        }
+        
+        // Schedule any cross-thread interactions
+        if (threadInteractionAnalyzer.HasViableInteractions(activeThreads)) {
+            PlotThreadInteraction interaction = threadInteractionAnalyzer.CreateOptimalInteraction(
+                activeThreads,
+                crewManager.GetActiveCrew()
+            );
+            
+            scheduler.ScheduleEvent(
+                currentTime + DEV_PHASE_RELATIVE_LENGTH * 0.7f, // Later in dev phase
+                () => ExecuteThreadInteraction(interaction)
+            );
+        }
+    }
+    ```
+  - *Cross-Reference:* Section 2.4 (Critical Moments) for event mechanics.
+
+- **Climax Phase:**
+  - Features a high-stakes decision or confrontation, such as a standoff over faction allegiance on Europa, with the player deciding the outcome (e.g., align with US, +15 us_influence, -20 china_influence).
+  - Brings together plot threads developed earlier, revealing connections between seemingly unrelated events.
+  - Typically contains the chapter's most morally complex choices, often with permanent consequences for crew or faction influence.
+  - Adapts the challenge level based on player performance in the development phase, ensuring appropriate difficulty.
+  - **Implementation Details:**
+    ```csharp
+    void ProgressToClimaxPhase(ChapterData chapter) {
+        worldState.SetCurrentPhase(NarrativePhase.Climax);
+        
+        // Analyze development phase outcomes
+        DevelopmentOutcomeAnalysis analysis = analyzeDevPhaseOutcomes(activeThreads);
+        
+        // Generate climax event based on development outcomes and threads
+        ClimaxEvent climaxEvent = climaxGenerator.CreateOptimalClimax(
+            activeThreads,
+            analysis,
+            worldState.GetFactionInfluences(),
+            chapter.missionType
+        );
+        
+        // Scale difficulty based on player performance in dev phase
+        float difficultyModifier = CalculateDifficultyModifier(analysis.playerPerformanceScore);
+        climaxEvent.AdjustDifficulty(difficultyModifier);
+        
+        // Schedule the climax confrontation
+        scheduler.ScheduleEvent(
+            currentTime + CLIMAX_DELAY,
+            () => ExecuteClimaxEvent(climaxEvent)
+        );
+        
+        // Set up potential fallback events if player avoids main climax
+        scheduler.ScheduleEvent(
+            currentTime + CLIMAX_DELAY + CLIMAX_TIMEOUT_DURATION,
+            () => {
+                if (!climaxEvent.hasBeenTriggered) {
+                    ForcefullyProgressClimax(climaxEvent);
+                }
+            }
+        );
+        
+        // Create environmental build-up to climax
+        List<StoryElement> climaxEnvironmentElements = environmentalStoryFactory.CreateClimaxElements(
+            climaxEvent,
+            chapter.primaryLocation,
+            worldState.GetFactionInfluences()
+        );
+        
+        foreach (StoryElement element in climaxEnvironmentElements) {
+            environmentalManager.ApplyElement(element);
+        }
+    }
+    
+    void ExecuteClimaxEvent(ClimaxEvent climax) {
+        climax.hasBeenTriggered = true;
+        
+        // Present key dramatic confrontation
+        ConfrontationEvent confrontation = climax.GetMainConfrontation();
+        uiManager.PresentConfrontation(confrontation);
+        
+        // Register with narrative memory for callbacks in future chapters
+        narrativeMemory.LogEvent(
+            EventType.MajorDecision,
+            "chapter_" + currentChapter.chapterNumber,
+            currentTime,
+            new Dictionary<string, object> {
+                { "climaxType", climax.type },
+                { "location", currentChapter.primaryLocation },
+                { "involvedCrew", GetInvolvedCrewIDs(confrontation) }
+            }
+        );
+        
+        // Pause regular events during climax
+        scheduler.PauseNonCriticalEvents();
+        
+        // Apply immediate environmental effects
+        climax.ApplyImmediateEnvironmentalEffects(environmentalManager);
+    }
+    ```
+  - *Cross-Reference:* Section 2.5 (Difficulty and Failure) for faction influence impacts.
+
+- **Resolution Phase:**
+  - Shows consequences (e.g., a successful base established, crew morale +10%) and teases the next chapter (e.g., a mysterious signal detected), ensuring narrative continuity.
+  - Provides closure to the chapter's main storylines while laying groundwork for future developments.
+  - Updates the worldState variables based on player choices, including faction influence, crew development, and permanent loss.
+  - Often includes a "legacy moment" that will be referenced in future chapters, creating multi-generational continuity.
+  - **Implementation Details:**
+    ```csharp
+    void ProgressToResolutionPhase(ChapterData chapter, ClimaxOutcome outcome) {
+        worldState.SetCurrentPhase(NarrativePhase.Resolution);
+        
+        // Resume regular event scheduling
+        scheduler.ResumeAllEvents();
+        
+        // Update faction influences based on climax outcome
+        worldState.UpdateFactionInfluences(outcome.factionChanges);
+        
+        // Generate resolution events based on climax outcome
+        ResolutionSequence resolution = resolutionFactory.CreateResolution(
+            outcome,
+            activeThreads,
+            chapter.missionType
+        );
+        
+        // Schedule resolution events in sequence
+        float currentDelay = INITIAL_RESOLUTION_DELAY;
+        foreach (ResolutionEvent resEvent in resolution.events) {
+            scheduler.ScheduleEvent(
+                currentTime + currentDelay,
+                () => ExecuteResolutionEvent(resEvent)
+            );
+            
+            currentDelay += RESOLUTION_EVENT_SPACING;
+        }
+        
+        // Create legacy moment for future callbacks
+        LegacyMoment legacy = legacyGenerator.CreateLegacyMoment(
+            outcome,
+            chapter,
+            worldState.GetFactionInfluences()
+        );
+        
+        narrativeMemory.RegisterLegacyMoment(legacy);
+        
+        // Apply crew development based on chapter events
+        foreach (CrewMember crew in crewManager.GetActiveCrew()) {
+            CrewDevelopment development = crewDevCalculator.CalculateDevelopment(
+                crew,
+                narrativeMemory.GetEventsInvolvingCrew(crew.crewID, chapter.chapterNumber)
+            );
+            
+            crew.ApplyDevelopment(development);
+            
+            // Log development for character arcs
+            characterArcManager.UpdateArc(crew, development);
+        }
+        
+        // Generate teaser for next chapter
+        if (chapter.hasNextChapter) {
+            ChapterTeaser teaser = teaserGenerator.CreateTeaser(
+                chapter.nextChapterData,
+                outcome,
+                worldState.GetFactionInfluences()
+            );
+            
+            scheduler.ScheduleEvent(
+                currentTime + CHAPTER_TEASER_DELAY,
+                () => PresentChapterTeaser(teaser)
+            );
+        }
+    }
+    ```
+  - *Cross-Reference:* Section 3.1 (Crew Design) for morale mechanics.
+
+- **Dynamic Content Generation:**
+  - Uses mission templates (Section 2.6) and game state (faction influence, crew traits) to create unique chapters.
+  - For example, a combat chapter might involve a rival ship encounter, with specifics (e.g., Chinese frigate) based on china_influence.
+  - Implements slot-filling algorithms that populate chapters with appropriate events, challenges, and characters.
+  - Balances procedural generation with hand-crafted narrative elements to ensure quality and coherence.
+  - **Implementation Details:**
+    ```csharp
+    ChapterData GenerateChapterContent(MissionType missionType, int chapterNumber) {
+        // Create chapter structure
+        ChapterData chapter = new ChapterData {
+            chapterNumber = chapterNumber,
+            missionType = missionType,
+            targetToneIndex = CalculateTargetTone(chapterNumber, worldState)
+        };
+        
+        // Select appropriate location based on mission and progression
+        chapter.primaryLocation = locationSelector.SelectLocation(
+            missionType,
+            chapterNumber,
+            previousLocations
+        );
+        
+        // Get faction-appropriate content templates
+        Dictionary<string, float> factionInfluences = worldState.GetFactionInfluences();
+        List<ContentTemplate> availableTemplates = contentLibrary.GetTemplatesForMission(
+            missionType,
+            factionInfluences,
+            chapter.targetToneIndex
+        );
+        
+        // Fill content slots based on crew composition
+        List<CrewMember> currentCrew = crewManager.GetActiveCrew();
+        ContentSlotFiller slotFiller = new ContentSlotFiller(contentLibrary);
+        
+        chapter.contentSlots = slotFiller.FillSlots(
+            availableTemplates,
+            currentCrew,
+            factionInfluences,
+            narrativeMemory.GetRecentSignificantEvents(5)
+        );
+        
+        // Generate appropriate challenges based on player skill
+        float playerSkillRating = playerAnalytics.GetSkillRating(missionType);
+        ChallengeGenerator challengeGen = new ChallengeGenerator();
+        
+        chapter.challenges = challengeGen.CreateChallenges(
+            missionType,
+            playerSkillRating,
+            chapter.contentSlots,
+            currentCrew
+        );
+        
+        // Ensure chapter has elements calling back to previous decisions
+        if (chapterNumber > 1) {
+            NarrativeCallback callback = callbackGenerator.CreateCallback(
+                narrativeMemory.GetCallbackableEvents(chapterNumber - 1),
+                chapter.contentSlots,
+                missionType
+            );
+            
+            if (callback != null) {
+                chapter.callbacks.Add(callback);
+            }
+        }
+        
+        return chapter;
+    }
+    ```
+
+- **Callbacks and Continuity:**
+  - References past events to maintain coherence, such as a crew member recalling a failed mission (-5% morale) or a damaged panel from a previous EVA triggering a side event.
+  - Maintains a "narrative memory" of significant player choices and their outcomes across generations.
+  - Implements a weighting system for callbacks, with events from 1-2 chapters ago receiving higher priority.
+  - Creates continuity across time skips, with objects, locations, and relationships carrying persistent history.
+
+- **Thoughtful Moments:**
+  - Schedules reflective scenes during low-intensity periods, such as crew discussing their hopes during transit, based on relationships (e.g., +5 relationship points for friends).
+  - Contrasts high-action sequences with quieter, character-focused interactions to create emotional pacing.
+  - Uses a "revelation budget" to distribute important character development across the mission, rather than concentrating it.
+  - Triggers special interactions based on current mission phase, ship status, and crew relationships.
+
+- **Dramatic Confrontations:**
+  - Stages morally complex choices in the climax, such as a debate over a coalition alliance, shaped by crew traits and faction influence (Section 2.5).
+  - Ensures confrontations have tangible gameplay impacts, not just narrative flavor.
+  - Implements a "stake escalation" system where early choices affect the magnitude of later consequences.
+  - Records player choice patterns to create personalized challenges that target their moral preferences.
+
+- **Pacing and Plot Progression:**
+  - Balances action and quiet moments, ensuring a natural flow, and manages key story points (e.g., faction dominance in Chapter 5) using planning algorithms.
+  - Uses a dynamic pacing model that responds to player engagement metrics.
+  - Implements "narrative gates" that ensure critical plot revelations occur in an appropriate sequence.
+  - Creates a sense of rising tension toward chapter climaxes, with measureable intensity metrics.
+
+- **Implementation Notes:**
+  - Narrative calculations are optimized within the AI Director's 5% CPU budget, with debug tools (e.g., `SetChapterPhase("Climax")`) for testing phase transitions.
+  - The chapter structure system uses serializable data to preserve narrative state across game sessions.
+  - Narrative elements support localization with cultural adaptations based on dominant faction.
+  - Performance monitoring ensures narrative complexity scales with available system resources.

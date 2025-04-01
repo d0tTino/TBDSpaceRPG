@@ -1,0 +1,1031 @@
+4. Technical Implementation
+===========================
+
+4.1 Game Engine
+---------------
+The game will be developed using Unity, selected for its robust support for both 2D and 3D game development, extensive community resources, and proven success in similar titles like *Kerbal Space Program* and *Rimworld*. Unity's flexibility enables seamless integration of the game's dual mechanics: 3D orbital navigation and 2D crew management.
+
+- **Key Features:**
+  - 3D rendering for the solar system simulation.
+  - 2D tools (sprite rendering, tilemaps) for the ship's interior.
+  - Physics engine for realistic orbital mechanics (augmented with plugins).
+  - Scripting in C# for gameplay logic and AI behavior.
+
+- **Third-Party Plugins:**
+  - **Simple Kepler Orbits:** For simulating realistic orbital mechanics.
+  - **Yarn Spinner:** For managing dialogue trees and narrative branching.
+
+4.2 Orbital Mechanics
+---------------------
+Orbital mechanics will be implemented using the Simple Kepler Orbits plugin from the Unity Asset Store, which provides tools for simulating spacecraft trajectories based on Keplerian mechanics.
+
+- **Trajectory Plotting:**
+  - Players plot courses using a 3D interface, selecting pre-calculated paths or adjusting parameters (e.g., delta-v, burn timing).
+  - Crew members (e.g., Pilot) can suggest course corrections based on new data (e.g., rival ship movements).
+
+- **Propulsion:**
+  - Spacecraft use chemical rockets, with realistic fuel consumption and transit times (e.g., 6-9 months to Mars).
+
+- **EVA System:**
+  - An extravehicular activity (EVA) feature allows crew to perform tasks outside the ship (e.g., repairs, rescues).
+  - Crew are represented as 3D models during EVA, with success rates tied to skills and traits (e.g., Engineering skill, Calm trait).
+
+4.3 Crew Management System
+--------------------------
+Crew management will be handled in a 2D top-down view of the ship's interior, leveraging Unity's 2D tools.
+
+- **2D Interior View:**
+  - Side-facing and back-facing sprites for a cutaway effect, similar to *Barotrauma*.
+  - Players can move via WASD or click interactable objects (e.g., computers, panels) for tasks like scanning or comms.
+
+- **Zero-G Movement System:**
+  - Crew movement in zero gravity follows realistic physics:
+    * Point-and-click navigation where crew push off and float to destinations
+    * Momentum-based movement with gradual deceleration using handholds
+    * Trajectory visualization showing projected paths before movement commands
+    * Collision avoidance with other crew members and obstacles
+  
+  - **Implementation Details:**
+    ```csharp
+    void MoveCrewMember(CrewMember crew, Vector2 targetPosition) {
+        // Calculate launch vector (direction and power)
+        Vector2 moveDirection = (targetPosition - crew.position).normalized;
+        float distance = Vector2.Distance(crew.position, targetPosition);
+        
+        // Adjust push-off power based on distance and crew attributes
+        float pushPower = Mathf.Clamp(
+            distance * BASE_PUSH_COEFFICIENT,
+            MIN_PUSH_POWER,
+            crew.GetAttributeValue(Attribute.Strength) * MAX_PUSH_MULTIPLIER
+        );
+        
+        // Apply impulse force in the movement direction
+        crew.rigidbody.AddForce(moveDirection * pushPower, ForceMode2D.Impulse);
+        
+        // Calculate and visualize trajectory
+        DrawTrajectory(crew, moveDirection * pushPower);
+        
+        // Set crew state to "Moving"
+        crew.SetState(CrewState.Moving);
+        
+        // Schedule grab action on arrival near destination
+        float estimatedArrivalTime = CalculateArrivalTime(
+            distance, 
+            pushPower, 
+            crew.rigidbody.drag
+        );
+        
+        // Schedule deceleration when approaching target
+        StartCoroutine(BeginDecelerationAtTarget(
+            crew, 
+            targetPosition,
+            estimatedArrivalTime * 0.8f
+        ));
+    }
+    
+    IEnumerator BeginDecelerationAtTarget(CrewMember crew, Vector2 target, float delay) {
+        yield return new WaitForSeconds(delay);
+        
+        // Check if we're approaching target and still in motion
+        if (crew.GetState() == CrewState.Moving && 
+            Vector2.Distance(crew.position, target) < DECELERATION_DISTANCE) {
+            
+            // Find nearest handhold
+            Handhold nearestGrab = FindNearestHandhold(crew.position, target);
+            
+            if (nearestGrab != null) {
+                // Adjust crew trajectory to intercept handhold
+                Vector2 adjustedDirection = (nearestGrab.position - crew.position).normalized;
+                crew.rigidbody.velocity = adjustedDirection * 
+                                        crew.rigidbody.velocity.magnitude * 
+                                        COURSE_CORRECTION_FACTOR;
+                
+                // Trigger grab animation when in range
+                StartCoroutine(GrabHandholdWhenInRange(crew, nearestGrab));
+            } else {
+                // No handhold available, activate RCS for stopping
+                ActivateRCS(crew, target);
+            }
+        }
+    }
+    
+    IEnumerator GrabHandholdWhenInRange(CrewMember crew, Handhold handhold) {
+        // Wait until within grab range
+        while (Vector2.Distance(crew.position, handhold.position) > GRAB_DISTANCE) {
+            yield return null;
+        }
+        
+        // Grab handhold
+        crew.rigidbody.velocity = Vector2.zero;
+        crew.transform.position = handhold.position;
+        crew.SetState(CrewState.Idle);
+        crew.PlayAnimation("Grab");
+        
+        // Apply stress/stamina effects
+        float movementEffort = crew.initialMoveVelocity.magnitude * EFFORT_FACTOR;
+        crew.ApplyStamina(-movementEffort);
+        
+        // Trigger onArrival events
+        if (crew.onArrivalAction != null) {
+            crew.onArrivalAction.Invoke();
+        }
+    }
+    
+    void ActivateRCS(CrewMember crew, Vector2 targetPosition) {
+        // Calculate deceleration vector (opposite to current velocity)
+        Vector2 decelerationDirection = -crew.rigidbody.velocity.normalized;
+        
+        // Apply RCS thrust (weaker than push-off, consumes RCS fuel)
+        float rcsThrust = crew.rigidbody.velocity.magnitude * RCS_THRUST_FACTOR;
+        crew.rigidbody.AddForce(decelerationDirection * rcsThrust, ForceMode2D.Force);
+        
+        // Consume RCS fuel
+        crew.ConsumeRcsCharge(rcsThrust * RCS_FUEL_CONSUMPTION_RATE);
+        
+        // Play RCS effect
+        CreateRcsThrustEffect(crew.position, decelerationDirection);
+        
+        // Set crew state to "Decelerating"
+        crew.SetState(CrewState.Decelerating);
+    }
+    ```
+  
+  - **Physical Simulation:**
+    * Realistic momentum conservation with drag coefficients based on environment (habitation/industrial/airlock zones)
+    * Variable movement speed based on crew attributes (EVA skill modifies control precision: +/-15%)
+    * Fatigue system where consecutive movements without rest increase error margin (5% per movement, max 25%)
+    * Injury affects movement precision (broken limb: -30% navigation accuracy, +50% deceleration time)
+  
+  - **Environmental Interaction:**
+    * Interactive surfaces and equipment positioned along movement paths
+    * Handholds and foot-restraints provide stable positions for performing tasks
+    * Emergency grab points for rapid deceleration during crisis events
+    * Ship rotation introduces Coriolis effects in larger vessels (artificial gravity sections)
+
+- **Emergent Behavior System:**
+  - Crew members exhibit dynamic behaviors derived from their traits, skills, and current state:
+    * Need-based autonomy where crew satisfy personal requirements (rest, food, social interaction)
+    * Trait-driven interactions with environment and other crew
+    * Experience-based learning adjusting behavior patterns over time
+    * Contextual awareness triggering appropriate responses to emergencies or opportunities
+  
+  - **Implementation Details:**
+    ```csharp
+    void UpdateCrewBehavior(CrewMember crew, float deltaTime) {
+        // Update basic needs
+        crew.hunger += HUNGER_RATE * deltaTime;
+        crew.fatigue += CalculateFatigueRate(crew) * deltaTime;
+        crew.social -= SOCIAL_DECAY_RATE * deltaTime;
+        
+        // Get current highest priority need
+        CrewNeed primaryNeed = DeterminePrimaryNeed(crew);
+        
+        // If crew is idle and has a significant need, address it autonomously
+        if (crew.GetState() == CrewState.Idle && 
+            primaryNeed.urgency > AUTONOMOUS_ACTION_THRESHOLD) {
+            
+            // Based on need type, find appropriate action
+            switch (primaryNeed.type) {
+                case NeedType.Rest:
+                    FindAndUseRestStation(crew);
+                    break;
+                case NeedType.Food:
+                    FindAndUseFoodStation(crew);
+                    break;
+                case NeedType.Social:
+                    FindSocialInteraction(crew);
+                    break;
+                case NeedType.Occupation:
+                    FindOptimalTask(crew);
+                    break;
+                case NeedType.Privacy:
+                    SeekPrivateSpace(crew);
+                    break;
+            }
+        }
+        
+        // Apply trait-specific behaviors
+        foreach (Trait trait in crew.traits) {
+            ApplyTraitBehavior(crew, trait, deltaTime);
+        }
+        
+        // Check for potential interactions with nearby crew
+        CheckForSocialInteractions(crew);
+        
+        // Update emotional state based on environment and events
+        UpdateEmotionalState(crew, deltaTime);
+        
+        // Check for learning opportunities
+        UpdateExperienceAndLearning(crew, deltaTime);
+    }
+    
+    void ApplyTraitBehavior(CrewMember crew, Trait trait, float deltaTime) {
+        switch (trait.type) {
+            case TraitType.Curious:
+                // Curious crew occasionally investigate new ship areas
+                if (Random.value < CURIOSITY_CHECK_PROBABILITY * deltaTime) {
+                    FindAndInvestigateUnexploredArea(crew);
+                }
+                break;
+                
+            case TraitType.Anxious:
+                // Anxious crew check life support systems more frequently
+                crew.stressAccumulation += ANXIOUS_STRESS_RATE * deltaTime;
+                if (Random.value < SYSTEM_CHECK_PROBABILITY * deltaTime) {
+                    FindAndCheckNearestLifeSupportSystem(crew);
+                }
+                break;
+                
+            case TraitType.Sociable:
+                // Sociable crew seek out interaction more frequently
+                crew.social -= SOCIABLE_SOCIAL_DECAY_RATE * deltaTime; // Faster decay
+                break;
+                
+            case TraitType.Loner:
+                // Loners gain stress when near others for too long
+                int nearbyCrew = CountNearbyCrewMembers(crew.position, PERSONAL_SPACE_RADIUS);
+                if (nearbyCrew > 0) {
+                    crew.stressAccumulation += LONER_CROWD_STRESS * nearbyCrew * deltaTime;
+                }
+                break;
+                
+            // Additional traits and behaviors...
+        }
+    }
+    
+    void CheckForSocialInteractions(CrewMember crew) {
+        // Find nearby crew members
+        List<CrewMember> nearbyCrew = GetNearbyCrewMembers(crew, INTERACTION_RADIUS);
+        
+        foreach (CrewMember other in nearbyCrew) {
+            // Skip crew members already engaged in interactions
+            if (other.GetState() == CrewState.Interacting)
+                continue;
+                
+            // Check relationship status
+            Relationship relationship = relationshipManager.GetRelationship(crew, other);
+            
+            // Calculate interaction probability based on relationship and traits
+            float interactionChance = CalculateInteractionProbability(crew, other, relationship);
+            
+            if (Random.value < interactionChance) {
+                // Determine interaction type (casual chat, argument, collaboration, etc.)
+                InteractionType interactionType = DetermineInteractionType(crew, other, relationship);
+                
+                // Initiate the interaction
+                StartCrewInteraction(crew, other, interactionType);
+            }
+        }
+    }
+    
+    void UpdateExperienceAndLearning(CrewMember crew, float deltaTime) {
+        // Check if crew is performing a skill-based action
+        if (crew.currentAction != null && crew.currentAction.providesExperience) {
+            // Accumulate experience in the relevant skill
+            SkillType relevantSkill = crew.currentAction.relatedSkill;
+            crew.AddExperience(relevantSkill, EXPERIENCE_GAIN_RATE * deltaTime);
+            
+            // Chance to improve at task when meaningful experience threshold is reached
+            if (crew.GetExperience(relevantSkill) >= SKILL_IMPROVEMENT_THRESHOLD) {
+                // Improve skill and reset experience counter
+                crew.ImproveSkill(relevantSkill, SKILL_IMPROVEMENT_AMOUNT);
+                crew.ResetExperience(relevantSkill);
+                
+                // Notify player of skill improvement
+                notificationSystem.CreateSkillImprovedNotification(crew, relevantSkill);
+            }
+        }
+        
+        // Learning from observation (watching others perform tasks)
+        if (crew.GetState() == CrewState.Observing && crew.observingAction != null) {
+            CrewMember observedCrew = crew.observingCrewMember;
+            SkillType observedSkill = crew.observingAction.relatedSkill;
+            
+            // Gain experience at a reduced rate when observing
+            float observationExperienceRate = OBSERVATION_EXPERIENCE_FACTOR * 
+                                           EXPERIENCE_GAIN_RATE * 
+                                           deltaTime;
+            
+            crew.AddExperience(observedSkill, observationExperienceRate);
+        }
+    }
+    ```
+  
+  - **Behavioral Modifiers:**
+    * Environmental factors affect behavior (radiation alerts increase stress: +5% per minute)
+    * Crew relationships alter interaction patterns (friends seek proximity: +30% interaction chance)
+    * Shift schedules create natural cycles of activity and rest
+    * Mission phase affects work priorities (launch preparation vs. transit maintenance)
+  
+  - **Decision Making:**
+    * Utility-based AI for autonomous action selection
+    * Hierarchical task networks for complex multi-stage activities
+    * Emotional state machine transitioning between primary states (Focused, Stressed, Relaxed, Frustrated)
+    * Memory system that recalls past events and influences future decisions
+
+- **Crew AI:**
+  - Crew automatically perform tasks based on ship status (e.g., experiments during coasting, strapping in during maneuvers).
+  - AI uses state machines or behavior trees to manage behavior, with schedules for routine tasks and event-driven responses.
+  - Tasks are prioritized by:
+    * Critical systems first (life support: oxygen, temperature, radiation shielding)
+    * Mission objectives second (experiments, data collection, construction)
+    * Maintenance third (repairs, upgrades, cleaning)
+    * Personal needs last (rest, recreation, social interaction)
+  
+  - Tasks are assigned based on:
+    * Primary role specialization (90% task efficiency)
+    * Secondary skill compatibility (70% task efficiency)
+    * Proximity to task location (15% completion time reduction for adjacent tasks)
+    * Current workload and fatigue levels (tasks rejected above 85% workload)
+
+- **Interpersonal Dynamics:**
+  - Relationship system tracks friendships, rivalries, and romances, with a meter (-100 to +100) evolving based on interactions.
+  - Failures cause resentment, potentially leading to risky recommendations (e.g., suggesting disliked crew for EVA).
+  - Relationship development driven by:
+    * Shared experiences (working together: +0.5 relationship per hour)
+    * Personality compatibility (complementary traits: +5% relationship growth)
+    * Stress situations (high-pressure success: +10 relationship, failure: -15 relationship)
+    * Communication events (successful personal conversations: +5-15 relationship)
+  
+  - Relationship effects on gameplay:
+    * Strong positive relationships (>75): Crew prioritize helping each other (+25% response to requests)
+    * Strong negative relationships (<-75): Increased stress when working together (+10% stress per hour)
+    * Romantic relationships: Morale boost when together (+10% productivity), significant distress if partner is injured/lost
+
+4.4 User Interface
+------------------
+The user interface (UI) will enable seamless transitions between the 3D space view and the 2D ship interior view, with intuitive controls for navigation and crew management.
+
+- **View Switching:**
+  - Players switch between views via UI buttons or hotkeys, with smooth camera transitions.
+
+- **Controls:**
+  - Navigation tools for plotting orbits and selecting EVA crew.
+  - Crew task assignment via drag-and-drop or schedules.
+
+- **Communications System:**
+  - Implements realistic delays based on distance (e.g., 4-20 minutes to Earth, minimal for nearby ships).
+  - Dialog trees update over time, with contextual options for character arcs and worldbuilding.
+
+4.4.1 View Transition System
+---------------------------
+The transition between 3D orbital view and 2D interior view is designed to be seamless and immersive, maintaining spatial continuity while optimizing performance.
+
+- **3D-to-2D Transition Mechanics:**
+  - Players zoom in with the scroll wheel until reaching a proximity threshold to the ship.
+  - At the threshold, a smooth fade transition occurs while switching from perspective to orthographic camera.
+  - The transition is loadless, with 2D interiors preloaded to ensure <500ms transition time.
+  
+  - **Integration with AI Director:** If a dramatic confrontation (Section 3.4) is active during a view transition, the UI buffers the event's dialogue window, ensuring it appears seamlessly after the transition completes, maintaining narrative immersion.
+  
+  - **Implementation Details:**
+    ```csharp
+    void HandleViewTransition(float scrollDelta) {
+        // Update camera distance based on scroll input
+        float zoomSpeed = cameraSettings.GetZoomSpeed();
+        currentDistance = Mathf.Clamp(
+            currentDistance - scrollDelta * zoomSpeed,
+            MIN_CAMERA_DISTANCE,
+            MAX_CAMERA_DISTANCE
+        );
+        
+        // Apply new distance to camera
+        UpdateCameraPosition();
+        
+        // Check for transition threshold
+        if (currentDistance <= TRANSITION_THRESHOLD && !isTransitioning && !isInteriorView) {
+            StartCoroutine(TransitionTo2DView());
+        }
+        else if (currentDistance > TRANSITION_THRESHOLD && !isTransitioning && isInteriorView) {
+            StartCoroutine(TransitionTo3DView());
+        }
+    }
+    
+    IEnumerator TransitionTo2DView() {
+        isTransitioning = true;
+        
+        // Buffer any active AI Director events
+        if (aiDirector.HasActiveConfrontation()) {
+            aiDirector.PauseActiveEvents();
+        }
+        
+        // Start fade out
+        fadePanel.gameObject.SetActive(true);
+        LeanTween.alpha(fadePanel.rectTransform, 1f, FADE_DURATION)
+            .setEase(LeanTweenType.easeInOutSine);
+        
+        yield return new WaitForSeconds(FADE_DURATION);
+        
+        // Switch cameras
+        exteriorCamera.gameObject.SetActive(false);
+        interiorCamera.gameObject.SetActive(true);
+        
+        // Ensure interior camera is properly aligned with ship orientation
+        AlignInteriorCameraWithShip();
+        
+        // Activate 2D interior elements
+        shipInteriorRoot.SetActive(true);
+        
+        // Start fade in
+        LeanTween.alpha(fadePanel.rectTransform, 0f, FADE_DURATION)
+            .setEase(LeanTweenType.easeInOutSine);
+        
+        yield return new WaitForSeconds(FADE_DURATION);
+        fadePanel.gameObject.SetActive(false);
+        
+        isInteriorView = true;
+        isTransitioning = false;
+        
+        // Resume any buffered AI Director events
+        if (aiDirector.HasPausedEvents()) {
+            aiDirector.ResumeEvents();
+        }
+    }
+    
+    void AlignInteriorCameraWithShip() {
+        // Get the ship's current orientation
+        Quaternion shipRotation = currentShip.transform.rotation;
+        
+        // Set the interior camera's parent to the ship transform
+        interiorCamera.transform.SetParent(currentShip.transform);
+        
+        // Position the camera at a fixed local position (side view)
+        interiorCamera.transform.localPosition = new Vector3(-10f, 0f, 0f);
+        
+        // Orient the camera to look at the ship's interior
+        interiorCamera.transform.localRotation = Quaternion.identity;
+    }
+    ```
+
+- **Dynamic 2D View Rotation:**
+  - The 2D interior view rotates with the ship's orientation in 3D space.
+  - When the ship rotates for maneuvers (e.g., retrograde burns), the interior view adjusts accordingly.
+  - Implementation uses parent-child hierarchy, with 2D interior objects as children of the ship's transform.
+  
+  - **Crew Reaction to Rotation:** Rapid ship rotations (angular velocity > ROTATION_THRESHOLD) may cause crew stress (+5% per minute if not anchored) or minor injuries (-2% health if drifting), reflecting the physical toll of zero-G maneuvers. Crew with "Calm" traits are less affected (-2% stress).
+  
+  - **Implementation Details:**
+    ```csharp
+    void Update() {
+        if (isInteriorView) {
+            // Update any visual indicators of the ship's orientation
+            UpdateOrientationIndicators();
+            
+            // Update gravity/acceleration vector indicators based on ship thrust
+            if (currentShip.isAccelerating) {
+                UpdateAccelerationIndicators(currentShip.GetCurrentAcceleration());
+            }
+            
+            // Handle crew movement in response to ship rotation
+            UpdateCrewPositionsForRotation();
+        }
+    }
+    
+    void UpdateOrientationIndicators() {
+        // Get the current "up" direction in ship-local space
+        Vector3 localUp = Vector3.up;
+        
+        // Convert to world space based on ship's rotation
+        Vector3 worldUp = currentShip.transform.TransformDirection(localUp);
+        
+        // Calculate angle for UI indicator
+        float angle = Vector3.SignedAngle(Vector3.up, worldUp, Vector3.forward);
+        
+        // Update orientation indicator UI
+        orientationIndicator.transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+    
+    void UpdateCrewPositionsForRotation() {
+        // When ship rotates rapidly, crew may need to grab handholds or react
+        if (currentShip.angularVelocity.magnitude > ROTATION_THRESHOLD) {
+            foreach (CrewMember crew in activeCrewMembers) {
+                // Crew not holding onto something may drift
+                if (crew.GetState() != CrewState.Anchored) {
+                    ApplyRotationalForceToCrewMember(crew);
+                    
+                    // Apply stress effects for non-anchored crew
+                    float stressIncrease = ROTATION_STRESS_RATE * Time.deltaTime;
+                    
+                    // Calm trait reduces stress from rotation
+                    if (crew.HasTrait(TraitType.Calm)) {
+                        stressIncrease *= CALM_TRAIT_STRESS_MODIFIER;
+                    }
+                    
+                    crew.AddStress(stressIncrease);
+                    
+                    // Apply minor health damage if crew is drifting during high rotation
+                    if (crew.GetState() == CrewState.Moving && 
+                        currentShip.angularVelocity.magnitude > HIGH_ROTATION_THRESHOLD) {
+                        float healthDecrease = ROTATION_HEALTH_PENALTY * Time.deltaTime;
+                        crew.AdjustHealth(-healthDecrease);
+                        
+                        // Notify AI Director of potential crisis moment
+                        aiDirector.RegisterCrewIncident(
+                            crew, 
+                            IncidentType.RotationalInjury, 
+                            currentShip.angularVelocity.magnitude
+                        );
+                    }
+                }
+            }
+        }
+    }
+    ```
+
+- **2D Representation of 3D Habitat:**
+  - Each module in the habitat has its own 2D side view with proper orientation.
+  - Players navigate between modules through hatches and docking nodes with seamless transitions.
+  - For multi-module habitats (e.g., central hab with left/right pods), adjacency is visualized through:
+    * Blurred views through open hatches showing connected modules
+    * Overlays indicating modules above/below the current viewing plane
+    * Transition animations when moving between modules
+  
+  - **Environmental Storytelling Integration:** The AI Director (Section 3.4) updates module visuals during transitions to reflect past events (e.g., a damaged hatch from a previous EVA, a crew member's personal item in an adjacent module), influencing crew morale (±5%) and triggering side events.
+  
+  - **Implementation Details:**
+    ```csharp
+    void SwitchToModule(ShipModule targetModule) {
+        StartCoroutine(TransitionBetweenModules(currentModule, targetModule));
+    }
+    
+    IEnumerator TransitionBetweenModules(ShipModule fromModule, ShipModule toModule) {
+        // Determine the relative position (left, right, above, below)
+        ModuleDirection direction = DetermineModuleDirection(fromModule, toModule);
+        
+        // Start transition animation based on direction
+        switch (direction) {
+            case ModuleDirection.Left:
+                StartSlideTransition(Vector2.right); // Slide current view right to reveal left module
+                break;
+            case ModuleDirection.Right:
+                StartSlideTransition(Vector2.left); // Slide current view left to reveal right module
+                break;
+            case ModuleDirection.Above:
+                StartFadeTransition(); // Fade between above/below modules
+                break;
+            case ModuleDirection.Below:
+                StartFadeTransition(); // Fade between above/below modules
+                break;
+            default:
+                StartFadeTransition(); // Default to fade
+                break;
+        }
+        
+        // Wait for transition animation
+        yield return new WaitForSeconds(MODULE_TRANSITION_DURATION);
+        
+        // Deactivate previous module visuals
+        fromModule.SetVisibility(false);
+        
+        // Activate new module visuals
+        toModule.SetVisibility(true);
+        currentModule = toModule;
+        
+        // Update adjacent module blur effects
+        UpdateAdjacentModuleViews();
+        
+        // Request environmental storytelling elements from AI Director
+        StoryElement[] storyElements = aiDirector.GetEnvironmentalElementsForModule(toModule.moduleID);
+        foreach (StoryElement element in storyElements) {
+            ApplyEnvironmentalElement(element, toModule);
+        }
+        
+        // Apply morale effects from environment to crew in this module
+        foreach (CrewMember crew in toModule.GetCrewInModule()) {
+            float moraleEffect = CalculateEnvironmentalMoraleEffect(crew, toModule);
+            crew.AdjustMorale(moraleEffect);
+            
+            // Chance for crew to comment on environmental elements
+            if (Random.value < ENVIRONMENTAL_COMMENT_CHANCE) {
+                StoryElement commentElement = SelectRelevantStoryElement(crew, storyElements);
+                if (commentElement != null) {
+                    aiDirector.TriggerCrewComment(crew, commentElement);
+                }
+            }
+        }
+    }
+    
+    void UpdateAdjacentModuleViews() {
+        // Clear existing adjacent module renderers
+        foreach (ModuleBlurView blurView in activeBlurViews) {
+            blurView.gameObject.SetActive(false);
+        }
+        activeBlurViews.Clear();
+        
+        // For each connection in current module
+        foreach (ModuleConnection connection in currentModule.connections) {
+            ShipModule adjacentModule = connection.connectedModule;
+            
+            // Create/update blur view for this connection
+            ModuleBlurView blurView = GetOrCreateBlurViewFor(adjacentModule);
+            
+            // Position the blur view at the connection point
+            blurView.transform.position = connection.transform.position;
+            blurView.transform.rotation = connection.transform.rotation;
+            
+            // Set the camera rendering the adjacent module
+            blurView.SetupCamera(adjacentModule);
+            
+            // Apply blur effect based on distance/relationship
+            float blurAmount = CalculateBlurAmount(connection);
+            blurView.SetBlurIntensity(blurAmount);
+            
+            // Apply any environmental storytelling hints visible through connection
+            StoryElement[] visibleElements = aiDirector.GetVisibleElementsThroughConnection(
+                currentModule.moduleID,
+                adjacentModule.moduleID
+            );
+            
+            if (visibleElements.Length > 0) {
+                blurView.SetStoryElements(visibleElements);
+            }
+            
+            // Activate the blur view
+            blurView.gameObject.SetActive(true);
+            activeBlurViews.Add(blurView);
+        }
+    }
+    ```
+
+- **Docking Node Depth Visualization:**
+  - When looking through an open hatch or docking port, a real-time blurred view of the adjacent module is displayed.
+  - Implementation uses render textures with blur post-processing to create depth perception.
+  - Crew and objects in the adjacent module are visible through the connection, enhancing spatial awareness.
+  
+  - **Crew Movement Visualization:** As crew move between modules, their sprites fade into the blurred view of the adjacent module, with a subtle animation (e.g., floating through the hatch), ensuring players can track crew positions during transitions.
+  
+  - **Implementation Details:**
+    ```csharp
+    public class ModuleBlurView : MonoBehaviour {
+        [SerializeField] private Camera moduleCamera;
+        [SerializeField] private RenderTexture renderTexture;
+        [SerializeField] private Material blurMaterial;
+        [SerializeField] private MeshRenderer viewRenderer;
+        [SerializeField] private Transform transitionVolume;
+        
+        private List<CrewTransition> activeTransitions = new List<CrewTransition>();
+        
+        public void SetupCamera(ShipModule targetModule) {
+            // Position camera to capture the target module
+            moduleCamera.transform.position = CalculateCameraPositionFor(targetModule);
+            moduleCamera.transform.rotation = CalculateCameraRotationFor(targetModule);
+            moduleCamera.targetTexture = renderTexture;
+            
+            // Set layer mask to only render the target module
+            moduleCamera.cullingMask = LayerMask.GetMask("Module" + targetModule.moduleID);
+        }
+        
+        public void SetBlurIntensity(float intensity) {
+            // Update blur shader parameter
+            blurMaterial.SetFloat("_BlurSize", intensity);
+        }
+        
+        public void SetStoryElements(StoryElement[] elements) {
+            // Apply visible story elements to the blur view
+            // These could be highlighted or given special visual treatment
+            foreach (StoryElement element in elements) {
+                GameObject visualHint = Instantiate(
+                    storyElementHintPrefab, 
+                    transitionVolume
+                );
+                visualHint.GetComponent<StoryElementHint>().Setup(element);
+            }
+        }
+        
+        public void RegisterCrewTransition(CrewMember crew, float transitionDuration) {
+            // Create a transitioning crew sprite that moves through the connection
+            GameObject transitionSprite = Instantiate(
+                crewTransitionPrefab,
+                transitionVolume
+            );
+            
+            CrewTransition transition = transitionSprite.GetComponent<CrewTransition>();
+            transition.Initialize(
+                crew,
+                transitionDuration,
+                moduleCamera.transform.position
+            );
+            
+            activeTransitions.Add(transition);
+        }
+        
+        private void Update() {
+            // Update active crew transitions
+            for (int i = activeTransitions.Count - 1; i >= 0; i--) {
+                if (activeTransitions[i].isComplete) {
+                    Destroy(activeTransitions[i].gameObject);
+                    activeTransitions.RemoveAt(i);
+                }
+            }
+        }
+        
+        private void OnEnable() {
+            // Assign render texture to the view material
+            viewRenderer.material.mainTexture = renderTexture;
+            moduleCamera.enabled = true;
+        }
+        
+        private void OnDisable() {
+            moduleCamera.enabled = false;
+        }
+    }
+    
+    public class CrewTransition : MonoBehaviour {
+        public bool isComplete { get; private set; } = false;
+        
+        public void Initialize(CrewMember crew, float duration, Vector3 cameraPosition) {
+            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+            spriteRenderer.sprite = crew.GetCurrentSprite();
+            
+            // Calculate start and end positions
+            Vector3 startPos = transform.position;
+            Vector3 endPos = cameraPosition + Vector3.forward * 2f; // Towards camera
+            
+            // Start transition animation
+            StartCoroutine(AnimateTransition(startPos, endPos, duration));
+        }
+        
+        IEnumerator AnimateTransition(Vector3 start, Vector3 end, float duration) {
+            float elapsed = 0f;
+            
+            while (elapsed < duration) {
+                float t = elapsed / duration;
+                
+                // Move along path
+                transform.position = Vector3.Lerp(start, end, t);
+                
+                // Fade out as we approach camera
+                Color c = GetComponent<SpriteRenderer>().color;
+                c.a = Mathf.Lerp(1f, 0f, Mathf.SmoothStep(0f, 1f, t));
+                GetComponent<SpriteRenderer>().color = c;
+                
+                // Scale up slightly to simulate approaching
+                float scale = Mathf.Lerp(1f, 1.5f, t);
+                transform.localScale = new Vector3(scale, scale, 1f);
+                
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            
+            isComplete = true;
+        }
+    }
+    ```
+
+- **Zero-G Movement Transition Context:**
+  - The existing Zero-G Movement System (Section 4.3) is seamlessly integrated with the view transition system.
+  - When transitioning to 2D, physics constraints adapt to the current viewing plane.
+  - Movement trajectories and handholds are visualized differently based on the current module's orientation.
+  - Player commands during transition are buffered to ensure responsive control.
+
+- **Visual Design Principles:**
+  - Hard sci-fi aesthetics are maintained across both views, with consistent color schemes and design language.
+  - Interior details reflect the ship's function, with specialized areas for different modules.
+  - Environmental storytelling elements (described in Section 4.4.4) are visible through transitions.
+  - Orientation markers provide constant spatial awareness during rotation maneuvers.
+
+- **Performance Considerations:**
+  - Texture streaming is optimized to preload only the current and adjacent modules.
+  - Occlusion culling prevents rendering of obscured modules in both 3D and 2D views.
+  - LOD system reduces detail on distant elements in 3D view while maintaining full detail in 2D.
+  - Memory footprint is managed through asset pooling of common interior elements.
+  - **Performance Benchmark:** On low-end hardware (e.g., Intel i3, 4GB RAM), module transitions and blur rendering maintain 30 FPS, with memory usage for render textures capped at 50MB.
+
+4.4.4 AI Director UI Support
+----------------------------
+The user interface provides specialized components and systems to support the AI Director's narrative events, ensuring players can meaningfully engage with emergent storylines without disrupting core gameplay.
+
+- **Confrontation Interface:**
+  - When the AI Director triggers a dramatic confrontation, the system presents a contextual dialogue panel that overlays but doesn't completely obscure the game state.
+  - **Implementation Details:**
+    ```csharp
+    void PresentConfrontation(ConfrontationEvent confrontation) {
+        // Pause background systems but maintain visuals
+        gameplayManager.SetTimeScale(0.1f);
+        
+        // Load character portraits with faction-aligned frames
+        UIElement protagonistPortrait = UIFactory.CreatePortrait(
+            confrontation.protagonist,
+            GetFactionTheme(confrontation.protagonist.factionAlignment)
+        );
+        
+        UIElement antagonistPortrait = UIFactory.CreatePortrait(
+            confrontation.antagonist,
+            GetFactionTheme(confrontation.antagonist.factionAlignment)
+        );
+        
+        // Create dialogue text with dynamic content
+        dialoguePanel.SetText(StringFormatter.Format(
+            confrontation.dialogueTemplate,
+            new Dictionary<string, string> {
+                {"PROTAGONIST", confrontation.protagonist.name},
+                {"ANTAGONIST", confrontation.antagonist.name},
+                {"MISSION", currentMission.name},
+                {"CONTEXT", confrontation.contextDescription}
+            }
+        ));
+        
+        // Generate choice buttons with tooltips showing consequences
+        foreach (ConfrontationChoice choice in confrontation.choices) {
+            Button choiceButton = UIFactory.CreateChoiceButton(choice);
+            
+            // Color-code based on approach
+            switch (choice.approach) {
+                case Approach.Aggressive: choiceButton.SetColorScheme(ColorScheme.Red); break;
+                case Approach.Diplomatic: choiceButton.SetColorScheme(ColorScheme.Green); break;
+                case Approach.Pragmatic: choiceButton.SetColorScheme(ColorScheme.Blue); break;
+                case Approach.Evasive: choiceButton.SetColorScheme(ColorScheme.Gray); break;
+            }
+            
+            // Set tooltip with outcome preview
+            string tooltip = "Potential outcomes:\n";
+            if (choice.relationshipDelta != 0)
+                tooltip += $"• Relationship: {FormatDelta(choice.relationshipDelta)}\n";
+            if (choice.factionInfluenceDelta.Count > 0)
+                tooltip += $"• Faction influence: {FormatInfluenceDelta(choice.factionInfluenceDelta)}\n";
+            if (choice.crewMoraleDelta != 0)
+                tooltip += $"• Crew morale: {FormatDelta(choice.crewMoraleDelta)}\n";
+            
+            choiceButton.SetTooltip(tooltip);
+        }
+        
+        // Animate entry (slide from bottom)
+        confrontationPanel.SetActive(true);
+        confrontationPanel.AnimateEntry();
+    }
+    ```
+  
+  - **Visual Design:**
+    * Character portraits display emotional states through subtle facial animations
+    * Dialogue text renders gradually with voice acting when available
+    * Background elements subtly reflect the confrontation context (red tint for danger, blue for technical issues)
+    * Faction influences manifest through UI accents that align with the dominant faction aesthetic:
+      * Chinese influence > 75: Subdued red borders with golden geometric patterns
+      * US influence > 75: Navy blue headers with white star motifs
+      * Coalition influence > 75: Green/purple accents with multicultural symbolism
+      * Chaos scenario: Mismatched UI elements with visible "wear" effects
+
+- **Side Event Notification System:**
+  - The AI Director's side events appear as contextual notifications that integrate with the existing alert system.
+  - **Implementation Details:**
+    ```csharp
+    void QueueSideEvent(SideEvent sideEvent) {
+        // Create notification with appropriate icon
+        Notification notification = new Notification {
+            title = sideEvent.title,
+            description = sideEvent.shortDescription,
+            priority = CalculateEventPriority(sideEvent),
+            icon = GetEventIcon(sideEvent.type),
+            expirationTime = currentTime + EVENT_NOTIFICATION_DURATION
+        };
+        
+        // Add interaction handler
+        notification.onClick = () => OpenSideEventPanel(sideEvent);
+        
+        // Add to notification system with appropriate styling
+        NotificationManager.AddNotification(notification);
+        
+        // Schedule reminder if not addressed within timeframe
+        if (sideEvent.urgency > UrgencyLevel.Low) {
+            scheduler.ScheduleTask(
+                currentTime + REMINDER_DELAY,
+                () => {
+                    if (!sideEvent.acknowledged) {
+                        NotificationManager.PulseNotification(notification.id);
+                    }
+                }
+            );
+        }
+    }
+    ```
+  
+  - **Visual Design:**
+    * Side event icons reflect event types:
+      * Personal crisis: Heartbeat line icon
+      * Equipment failure: Broken gear icon
+      * Crew conflict: Opposing arrows icon
+      * Discovery: Magnifying glass icon
+    * Notification prominence scales with event urgency:
+      * Critical: Flashing red border, persistent positioning
+      * High: Yellow accent, semi-transparent overlay
+      * Medium: Blue highlight, standard notification area
+      * Low: White text, smaller notification footprint
+    * All notifications include a small faction influence indicator when relevant
+
+- **Environmental Storytelling Visualization:**
+  - The ship/station view dynamically updates to reflect AI Director-managed environmental changes.
+  - **Implementation Details:**
+    ```csharp
+    void ApplyEnvironmentalStoryElement(StoryElement element, ShipSection section) {
+        // Load appropriate visual asset
+        GameObject visualElement = AssetLoader.LoadAsset(element.visualAssetPath);
+        
+        // Position within section
+        Vector3 position = section.GetAvailablePosition(element.size);
+        visualElement.transform.position = position;
+        
+        // Add interaction components
+        InteractableObject interactable = visualElement.AddComponent<InteractableObject>();
+        interactable.SetTooltip(element.description);
+        interactable.OnInteract += () => TriggerEnvironmentalStoryEvent(element);
+        
+        // Apply visual effects based on element type
+        switch (element.type) {
+            case ElementType.Damage:
+                visualElement.AddComponent<FlickeringLight>();
+                AudioSource audio = visualElement.AddComponent<AudioSource>();
+                audio.clip = AssetLoader.LoadAudioClip("effects/electrical_short");
+                audio.spatialBlend = 1.0f; // Fully 3D
+                audio.loop = true;
+                audio.Play();
+                break;
+            
+            case ElementType.Memorial:
+                visualElement.AddComponent<GlowEffect>();
+                break;
+            
+            case ElementType.CrewArtifact:
+                visualElement.AddComponent<HighlightOnProximity>();
+                break;
+        }
+        
+        // Register with ship visualization system
+        section.RegisterEnvironmentalElement(element.id, visualElement);
+        
+        // Apply morale effect to crew in section
+        foreach (CrewMember crew in section.assignedCrew) {
+            crew.ApplyMorale(element.moraleEffect);
+        }
+    }
+    ```
+  
+  - **Visual Design:**
+    * Environmental elements are subtly highlighted when crew interact with them
+    * Hover tooltips provide narrative context for each element (e.g., "This mural was painted by Engineer Chen during the long transit to Jupiter")
+    * Elements accumulate over time, with older items fading slightly but remaining visible
+    * Ship interiors evolve visually across generations, with clear visual language for:
+      * Damage/repairs: Scorch marks, patched panels with mismatched materials
+      * Crew additions: Personal effects, cultural markers, scientific equipment
+      * Historical events: Memorial plaques, trophies from successful missions, salvaged artifacts
+
+- **Performance Optimization:**
+  - UI components for the AI Director are designed for minimal performance impact:
+    * All narrative UI elements preload during mission initialization
+    * Texture atlases combine common UI elements to reduce draw calls
+    * Confrontation panels use skeletal animation rather than full video for character expressions
+    * Environmental storytelling elements use instanced rendering for similar objects
+  - Measured performance metrics:
+    * Confrontation panel load time: <80ms on target hardware
+    * Memory overhead: <15MB for all narrative UI components
+    * Frame rate impact during narrative events: <5% reduction from baseline
+    * Texture memory: Shared 2K atlas for all narrative elements (~4MB)
+
+- **Accessibility Considerations:**
+  - The narrative UI system includes specific accommodations:
+    * Text-to-speech support for all dialogue with adjustable reading speed
+    * Configurable text size and contrast settings independent of main UI
+    * Option to replace timed choices with pause-based selection
+    * Color-blind friendly indication of emotional states and choice impacts
+    * Subtitle options for all voice acting with customizable timing
+
+4.5 Data Persistence
+--------------------
+A save and load system will preserve game state across chapters, ensuring continuity of crew status, ship data, and world state.
+
+- **Save Data:**
+  - Crew attributes (health, morale, relationships), ship status, and geopolitical balance.
+  - Time skips update crew ages and integrate offspring based on relationships.
+
+- **Implementation:**
+  - Use Unity's serialization system (e.g., JSON or binary formats) for efficient saving and loading.
+
+4.6 Localization
+----------------
+Localization will support multiple languages, particularly English and Mandarin, with dynamic adaptation based on the narrative's geopolitical context.
+
+- **Language Support:**
+  - UI elements, dialogue, and audio adapt to the dominant faction (US or China).
+  - Use Unity's Localization Package for text and audio management.
+
+4.7 Performance Optimization
+----------------------------
+Performance optimization is essential to manage the simulation of orbital mechanics, crew interactions, and UI updates.
+
+- **Techniques:**
+  - Level of Detail (LOD) for distant planets and ships.
+  - Efficient pathfinding for crew movement (e.g., A* algorithm).
+  - UI batching to reduce draw calls.
+
+- **Tools:**
+  - Unity's Profiler and Frame Debugger for identifying bottlenecks.
+
+4.8 Planet Position Calculation
+-------------------------------
+Planet positions will be calculated using a simplified orbital model, updated based on the in-game date.
+
+- **Implementation:**
+  - Use Keplerian approximations with circular orbits and known periods (e.g., Earth: 365.25 days).
+  - Positions are precomputed or calculated once per chapter to minimize runtime impact.
+
+- **Accuracy:**
+  - Sufficient for mission planning, focusing on realism without full n-body simulation.

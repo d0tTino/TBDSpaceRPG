@@ -1,0 +1,50 @@
+6. Appendices
+=============
+
+6.1 Glossary
+------------
+This glossary defines key technical terms used throughout the Gameplay/System Document to ensure clarity and consistency.
+
+- **Crew Traits:** Static personality characteristics (e.g., "Hot-headed," "Genius") that influence a crew member's behavior, task performance, and interactions with other crew members.
+- **Orbital Mechanics:** The simulation of spacecraft movement based on real-world physics, including gravity, velocity, and trajectory calculations.
+- **Delta-V (Δv):** A measure of the change in velocity required for spacecraft maneuvers, such as course corrections or orbital insertions.
+- **Transfer Window:** A specific period when planets are aligned optimally for interplanetary travel, minimizing fuel consumption.
+- **Morale:** A dynamic attribute representing a crew member's emotional state, which affects their task efficiency and likelihood of conflicts.
+- **Relationship Meter:** A numerical value (e.g., -100 to +100) that tracks the bond between two crew members, influencing their cooperation and task performance.
+- **EVA (Extravehicular Activity):** A feature allowing crew members to perform tasks outside the spacecraft, such as repairs or rescues, with success tied to their skills and traits.
+- **Aerobraking:** A maneuver using a planet’s atmosphere to reduce spacecraft velocity, requiring precise control to avoid damage.
+- **Cascading Failures:** A series of system or task failures that compound over time if not addressed, potentially leading to mission-critical issues.
+
+6.2 Technical References
+------------------------
+This section provides links to external resources and documentation relevant to the game's technical implementation.
+
+- **Unity Documentation:**
+  - [Unity - Scripting API: Transform.position](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Transform-position.html): For handling object positions in 3D space.
+  - [Unity - Data Persistence](https://docs.unity3d.com/Manual/script-Serialization.html): For saving and loading game state.
+  - [Unity - Localization Package](https://docs.unity3d.com/Packages/com.unity.localization@1.0/manual/index.html): For managing multiple languages.
+
+- **Plugins:**
+  - [Simple Kepler Orbits](https://assetstore.unity.com/packages/tools/physics/simple-kepler-orbits-97048): Plugin for simulating orbital mechanics.
+  - [Yarn Spinner](https://github.com/YarnSpinnerTool/YarnSpinner-Unity): For managing dialogue trees and narrative branching.
+
+- **Optimization Guides:**
+  - [Performance Recommendations for Unity](https://learn.microsoft.com/en-us/windows/mixed-reality/develop/unity/performance-recommendations-for-unity): Best practices for optimizing Unity projects.
+  - [Unity Profiler](https://docs.unity3d.com/Manual/Profiler.html): Tool for identifying performance bottlenecks.
+
+- **Orbital Mechanics Resources:**
+  - [NASA: Basics of Space Flight](https://solarsystem.nasa.gov/basics/chapter1-1/): Introduction to orbital mechanics concepts.
+  - [Kerbal Space Program Wiki](https://wiki.kerbalspaceprogram.com/wiki/Main_Page): Community-driven resource for spaceflight simulation mechanics.
+
+6.3 Open Technical Questions
+----------------------------
+This section lists areas of the design that require further clarification or decision-making. These questions will be addressed in future iterations.
+
+- How will crew traits mechanically affect task success rates and crisis resolutions? (e.g., percentage bonuses for Genius trait)
+- What is the exact user interface design for switching between 3D navigation and 2D crew management views? (e.g., button placement, transition animations)
+- How will the narrative branches be structured following key decisions, such as the missile choice in Chapter 1? (e.g., data structure for tracking choices)
+- What technical solutions will be used for data persistence across chapters, especially regarding crew and world state? (e.g., JSON vs. binary serialization)
+- How will localization be implemented to support dynamic language changes based on the narrative's geopolitical context? (e.g., real-time switching of UI and audio)
+- What algorithms will be used for crew pathfinding in the 2D ship interior? (e.g., A* pathfinding)
+- How will the EVA system be integrated into the 3D view, including crew movement and task mechanics? (e.g., physics-based movement vs. scripted paths)
+- What is the performance budget for crew AI and relationship simulations, especially with 6 crew members? (e.g., CPU cycles per frame)
