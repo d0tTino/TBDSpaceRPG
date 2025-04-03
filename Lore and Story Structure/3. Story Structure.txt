@@ -1,0 +1,75 @@
+3. Story Structure
+===================
+
+3.1 Chapter System
+------------------
+The game’s narrative unfolds through a series of chapters, each representing a pivotal mission or phase in humanity’s expansion across the solar system. These chapters are interconnected, with the outcomes of one shaping the world and crew of the next. Between chapters, time skips of 20 to 50 years occur, emphasizing the slow, generational pace of space colonization and the enduring consequences of player decisions.
+
+- **Chapter Flow:**
+  - **Mission Briefing:** Each chapter opens with a briefing where players receive objectives, select crew members, and prepare their ship. This is the moment to strategize—will you prioritize speed, firepower, or diplomacy?
+  - **Transit Phase:** Players navigate the vast distances of space, managing crew morale, ship resources, and unexpected challenges like solar flares or rival sightings. Choices made here—pushing the engines or conserving fuel—set the stage for what’s to come.
+  - **Destination:** The mission’s core unfolds at the target—landing on Mars, mining an asteroid, or confronting a rival faction. This phase demands critical decisions that can alter the story’s trajectory, from success to catastrophic failure.
+  - **Debriefing:** The chapter closes with a reflection on the mission’s outcomes. Players see immediate results (a colony founded, a rival thwarted) and glimpse long-term ripples (a new alliance or a simmering grudge).
+
+- **Time Skips:**
+  - Between chapters, decades pass, revealing a solar system transformed by the player’s actions. A fledgling Mars outpost might grow into a thriving city—or collapse into ruin. Crew members age, retire, or die, replaced by descendants shaped by their predecessors’ legacies.
+  - These skips are a narrative mirror, showing how a single choice—like sparing an enemy ship—might lead to peace decades later, or how a ruthless act could sow chaos for generations.
+
+3.2 Macro Story: Space Race
+---------------------------
+The game’s backbone is the escalating rivalry between the United States and China, a cold war turned cosmic. This macro story frames every mission, a high-stakes struggle for dominance over the solar system’s resources and territories, where player choices determine whether humanity unites or fractures.
+
+- **Initial State (2040s):**
+  - The US, battered by World War III, leads the Artemis Coalition—a shaky alliance of nations clinging to power. China, centralized and relentless, drives its own agenda with unmatched resources. Smaller players like India and a fractured Europe vie for scraps, complicating the board.
+  - The Moon’s helium-3 deposits, Mars’ real estate, and the asteroid belt’s wealth are the prizes. Tensions simmer, but war hasn’t broken out—yet. The player’s actions could tip the scales.
+
+- **Branching Paths:**
+  - **War Path:** Aggressive moves—sabotaging a Chinese rover, seizing a contested moon base—ignite conflict. Fleets battle over Mars, debris clogs orbits, and colonies become pawns in a brutal game. Survival, not progress, becomes the goal.
+  - **Peace Path:** Diplomatic gestures—sharing tech, aiding a stranded rival—build bridges. A coalition might emerge, pooling resources for bold ventures like Jupiter’s moons. Peace is fragile, though, and betrayal lurks.
+  - **Ideological Outcomes:** Choices also shape governance. Favoring freedom fosters democratic colonies; enforcing order might birth a communist regime or a technocratic state. The solar system’s soul hangs in the balance.
+
+- **Key Events:**
+  - **The Mars Missile Crisis:** Early on, if trailing in the race, the player might face orders to strike a Chinese ship. Firing locks in war; defiance keeps peace alive.
+  - **The Lunar Accord:** A mid-game summit tests negotiation skills. Success could unify factions; failure might spark a shooting war.
+  - **The Belt Rebellion:** Overexploiting asteroid miners could trigger an uprising, forcing the player to quash it or concede—a choice with galactic repercussions.
+
+3.3 Micro Story: Crew
+---------------------
+Amid the grand sweep of the space race, the crew’s personal stories ground the narrative in human emotion. These astronauts, engineers, and scientists are more than tools—they’re a family forged in the void, their lives evolving with every mission.
+
+- **Personal Arcs:**
+  - Each crew member arrives with a past: a pilot fleeing a ruined Earth, a biologist obsessed with alien life. Traits like "Loyal" or "Reckless" shape their journeys, which unfold across chapters—redemption, betrayal, or quiet heroism.
+  - Example: A mechanic’s grudge against a rival faction might boil over during a mission, forcing the player to intervene—or let it play out.
+
+- **Relationships:**
+  - Bonds form organically—friendships over late-night repairs, romances sparked in zero-G. A tight crew boosts efficiency; discord invites disaster. Players can nudge these dynamics, pairing allies or separating foes, but chance and traits keep outcomes unpredictable.
+  - A romance might yield a child, born mid-game, who grows into a crew member with inherited strengths—and flaws.
+
+- **Generational Succession:**
+  - Time skips age the crew. A grizzled captain retires; a young gun rises. Offspring inherit traits (a "Cautious" medic’s kid might be "Prudent") and carry forward grudges or dreams. A founder’s vision might live on—or be undone—through their lineage.
+
+3.4 Mission Variety
+--------------------
+Missions are the game’s heartbeat, offering diverse challenges that test strategy, morality, and nerve. Each ties into the larger story, amplifying the player’s impact on crew and cosmos alike.
+
+- **Exploration:** Scout Saturn’s rings or drill into Ceres. These missions promise discovery—new tech, alien traces—but risk is high: storms, malfunctions, or unseen enemies.
+- **Colonization:** Plant roots on Venus or a Kuiper Belt rock. Success builds humanity’s reach; failure wastes lives and resources. Who gets priority—your faction or a rival?—is up to you.
+- **Combat:** Face off against pirates or a Chinese frigate. Battles hinge on tactics—flank or feint?—and carry weight: every shot fired escalates the stakes.
+- **Diplomacy:** Barter for fuel or avert a war. Words can win allies or make enemies, with outcomes rippling to the endgame.
+
+Missions interlink with the narrative. A combat victory might secure a resource, fueling a colonization push, while a diplomatic flop could strain crew morale.
+
+3.5 Endgame
+------------
+The final chapter is the player’s reckoning, where decades of choices coalesce into humanity’s fate. Multiple endings reflect the legacy carved across the stars, paired with personal epilogues for the crew.
+
+- **War:** A solar system in flames—colonies razed, fleets shattered. The player’s crew survives as nomads in a broken frontier, their name synonymous with conflict.
+- **Peace:** Unity prevails, however uneasy. Factions share the stars, launching missions beyond Pluto. The crew retires as architects of hope, though scars remain.
+- **Democracy:** Free colonies dot the void, each a testament to liberty. They’re fragile, prey to infighting, but the player’s descendants lead with pride.
+- **Communism:** One power rules, order absolute. Dissent is crushed, progress assured. The crew’s lineage enforces this new era, for good or ill.
+
+- **Crew Epilogues:** A captain’s child might govern Mars, or a scientist’s kin could rebel against the player’s regime. These tales close the story, echoing every triumph and regret.
+
+---
+
+This structure weaves a tapestry of ambition, sacrifice, and survival. From the chapter system’s generational sweep to the space race’s geopolitical drama, the crew’s intimate struggles, the missions’ variety, and the endgame’s lasting verdicts, players craft a saga where every choice resonates across the stars.

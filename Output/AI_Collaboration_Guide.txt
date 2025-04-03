@@ -1,0 +1,226 @@
+# TBD Space Game - AI Collaboration Guide
+
+## Purpose
+This document provides specialized information for AI assistants working on the TBD Space Game project. It includes technical references, command patterns, context guides, and response formatting guidelines to optimize AI collaboration.
+
+## Project Technical Architecture
+
+### Core Systems Map
+```
+┌─────────────────────┐       ┌─────────────────────┐
+│                     │       │                     │
+│  Unity Game Engine  │◄─────►│    MCP Interface    │
+│                     │       │                     │
+└──────────┬──────────┘       └─────────┬───────────┘
+           │                            │
+           ▼                            ▼
+┌─────────────────────┐       ┌─────────────────────┐
+│                     │       │                     │
+│  Gameplay Systems   │       │  External Services  │
+│                     │       │                     │
+└─────────────────────┘       └─────────────────────┘
+```
+
+### System Dependencies
+1. **MCP Interface**
+   - Depends on: Node.js, WebSocket protocol
+   - Used by: Unity game systems, external tools
+   - Communication method: JSON over WebSockets
+
+2. **Unity Game Engine**
+   - C# scripts for gameplay logic
+   - Unity version: 2022.3.4f1
+   - Key packages: URP, Burst Compiler
+
+3. **Gameplay Systems**
+   - Time Skip System → Crew System → Relationship System
+   - Ship Customization → Ship Performance
+   - Orbital Mechanics → Navigation → Mission Planning
+
+## Code Pattern Recognition
+
+### MCP Command Pattern
+```csharp
+// Command structure
+public class McpCommand {
+    public string menuPath; // E.g., "MCP/Ship/V2/Upgrade Thrust"
+    public Dictionary<string, object> parameters;
+    public Action<bool, string> callback;
+}
+
+// Command execution pattern
+void ExecuteCommand(McpCommand command) {
+    McpClient.Instance.SendRequest(command.menuPath, command.parameters, command.callback);
+}
+```
+
+### Crew System Patterns
+```csharp
+// Crew member creation
+CrewMember newCrew = new CrewMember {
+    Name = "Name",
+    Age = 30,
+    Skills = new Dictionary<SkillType, float>(),
+    Traits = new List<Trait>()
+};
+
+// Relationship management
+Relationship relationship = new Relationship {
+    CrewMember1Id = crewA.Id,
+    CrewMember2Id = crewB.Id,
+    Value = 0, // -100 to 100
+    Type = RelationshipType.Professional
+};
+```
+
+### Time Skip Patterns
+```csharp
+// Time skip execution
+int yearsSkipped = timeSkipManager.ExecuteTimeSkip("Training"); // Focus parameter
+
+// Crew aging
+void ProcessCrewAging(int yearsSkipped, string playerFocus) {
+    foreach (CrewMember crew in crewManager.GetActiveCrew()) {
+        crew.Age += yearsSkipped;
+        // Apply skill growth, health changes based on focus
+    }
+}
+```
+
+## AI Assistance Guidelines
+
+### Best Response Formats
+
+1. **For Code Solutions**
+   ```
+   [Problem Analysis]
+   Brief assessment of the issue.
+
+   [Solution Approach]
+   Explanation of strategy.
+
+   [Code Implementation]
+   ```csharp
+   // Code solution with comments
+   ```
+
+   [Integration Notes]
+   Steps for implementing in existing codebase.
+   ```
+
+2. **For Documentation Tasks**
+   ```
+   [Documentation Structure]
+   Outline of document sections.
+
+   [Content Recommendations]
+   Key points to include.
+
+   [Sample Section]
+   Example content.
+
+   [Cross-Reference Opportunities]
+   Related documents to link.
+   ```
+
+3. **For System Design**
+   ```
+   [Requirements Analysis]
+   Understanding of needs.
+
+   [Design Options]
+   Different approaches with pros/cons.
+
+   [Recommended Architecture]
+   Detailed design diagram and explanation.
+
+   [Implementation Path]
+   Step-by-step guide.
+   ```
+
+### Context-Gathering Patterns
+
+When insufficient information is provided, use these patterns to gather context:
+
+1. **Technical Context**
+   ```
+   To provide the best solution, I need to understand:
+   1. Which system this relates to (MCP, TimeSkip, Crew, etc.)
+   2. Current implementation state
+   3. Specific constraints
+   ```
+
+2. **Goal Clarification**
+   ```
+   I can help with several approaches:
+   1. [First option with outcome]
+   2. [Second option with outcome]
+   3. [Third option with outcome]
+   Which best aligns with your goals?
+   ```
+
+3. **File Location**
+   ```
+   To implement this solution, I'll need to know:
+   1. Location of [relevant file]
+   2. Current state of [related system]
+   3. Whether [assumption] is correct
+   ```
+
+## Technical Reference
+
+### MCP Commands
+| Command Path | Purpose | Parameters |
+|--------------|---------|------------|
+| MCP/Ship/V2/Create Test Ship | Creates a test ship instance | None |
+| MCP/Ship/V2/Upgrade Thrust | Upgrades ship thrust capability | None |
+| MCP/Ship/V2/Log Current Upgrades | Logs current ship upgrades | None |
+
+### Core Files
+| File Path | Purpose | Key Dependencies |
+|-----------|---------|------------------|
+| Scripts/TimeSkipManager.cs | Manages generational progression | CrewManager, WorldStateManager |
+| Scripts/Models/CrewMember.cs | Crew member data structure | None |
+| Scripts/Models/Relationship.cs | Relationship data structure | None |
+| Scripts/Managers/CrewManager.cs | Manages crew collection | CrewMember, Relationship |
+
+### Common Commands
+```powershell
+# Start MCP server with specific port
+env UNITY_PORT=8001 node [path-to-server]/build/index.js
+
+# Test MCP connection
+./mcpWebSocketClient-simple.ps1 -menuPath "MCP/Test/Ping"
+
+# Check port availability
+netstat -ano | findstr :8001
+```
+
+## Troubleshooting Guide
+
+### MCP Connection Issues
+1. **Problem**: Unable to connect to MCP server
+   **Diagnostic**: Check if server is running and port is available
+   **Solution**: Use `netstat -ano | findstr :8001` to check port, then restart server
+
+2. **Problem**: Connection errors in Unity console
+   **Diagnostic**: WebSocket connection refused or timeout
+   **Solution**: Ensure correct port, check Node.js is running, verify firewall settings
+
+3. **Problem**: GUI layout errors in editor
+   **Diagnostic**: Error about invalid GUI layout state
+   **Solution**: These are display-only issues, can be ignored, but restarting Unity clears them
+
+### Command Reference
+| Category | Command | Purpose |
+|----------|---------|---------|
+| MCP | Start MCP Server | `env UNITY_PORT=8001 node [path]/build/index.js` |
+| MCP | Test Connection | `./mcpWebSocketClient-simple.ps1 -menuPath "MCP/Test/Ping"` |
+| Unity | Run Unity Editor | Open project in Unity 2022.3.4f1 |
+| Git | Commit Changes | `git add . && git commit -m "Description" && git push` |
+
+## Version History
+- v0.1: Initial guide creation
+- v0.2: Added system diagrams and dependencies
+- v0.3: Expanded troubleshooting section
+- v0.4: Added best response formats 

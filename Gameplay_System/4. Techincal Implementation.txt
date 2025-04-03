@@ -1,0 +1,3063 @@
+4. Technical Implementation
+===========================
+
+4.1 Game Engine
+---------------
+The game will be developed using Unity, selected for its robust support for both 2D and 3D game development, extensive community resources, and proven success in similar titles like *Kerbal Space Program* and *Rimworld*. Unity's flexibility enables seamless integration of the game's dual mechanics: 3D orbital navigation and 2D crew management.
+
+- **Key Features:**
+  - 3D rendering for the solar system simulation.
+  - 2D tools (sprite rendering, tilemaps) for the ship's interior.
+  - Physics engine for realistic orbital mechanics (augmented with plugins).
+  - Scripting in C# for gameplay logic and AI behavior.
+
+- **Third-Party Plugins:**
+  - **Simple Kepler Orbits:** For simulating realistic orbital mechanics.
+  - **Yarn Spinner:** For managing dialogue trees and narrative branching.
+
+4.2 Orbital Mechanics
+---------------------
+Orbital mechanics will be implemented using the Simple Kepler Orbits plugin from the Unity Asset Store, which provides tools for simulating spacecraft trajectories based on Keplerian mechanics.
+
+- **Trajectory Plotting:**
+  - Players plot courses using a 3D interface, selecting pre-calculated paths or adjusting parameters (e.g., delta-v, burn timing).
+  - Crew members (e.g., Pilot) can suggest course corrections based on new data (e.g., rival ship movements).
+
+- **Propulsion:**
+  - Spacecraft use chemical rockets, with realistic fuel consumption and transit times (e.g., 6-9 months to Mars).
+
+- **EVA System:**
+  - An extravehicular activity (EVA) feature allows crew to perform tasks outside the ship (e.g., repairs, rescues).
+  - Crew are represented as 3D models during EVA, with success rates tied to skills and traits (e.g., Engineering skill, Calm trait).
+
+**4.2.1 Combat Trajectory System**
+----------------------------------
+The space combat system implements realistic orbital mechanics for weapons fire, target interception, and evasive maneuvers, ensuring that gameplay accurately reflects the constraints of physics in space.
+
+- **Intercept Calculation Systems:**
+  ```csharp
+  /// <summary>
+  /// Calculates an intercept solution for a target moving along a predictable orbital trajectory.
+  /// </summary>
+  /// <param name="firingPosition">The current position of the firing vessel</param>
+  /// <param name="firingVelocity">The current velocity vector of the firing vessel</param>
+  /// <param name="targetOrbit">The orbital parameters of the target vessel</param>
+  /// <param name="projectileSpeed">Speed of the projectile in m/s</param>
+  /// <param name="maxTimeToIntercept">Maximum time window to consider for intercept solutions</param>
+  /// <returns>An InterceptSolution containing firing vector and time to intercept, null if no solution found</returns>
+  public InterceptSolution CalculateOrbitalIntercept(
+      Vector3 firingPosition, 
+      Vector3 firingVelocity,
+      KeplerOrbit targetOrbit,
+      float projectileSpeed,
+      float maxTimeToIntercept)
+  {
+      // Start with a coarse-grained search for possible intercept times
+      List<float> potentialInterceptTimes = new List<float>();
+      float timeStep = maxTimeToIntercept / INITIAL_SEARCH_STEPS;
+      
+      for (float t = 0; t <= maxTimeToIntercept; t += timeStep)
+      {
+          // Calculate target position at time t
+          Vector3 targetPosition = targetOrbit.GetPositionAtTime(
+              targetOrbit.TimeOfPeriapsis + t
+          );
+          
+          // Calculate travel time for projectile to reach this position
+          float distanceToTarget = Vector3.Distance(firingPosition, targetPosition);
+          float travelTime = distanceToTarget / projectileSpeed;
+          
+          // If projectile would arrive close to time t, this is a potential solution
+          if (Mathf.Abs(travelTime - t) < COARSE_SEARCH_THRESHOLD)
+          {
+              potentialInterceptTimes.Add(t);
+          }
+      }
+      
+      // Refine each potential solution using Newton-Raphson iteration
+      InterceptSolution bestSolution = null;
+      float lowestDeltaV = float.MaxValue;
+      
+      foreach (float initialGuess in potentialInterceptTimes)
+      {
+          InterceptSolution solution = RefineInterceptSolution(
+              firingPosition,
+              firingVelocity,
+              targetOrbit,
+              projectileSpeed,
+              initialGuess
+          );
+          
+          if (solution != null)
+          {
+              // Calculate required delta-V to achieve this firing solution
+              float requiredDeltaV = Vector3.Magnitude(
+                  solution.firingVector - firingVelocity
+              );
+              
+              // Keep track of the solution requiring least delta-V
+              if (requiredDeltaV < lowestDeltaV)
+              {
+                  lowestDeltaV = requiredDeltaV;
+                  bestSolution = solution;
+              }
+          }
+      }
+      
+      return bestSolution;
+  }
+  
+  /// <summary>
+  /// Refines an intercept solution using Newton-Raphson iteration.
+  /// </summary>
+  private InterceptSolution RefineInterceptSolution(
+      Vector3 firingPosition,
+      Vector3 firingVelocity,
+      KeplerOrbit targetOrbit,
+      float projectileSpeed,
+      float initialTimeGuess)
+  {
+      float timeGuess = initialTimeGuess;
+      float previousError = float.MaxValue;
+      
+      for (int i = 0; i < MAX_REFINEMENT_ITERATIONS; i++)
+      {
+          // Calculate target position at timeGuess
+          Vector3 targetPosition = targetOrbit.GetPositionAtTime(
+              targetOrbit.TimeOfPeriapsis + timeGuess
+          );
+          
+          // Calculate distance and travel time
+          float distanceToTarget = Vector3.Distance(firingPosition, targetPosition);
+          float travelTime = distanceToTarget / projectileSpeed;
+          
+          // Calculate error (difference between arrival time and target time)
+          float error = travelTime - timeGuess;
+          
+          // Check if we've converged to an acceptable solution
+          if (Mathf.Abs(error) < CONVERGENCE_THRESHOLD)
+          {
+              // Calculate firing vector required to hit target
+              Vector3 firingDirection = (targetPosition - firingPosition).normalized;
+              Vector3 firingVector = firingDirection * projectileSpeed;
+              
+              return new InterceptSolution {
+                  firingVector = firingVector,
+                  timeToIntercept = travelTime,
+                  targetPosition = targetPosition
+              };
+          }
+          
+          // If error is increasing, the iteration is diverging
+          if (Mathf.Abs(error) > Mathf.Abs(previousError))
+          {
+              break;
+          }
+          
+          // Update time guess using Newton-Raphson step
+          // Derivative of error function is approximately -1 + derivative of distance/speed
+          // For simplicity, we use a fixed derivative approximation
+          float derivativeApprox = -1.2f;
+          timeGuess = timeGuess - error / derivativeApprox;
+          
+          previousError = error;
+      }
+      
+      // Failed to converge to a solution
+      return null;
+  }
+
+- **Heat Signature Management:**
+  The combat system includes heat generation, dissipation, and detection mechanics to model the thermal signatures of spacecraft during engagements.
+  
+  ```csharp
+  /// <summary>
+  /// Updates heat generation and dissipation for a combat vessel.
+  /// </summary>
+  public void UpdateThermalSignature(CombatVessel vessel, float deltaTime)
+  {
+      // Calculate heat generation from active systems
+      float heatGeneration = 0f;
+      
+      // Main propulsion heat
+      if (vessel.mainEngineActive)
+      {
+          heatGeneration += vessel.mainEngineThrustPercentage * 
+                           vessel.heatGenerationCurve.Evaluate(vessel.mainEngineThrustPercentage) * 
+                           vessel.mainEngineHeatOutput;
+      }
+      
+      // RCS thrusters heat
+      heatGeneration += vessel.rcsActivityLevel * vessel.rcsHeatOutput;
+      
+      // Weapon systems heat
+      foreach (WeaponSystem weapon in vessel.weaponSystems)
+      {
+          if (weapon.isActive)
+          {
+              heatGeneration += weapon.currentHeatGeneration;
+          }
+      }
+      
+      // Life support and electronics baseline heat
+      heatGeneration += vessel.baselineHeatGeneration;
+      
+      // Calculate heat dissipation
+      // Radiators effectiveness varies based on orientation to the sun
+      float radiatorEfficiency = CalculateRadiatorEfficiency(
+          vessel.transform.rotation, 
+          vessel.sunDirection
+      );
+      
+      float heatDissipation = vessel.radiatorCapacity * 
+                              radiatorEfficiency * 
+                              vessel.radiatorDeploymentPercentage;
+      
+      // Calculate net heat change
+      float netHeatChange = heatGeneration - heatDissipation;
+      
+      // Update vessel temperature
+      vessel.currentHeat += netHeatChange * deltaTime;
+      vessel.currentHeat = Mathf.Clamp(
+          vessel.currentHeat, 
+          AMBIENT_TEMPERATURE, 
+          vessel.maximumSafeTemperature * 1.5f
+      );
+      
+      // Update infrared signature based on temperature
+      vessel.infraredSignature = CalculateInfraredSignature(
+          vessel.currentHeat, 
+          vessel.hullArea, 
+          vessel.hullEmissivity
+      );
+      
+      // Check for overheating damage
+      if (vessel.currentHeat > vessel.maximumSafeTemperature)
+      {
+          float overHeatRatio = (vessel.currentHeat - vessel.maximumSafeTemperature) / 
+                              (vessel.maximumSafeTemperature * 0.5f);
+          
+          ApplyOverheatDamage(vessel, overHeatRatio * OVERHEAT_DAMAGE_RATE * deltaTime);
+      }
+  }
+  
+  /// <summary>
+  /// Calculates the detection probability of a vessel based on its thermal signature.
+  /// </summary>
+  public float CalculateDetectionProbability(
+      CombatVessel target, 
+      CombatVessel observer, 
+      float distance)
+  {
+      // Base detection probability falls off with square of distance
+      float baseProbability = 1.0f / (1.0f + (distance * distance / 
+                                            (observer.sensorRange * observer.sensorRange)));
+      
+      // Adjust for target's thermal signature
+      float signatureMultiplier = target.infraredSignature / STANDARD_THERMAL_SIGNATURE;
+      
+      // Adjust for sensor quality and crew skill
+      float sensorEfficiency = observer.baseSensorEfficiency;
+      CrewMember sensorOperator = observer.GetSystemOperator(ShipSystem.Sensors);
+      
+      if (sensorOperator != null)
+      {
+          sensorEfficiency *= 1.0f + (sensorOperator.GetSkill(SkillType.Sensors) / 100.0f);
+      }
+      
+      // Calculate final detection probability
+      float detectionProbability = baseProbability * signatureMultiplier * sensorEfficiency;
+      
+      // Environmental modifiers (solar radiation, dust fields, etc.)
+      detectionProbability *= CalculateEnvironmentalDetectionModifier(
+          observer.currentRegion, 
+          observer.currentSolarActivity
+      );
+      
+      return Mathf.Clamp01(detectionProbability);
+  }
+  ```
+
+- **Debris Field Generation:**
+  Combat events generate persistent orbital debris that affects navigation and future engagements in the same region.
+  
+  ```csharp
+  /// <summary>
+  /// Generates orbital debris from a ship-to-ship weapon impact or destruction event.
+  /// </summary>
+  /// <param name="position">Impact position in space</param>
+  /// <param name="impactForce">Force of the impact in newtons</param>
+  /// <param name="targetMass">Mass of the impacted vessel or component</param>
+  /// <param name="referenceOrbit">The orbital parameters of the target at time of impact</param>
+  public void GenerateCombatDebris(
+      Vector3 position, 
+      float impactForce, 
+      float targetMass, 
+      KeplerOrbit referenceOrbit)
+  {
+      // Calculate debris field properties
+      int debrisCount = Mathf.FloorToInt(
+          Mathf.Sqrt(impactForce * targetMass) / DEBRIS_GENERATION_FACTOR
+      );
+      
+      debrisCount = Mathf.Clamp(debrisCount, MIN_DEBRIS_COUNT, MAX_DEBRIS_COUNT);
+      
+      // Create orbital debris objects
+      for (int i = 0; i < debrisCount; i++)
+      {
+          // Calculate ejection velocity (direction and magnitude)
+          Vector3 ejectionDirection = Random.onUnitSphere;
+          float ejectionSpeed = Random.Range(
+              MIN_EJECTION_SPEED,
+              Mathf.Sqrt(impactForce / targetMass) * EJECTION_SPEED_FACTOR
+          );
+          
+          Vector3 ejectionVelocity = ejectionDirection * ejectionSpeed;
+          
+          // Calculate debris size and mass
+          float debrisSize = Random.Range(MIN_DEBRIS_SIZE, MAX_DEBRIS_SIZE);
+          float debrisMass = debrisSize * debrisSize * DEBRIS_DENSITY;
+          
+          // Create new orbital parameters based on reference orbit plus ejection velocity
+          Vector3 newVelocity = referenceOrbit.GetVelocityAtTime(
+              referenceOrbit.GetTimeAtTrueAnomaly(referenceOrbit.TrueAnomaly)
+          ) + ejectionVelocity;
+          
+          KeplerOrbit debrisOrbit = new KeplerOrbit(
+              referenceOrbit.centralBody,
+              position,
+              newVelocity,
+              Time.time
+          );
+          
+          // Calculate debris lifetime based on orbit parameters
+          float lifetime = CalculateDebrisLifetime(
+              debrisOrbit,
+              debrisSize,
+              debrisMass
+          );
+          
+          // Create and register the debris object
+          OrbitalDebris debris = new OrbitalDebris(
+              debrisOrbit,
+              debrisSize,
+              debrisMass,
+              Time.time,
+              Time.time + lifetime
+          );
+          
+          worldState.debrisManager.RegisterDebris(debris);
+          
+          // Update regional hazard level for navigation
+          SpaceRegion region = worldState.GetRegionAtPosition(position);
+          region.hazardLevel += debrisSize * HAZARD_MULTIPLIER;
+      }
+      
+      // Apply regional effects
+      ApplyDebrisFieldEffects(position, debrisCount);
+  }
+  
+  /// <summary>
+  /// Calculates the probability of a collision with orbital debris during transit.
+  /// </summary>
+  public float CalculateDebrisCollisionProbability(
+      KeplerOrbit shipOrbit,
+      float transitTime,
+      float shipCrossSectionalArea)
+  {
+      float collisionProbability = 0f;
+      
+      // Get all debris regions that intersect with the ship's orbit
+      List<SpaceRegion> regionsAlongPath = worldState.GetRegionsAlongOrbit(shipOrbit);
+      
+      foreach (SpaceRegion region in regionsAlongPath)
+      {
+          // Calculate time spent in each region
+          float timeInRegion = CalculateTimeInRegion(shipOrbit, region);
+          
+          // Calculate collision probability based on debris density in region
+          float regionalProbability = region.debrisDensity * 
+                                     shipCrossSectionalArea * 
+                                     timeInRegion * 
+                                     COLLISION_COEFFICIENT;
+          
+          // Account for ship velocity relative to debris field
+          float velocityFactor = CalculateRelativeVelocityFactor(
+              shipOrbit, 
+              region.averageDebrisOrbit
+          );
+          
+          regionalProbability *= velocityFactor;
+          
+          // Accumulate total probability
+          collisionProbability += regionalProbability;
+      }
+      
+      return Mathf.Clamp01(collisionProbability);
+  }
+  ```
+
+- **Realistic Weapon Modeling:**
+  Weapon systems are modeled with physics-based constraints that affect targeting, damage, and effectiveness at different ranges.
+  
+  ```csharp
+  /// <summary>
+  /// Models the behavior of a kinetic projectile in space.
+  /// </summary>
+  public void UpdateKineticProjectile(KineticProjectile projectile, float deltaTime)
+  {
+      // Update position based on velocity
+      projectile.position += projectile.velocity * deltaTime;
+      
+      // Apply gravitational influences from nearby bodies
+      foreach (CelestialBody body in bodiesInRange)
+      {
+          Vector3 bodyDirection = body.position - projectile.position;
+          float distanceSquared = bodyDirection.sqrMagnitude;
+          
+          // Skip if too far for meaningful influence
+          if (distanceSquared > body.gravityInfluenceRadiusSquared)
+              continue;
+              
+          // Calculate gravitational acceleration
+          float gravitationalAcceleration = GRAVITATIONAL_CONSTANT * 
+                                          body.mass / 
+                                          distanceSquared;
+                                          
+          Vector3 accelerationVector = bodyDirection.normalized * gravitationalAcceleration;
+          
+          // Apply acceleration to velocity
+          projectile.velocity += accelerationVector * deltaTime;
+      }
+      
+      // Check for target hit
+      if (projectile.targetTracking && projectile.target != null)
+      {
+          float distanceToTarget = Vector3.Distance(
+              projectile.position, 
+              projectile.target.position
+          );
+          
+          if (distanceToTarget < projectile.hitThreshold)
+          {
+              // Calculate impact damage based on kinetic energy
+              float kineticEnergy = 0.5f * 
+                                   projectile.mass * 
+                                   projectile.velocity.sqrMagnitude;
+                                   
+              // Apply damage to target
+              ApplyKineticDamage(
+                  projectile.target,
+                  kineticEnergy,
+                  projectile.velocity.normalized,
+                  projectile.armorPenetration
+              );
+              
+              // Generate impact debris
+              GenerateCombatDebris(
+                  projectile.target.position,
+                  kineticEnergy,
+                  projectile.target.mass,
+                  projectile.target.orbit
+              );
+              
+              // Destroy projectile
+              RemoveProjectile(projectile);
+              return;
+          }
+      }
+      
+      // Update lifetime and check if expired
+      projectile.lifetime -= deltaTime;
+      if (projectile.lifetime <= 0f)
+      {
+          RemoveProjectile(projectile);
+      }
+  }
+  
+  /// <summary>
+  /// Models the behavior of a directed energy weapon (laser) in space.
+  /// </summary>
+  public void FireDirectedEnergyWeapon(
+      DirectedEnergyWeapon weapon, 
+      CombatVessel target,
+      float firingDuration)
+  {
+      // Calculate base damage
+      float basePower = weapon.outputPower * firingDuration;
+      
+      // Calculate beam divergence based on distance
+      float distance = Vector3.Distance(weapon.position, target.position);
+      float beamRadius = weapon.initialBeamRadius + 
+                       (distance * Mathf.Tan(weapon.divergenceAngle * Mathf.Deg2Rad));
+      
+      // Calculate power density at target
+      float beamArea = Mathf.PI * beamRadius * beamRadius;
+      float powerDensity = basePower / beamArea;
+      
+      // Account for atmospheric interference if applicable
+      if (target.isInAtmosphere || weapon.isInAtmosphere)
+      {
+          powerDensity *= CalculateAtmosphericTransmission(
+              weapon.position,
+              target.position,
+              weapon.wavelength
+          );
+      }
+      
+      // Calculate targeting accuracy based on crew skill and jitter
+      float accuracy = CalculateBeamAccuracy(
+          weapon,
+          distance,
+          weapon.GetOperator()?.GetSkill(SkillType.Weapons) ?? 0
+      );
+      
+      // Apply accuracy modifier to power density
+      powerDensity *= accuracy;
+      
+      // Calculate damage based on power density and target armor properties
+      float damage = CalculateDirectedEnergyDamage(
+          powerDensity,
+          target.armorReflectivity,
+          target.armorThermalConductivity,
+          target.armorMeltingPoint,
+          firingDuration
+      );
+      
+      // Apply damage to target
+      ApplyDirectedEnergyDamage(target, damage, weapon.position);
+      
+      // Generate heat in the weapon system
+      weapon.currentHeat += weapon.heatGenerationPerSecond * firingDuration;
+      
+      // Update weapon cooldown
+      weapon.cooldownTimeRemaining = weapon.baseCooldownTime;
+  }
+  ```
+
+4.3 Crew Management System
+--------------------------
+Crew management will be handled in a 2D top-down view of the ship's interior, leveraging Unity's 2D tools.
+
+- **2D Interior View:**
+  - Side-facing and back-facing sprites for a cutaway effect, similar to *Barotrauma*.
+  - Players can move via WASD or click interactable objects (e.g., computers, panels) for tasks like scanning or comms.
+
+- **Zero-G Movement System:**
+  - Crew movement in zero gravity follows realistic physics:
+    * Point-and-click navigation where crew push off and float to destinations
+    * Momentum-based movement with gradual deceleration using handholds
+    * Trajectory visualization showing projected paths before movement commands
+    * Collision avoidance with other crew members and obstacles
+  
+  - **Implementation Details:**
+    ```csharp
+    void MoveCrewMember(CrewMember crew, Vector2 targetPosition) {
+        // Calculate launch vector (direction and power)
+        Vector2 moveDirection = (targetPosition - crew.position).normalized;
+        float distance = Vector2.Distance(crew.position, targetPosition);
+        
+        // Adjust push-off power based on distance and crew attributes
+        float pushPower = Mathf.Clamp(
+            distance * BASE_PUSH_COEFFICIENT,
+            MIN_PUSH_POWER,
+            crew.GetAttributeValue(Attribute.Strength) * MAX_PUSH_MULTIPLIER
+        );
+        
+        // Apply impulse force in the movement direction
+        crew.rigidbody.AddForce(moveDirection * pushPower, ForceMode2D.Impulse);
+        
+        // Calculate and visualize trajectory
+        DrawTrajectory(crew, moveDirection * pushPower);
+        
+        // Set crew state to "Moving"
+        crew.SetState(CrewState.Moving);
+        
+        // Schedule grab action on arrival near destination
+        float estimatedArrivalTime = CalculateArrivalTime(
+            distance, 
+            pushPower, 
+            crew.rigidbody.drag
+        );
+        
+        // Schedule deceleration when approaching target
+        StartCoroutine(BeginDecelerationAtTarget(
+            crew, 
+            targetPosition,
+            estimatedArrivalTime * 0.8f
+        ));
+    }
+    
+    IEnumerator BeginDecelerationAtTarget(CrewMember crew, Vector2 target, float delay) {
+        yield return new WaitForSeconds(delay);
+        
+        // Check if we're approaching target and still in motion
+        if (crew.GetState() == CrewState.Moving && 
+            Vector2.Distance(crew.position, target) < DECELERATION_DISTANCE) {
+            
+            // Find nearest handhold
+            Handhold nearestGrab = FindNearestHandhold(crew.position, target);
+            
+            if (nearestGrab != null) {
+                // Adjust crew trajectory to intercept handhold
+                Vector2 adjustedDirection = (nearestGrab.position - crew.position).normalized;
+                crew.rigidbody.velocity = adjustedDirection * 
+                                        crew.rigidbody.velocity.magnitude * 
+                                        COURSE_CORRECTION_FACTOR;
+                
+                // Trigger grab animation when in range
+                StartCoroutine(GrabHandholdWhenInRange(crew, nearestGrab));
+            } else {
+                // No handhold available, activate RCS for stopping
+                ActivateRCS(crew, target);
+            }
+        }
+    }
+    
+    IEnumerator GrabHandholdWhenInRange(CrewMember crew, Handhold handhold) {
+        // Wait until within grab range
+        while (Vector2.Distance(crew.position, handhold.position) > GRAB_DISTANCE) {
+            yield return null;
+        }
+        
+        // Grab handhold
+        crew.rigidbody.velocity = Vector2.zero;
+        crew.transform.position = handhold.position;
+        crew.SetState(CrewState.Idle);
+        crew.PlayAnimation("Grab");
+        
+        // Apply stress/stamina effects
+        float movementEffort = crew.initialMoveVelocity.magnitude * EFFORT_FACTOR;
+        crew.ApplyStamina(-movementEffort);
+        
+        // Trigger onArrival events
+        if (crew.onArrivalAction != null) {
+            crew.onArrivalAction.Invoke();
+        }
+    }
+    
+    void ActivateRCS(CrewMember crew, Vector2 targetPosition) {
+        // Calculate deceleration vector (opposite to current velocity)
+        Vector2 decelerationDirection = -crew.rigidbody.velocity.normalized;
+        
+        // Apply RCS thrust (weaker than push-off, consumes RCS fuel)
+        float rcsThrust = crew.rigidbody.velocity.magnitude * RCS_THRUST_FACTOR;
+        crew.rigidbody.AddForce(decelerationDirection * rcsThrust, ForceMode2D.Force);
+        
+        // Consume RCS fuel
+        crew.ConsumeRcsCharge(rcsThrust * RCS_FUEL_CONSUMPTION_RATE);
+        
+        // Play RCS effect
+        CreateRcsThrustEffect(crew.position, decelerationDirection);
+        
+        // Set crew state to "Decelerating"
+        crew.SetState(CrewState.Decelerating);
+    }
+    ```
+  
+  - **Physical Simulation:**
+    * Realistic momentum conservation with drag coefficients based on environment (habitation/industrial/airlock zones)
+    * Variable movement speed based on crew attributes (EVA skill modifies control precision: +/-15%)
+    * Fatigue system where consecutive movements without rest increase error margin (5% per movement, max 25%)
+    * Injury affects movement precision (broken limb: -30% navigation accuracy, +50% deceleration time)
+  
+  - **Environmental Interaction:**
+    * Interactive surfaces and equipment positioned along movement paths
+    * Handholds and foot-restraints provide stable positions for performing tasks
+    * Emergency grab points for rapid deceleration during crisis events
+    * Ship rotation introduces Coriolis effects in larger vessels (artificial gravity sections)
+
+- **Emergent Behavior System:**
+  - Crew members exhibit dynamic behaviors derived from their traits, skills, and current state:
+    * Need-based autonomy where crew satisfy personal requirements (rest, food, social interaction)
+    * Trait-driven interactions with environment and other crew
+    * Experience-based learning adjusting behavior patterns over time
+    * Contextual awareness triggering appropriate responses to emergencies or opportunities
+  
+  - **Implementation Details:**
+    ```csharp
+    void UpdateCrewBehavior(CrewMember crew, float deltaTime) {
+        // Update basic needs
+        crew.hunger += HUNGER_RATE * deltaTime;
+        crew.fatigue += CalculateFatigueRate(crew) * deltaTime;
+        crew.social -= SOCIAL_DECAY_RATE * deltaTime;
+        
+        // Get current highest priority need
+        CrewNeed primaryNeed = DeterminePrimaryNeed(crew);
+        
+        // If crew is idle and has a significant need, address it autonomously
+        if (crew.GetState() == CrewState.Idle && 
+            primaryNeed.urgency > AUTONOMOUS_ACTION_THRESHOLD) {
+            
+            // Based on need type, find appropriate action
+            switch (primaryNeed.type) {
+                case NeedType.Rest:
+                    FindAndUseRestStation(crew);
+                    break;
+                case NeedType.Food:
+                    FindAndUseFoodStation(crew);
+                    break;
+                case NeedType.Social:
+                    FindSocialInteraction(crew);
+                    break;
+                case NeedType.Occupation:
+                    FindOptimalTask(crew);
+                    break;
+                case NeedType.Privacy:
+                    SeekPrivateSpace(crew);
+                    break;
+            }
+        }
+        
+        // Apply trait-specific behaviors
+        foreach (Trait trait in crew.traits) {
+            ApplyTraitBehavior(crew, trait, deltaTime);
+        }
+        
+        // Check for potential interactions with nearby crew
+        CheckForSocialInteractions(crew);
+        
+        // Update emotional state based on environment and events
+        UpdateEmotionalState(crew, deltaTime);
+        
+        // Check for learning opportunities
+        UpdateExperienceAndLearning(crew, deltaTime);
+    }
+    
+    void ApplyTraitBehavior(CrewMember crew, Trait trait, float deltaTime) {
+        switch (trait.type) {
+            case TraitType.Curious:
+                // Curious crew occasionally investigate new ship areas
+                if (Random.value < CURIOSITY_CHECK_PROBABILITY * deltaTime) {
+                    FindAndInvestigateUnexploredArea(crew);
+                }
+                break;
+                
+            case TraitType.Anxious:
+                // Anxious crew check life support systems more frequently
+                crew.stressAccumulation += ANXIOUS_STRESS_RATE * deltaTime;
+                if (Random.value < SYSTEM_CHECK_PROBABILITY * deltaTime) {
+                    FindAndCheckNearestLifeSupportSystem(crew);
+                }
+                break;
+                
+            case TraitType.Sociable:
+                // Sociable crew seek out interaction more frequently
+                crew.social -= SOCIABLE_SOCIAL_DECAY_RATE * deltaTime; // Faster decay
+                break;
+                
+            case TraitType.Loner:
+                // Loners gain stress when near others for too long
+                int nearbyCrew = CountNearbyCrewMembers(crew.position, PERSONAL_SPACE_RADIUS);
+                if (nearbyCrew > 0) {
+                    crew.stressAccumulation += LONER_CROWD_STRESS * nearbyCrew * deltaTime;
+                }
+                break;
+                
+            // Additional traits and behaviors...
+        }
+    }
+    
+    void CheckForSocialInteractions(CrewMember crew) {
+        // Find nearby crew members
+        List<CrewMember> nearbyCrew = GetNearbyCrewMembers(crew, INTERACTION_RADIUS);
+        
+        foreach (CrewMember other in nearbyCrew) {
+            // Skip crew members already engaged in interactions
+            if (other.GetState() == CrewState.Interacting)
+                continue;
+                
+            // Check relationship status
+            Relationship relationship = relationshipManager.GetRelationship(crew, other);
+            
+            // Calculate interaction probability based on relationship and traits
+            float interactionChance = CalculateInteractionProbability(crew, other, relationship);
+            
+            if (Random.value < interactionChance) {
+                // Determine interaction type (casual chat, argument, collaboration, etc.)
+                InteractionType interactionType = DetermineInteractionType(crew, other, relationship);
+                
+                // Initiate the interaction
+                StartCrewInteraction(crew, other, interactionType);
+            }
+        }
+    }
+    
+    void UpdateExperienceAndLearning(CrewMember crew, float deltaTime) {
+        // Check if crew is performing a skill-based action
+        if (crew.currentAction != null && crew.currentAction.providesExperience) {
+            // Accumulate experience in the relevant skill
+            SkillType relevantSkill = crew.currentAction.relatedSkill;
+            crew.AddExperience(relevantSkill, EXPERIENCE_GAIN_RATE * deltaTime);
+            
+            // Chance to improve at task when meaningful experience threshold is reached
+            if (crew.GetExperience(relevantSkill) >= SKILL_IMPROVEMENT_THRESHOLD) {
+                // Improve skill and reset experience counter
+                crew.ImproveSkill(relevantSkill, SKILL_IMPROVEMENT_AMOUNT);
+                crew.ResetExperience(relevantSkill);
+                
+                // Notify player of skill improvement
+                notificationSystem.CreateSkillImprovedNotification(crew, relevantSkill);
+            }
+        }
+        
+        // Learning from observation (watching others perform tasks)
+        if (crew.GetState() == CrewState.Observing && crew.observingAction != null) {
+            CrewMember observedCrew = crew.observingCrewMember;
+            SkillType observedSkill = crew.observingAction.relatedSkill;
+            
+            // Gain experience at a reduced rate when observing
+            float observationExperienceRate = OBSERVATION_EXPERIENCE_FACTOR * 
+                                           EXPERIENCE_GAIN_RATE * 
+                                           deltaTime;
+            
+            crew.AddExperience(observedSkill, observationExperienceRate);
+        }
+    }
+    ```
+  
+  - **Behavioral Modifiers:**
+    * Environmental factors affect behavior (radiation alerts increase stress: +5% per minute)
+    * Crew relationships alter interaction patterns (friends seek proximity: +30% interaction chance)
+    * Shift schedules create natural cycles of activity and rest
+    * Mission phase affects work priorities (launch preparation vs. transit maintenance)
+  
+  - **Decision Making:**
+    * Utility-based AI for autonomous action selection
+    * Hierarchical task networks for complex multi-stage activities
+    * Emotional state machine transitioning between primary states (Focused, Stressed, Relaxed, Frustrated)
+    * Memory system that recalls past events and influences future decisions
+
+- **Crew AI:**
+  - Crew automatically perform tasks based on ship status (e.g., experiments during coasting, strapping in during maneuvers).
+  - AI uses state machines or behavior trees to manage behavior, with schedules for routine tasks and event-driven responses.
+  - Tasks are prioritized by:
+    * Critical systems first (life support: oxygen, temperature, radiation shielding)
+    * Mission objectives second (experiments, data collection, construction)
+    * Maintenance third (repairs, upgrades, cleaning)
+    * Personal needs last (rest, recreation, social interaction)
+  
+  - Tasks are assigned based on:
+    * Primary role specialization (90% task efficiency)
+    * Secondary skill compatibility (70% task efficiency)
+    * Proximity to task location (15% completion time reduction for adjacent tasks)
+    * Current workload and fatigue levels (tasks rejected above 85% workload)
+
+- **Interpersonal Dynamics:**
+  - Relationship system tracks friendships, rivalries, and romances, with a meter (-100 to +100) evolving based on interactions.
+  - Failures cause resentment, potentially leading to risky recommendations (e.g., suggesting disliked crew for EVA).
+  - Relationship development driven by:
+    * Shared experiences (working together: +0.5 relationship per hour)
+    * Personality compatibility (complementary traits: +5% relationship growth)
+    * Stress situations (high-pressure success: +10 relationship, failure: -15 relationship)
+    * Communication events (successful personal conversations: +5-15 relationship)
+  
+  - Relationship effects on gameplay:
+    * Strong positive relationships (>75): Crew prioritize helping each other (+25% response to requests)
+    * Strong negative relationships (<-75): Increased stress when working together (+10% stress per hour)
+    * Romantic relationships: Morale boost when together (+10% productivity), significant distress if partner is injured/lost
+
+4.4 User Interface
+------------------
+The user interface (UI) will enable seamless transitions between the 3D space view and the 2D ship interior view, with intuitive controls for navigation and crew management.
+
+- **View Switching:**
+  - Players switch between views via UI buttons or hotkeys, with smooth camera transitions.
+
+- **Controls:**
+  - Navigation tools for plotting orbits and selecting EVA crew.
+  - Crew task assignment via drag-and-drop or schedules.
+
+- **Communications System:**
+  - Implements realistic delays based on distance (e.g., 4-20 minutes to Earth, minimal for nearby ships).
+  - Dialog trees update over time, with contextual options for character arcs and worldbuilding.
+
+4.4.1 View Transition System
+---------------------------
+The transition between 3D orbital view and 2D interior view is designed to be seamless and immersive, maintaining spatial continuity while optimizing performance.
+
+- **3D-to-2D Transition Mechanics:**
+  - Players zoom in with the scroll wheel until reaching a proximity threshold to the ship.
+  - At the threshold, a smooth fade transition occurs while switching from perspective to orthographic camera.
+  - The transition is loadless, with 2D interiors preloaded to ensure <500ms transition time.
+  
+  - **Integration with AI Director:** If a dramatic confrontation (Section 3.4) is active during a view transition, the UI buffers the event's dialogue window, ensuring it appears seamlessly after the transition completes, maintaining narrative immersion.
+  
+  - **Implementation Details:**
+    ```csharp
+    void HandleViewTransition(float scrollDelta) {
+        // Update camera distance based on scroll input
+        float zoomSpeed = cameraSettings.GetZoomSpeed();
+        currentDistance = Mathf.Clamp(
+            currentDistance - scrollDelta * zoomSpeed,
+            MIN_CAMERA_DISTANCE,
+            MAX_CAMERA_DISTANCE
+        );
+        
+        // Apply new distance to camera
+        UpdateCameraPosition();
+        
+        // Check for transition threshold
+        if (currentDistance <= TRANSITION_THRESHOLD && !isTransitioning && !isInteriorView) {
+            StartCoroutine(TransitionTo2DView());
+        }
+        else if (currentDistance > TRANSITION_THRESHOLD && !isTransitioning && isInteriorView) {
+            StartCoroutine(TransitionTo3DView());
+        }
+    }
+    
+    IEnumerator TransitionTo2DView() {
+        isTransitioning = true;
+        
+        // Buffer any active AI Director events
+        if (aiDirector.HasActiveConfrontation()) {
+            aiDirector.PauseActiveEvents();
+        }
+        
+        // Start fade out
+        fadePanel.gameObject.SetActive(true);
+        LeanTween.alpha(fadePanel.rectTransform, 1f, FADE_DURATION)
+            .setEase(LeanTweenType.easeInOutSine);
+        
+        yield return new WaitForSeconds(FADE_DURATION);
+        
+        // Switch cameras
+        exteriorCamera.gameObject.SetActive(false);
+        interiorCamera.gameObject.SetActive(true);
+        
+        // Ensure interior camera is properly aligned with ship orientation
+        AlignInteriorCameraWithShip();
+        
+        // Activate 2D interior elements
+        shipInteriorRoot.SetActive(true);
+        
+        // Start fade in
+        LeanTween.alpha(fadePanel.rectTransform, 0f, FADE_DURATION)
+            .setEase(LeanTweenType.easeInOutSine);
+        
+        yield return new WaitForSeconds(FADE_DURATION);
+        fadePanel.gameObject.SetActive(false);
+        
+        isInteriorView = true;
+        isTransitioning = false;
+        
+        // Resume any buffered AI Director events
+        if (aiDirector.HasPausedEvents()) {
+            aiDirector.ResumeEvents();
+        }
+    }
+    
+    void AlignInteriorCameraWithShip() {
+        // Get the ship's current orientation
+        Quaternion shipRotation = currentShip.transform.rotation;
+        
+        // Set the interior camera's parent to the ship transform
+        interiorCamera.transform.SetParent(currentShip.transform);
+        
+        // Position the camera at a fixed local position (side view)
+        interiorCamera.transform.localPosition = new Vector3(-10f, 0f, 0f);
+        
+        // Orient the camera to look at the ship's interior
+        interiorCamera.transform.localRotation = Quaternion.identity;
+    }
+    ```
+
+- **Dynamic 2D View Rotation:**
+  - The 2D interior view rotates with the ship's orientation in 3D space.
+  - When the ship rotates for maneuvers (e.g., retrograde burns), the interior view adjusts accordingly.
+  - Implementation uses parent-child hierarchy, with 2D interior objects as children of the ship's transform.
+  
+  - **Crew Reaction to Rotation:** Rapid ship rotations (angular velocity > ROTATION_THRESHOLD) may cause crew stress (+5% per minute if not anchored) or minor injuries (-2% health if drifting), reflecting the physical toll of zero-G maneuvers. Crew with "Calm" traits are less affected (-2% stress).
+  
+  - **Implementation Details:**
+    ```csharp
+    void Update() {
+        if (isInteriorView) {
+            // Update any visual indicators of the ship's orientation
+            UpdateOrientationIndicators();
+            
+            // Update gravity/acceleration vector indicators based on ship thrust
+            if (currentShip.isAccelerating) {
+                UpdateAccelerationIndicators(currentShip.GetCurrentAcceleration());
+            }
+            
+            // Handle crew movement in response to ship rotation
+            UpdateCrewPositionsForRotation();
+        }
+    }
+    
+    void UpdateOrientationIndicators() {
+        // Get the current "up" direction in ship-local space
+        Vector3 localUp = Vector3.up;
+        
+        // Convert to world space based on ship's rotation
+        Vector3 worldUp = currentShip.transform.TransformDirection(localUp);
+        
+        // Calculate angle for UI indicator
+        float angle = Vector3.SignedAngle(Vector3.up, worldUp, Vector3.forward);
+        
+        // Update orientation indicator UI
+        orientationIndicator.transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+    
+    void UpdateCrewPositionsForRotation() {
+        // When ship rotates rapidly, crew may need to grab handholds or react
+        if (currentShip.angularVelocity.magnitude > ROTATION_THRESHOLD) {
+            foreach (CrewMember crew in activeCrewMembers) {
+                // Crew not holding onto something may drift
+                if (crew.GetState() != CrewState.Anchored) {
+                    ApplyRotationalForceToCrewMember(crew);
+                    
+                    // Apply stress effects for non-anchored crew
+                    float stressIncrease = ROTATION_STRESS_RATE * Time.deltaTime;
+                    
+                    // Calm trait reduces stress from rotation
+                    if (crew.HasTrait(TraitType.Calm)) {
+                        stressIncrease *= CALM_TRAIT_STRESS_MODIFIER;
+                    }
+                    
+                    crew.AddStress(stressIncrease);
+                    
+                    // Apply minor health damage if crew is drifting during high rotation
+                    if (crew.GetState() == CrewState.Moving && 
+                        currentShip.angularVelocity.magnitude > HIGH_ROTATION_THRESHOLD) {
+                        float healthDecrease = ROTATION_HEALTH_PENALTY * Time.deltaTime;
+                        crew.AdjustHealth(-healthDecrease);
+                        
+                        // Notify AI Director of potential crisis moment
+                        aiDirector.RegisterCrewIncident(
+                            crew, 
+                            IncidentType.RotationalInjury, 
+                            currentShip.angularVelocity.magnitude
+                        );
+                    }
+                }
+            }
+        }
+    }
+    ```
+
+- **2D Representation of 3D Habitat:**
+  - Each module in the habitat has its own 2D side view with proper orientation.
+  - Players navigate between modules through hatches and docking nodes with seamless transitions.
+  - For multi-module habitats (e.g., central hab with left/right pods), adjacency is visualized through:
+    * Blurred views through open hatches showing connected modules
+    * Overlays indicating modules above/below the current viewing plane
+    * Transition animations when moving between modules
+  
+  - **Environmental Storytelling Integration:** The AI Director (Section 3.4) updates module visuals during transitions to reflect past events (e.g., a damaged hatch from a previous EVA, a crew member's personal item in an adjacent module), influencing crew morale (±5%) and triggering side events.
+  
+  - **Implementation Details:**
+    ```csharp
+    void SwitchToModule(ShipModule targetModule) {
+        StartCoroutine(TransitionBetweenModules(currentModule, targetModule));
+    }
+    ```
+
+4.4.2 Psychological Monitoring Interface
+----------------------------------------
+The psychological monitoring interface enables players to track, analyze, and respond to the neurobiological and psychological states of crew members across different mission types. This specialized UI system integrates research findings on spaceflight psychology with gameplay mechanics.
+
+- **Neurobiological Monitoring Dashboard:**
+  - A medical interface for tracking brain changes and stress biomarkers:
+    * Real-time cortisol level visualization (waveform showing diurnal patterns)
+    * Cognitive performance metrics (working memory, reaction time, spatial orientation)
+    * Sleep quality analysis (REM cycles, sleep interruptions, cumulative deficit)
+    * Brain structure change mapping (subtle visualization of gray matter shifts)
+  
+  - **Implementation Details:**
+    ```csharp
+    public class NeurobiologicalMonitor : MonoBehaviour {
+        [SerializeField] private LineRenderer cortisolGraph;
+        [SerializeField] private RectTransform brainVisualizer;
+        [SerializeField] private Image sleepCycleDisplay;
+        [SerializeField] private Text cognitiveMetricsText;
+        
+        private CrewMember targetCrew;
+        private Dictionary<BiomarkerType, List<float>> historicalData = new Dictionary<BiomarkerType, List<float>>();
+        private float updateFrequency = 6f; // Hours between updates
+        private float timeSinceUpdate = 0f;
+        
+        public void Initialize(CrewMember crew) {
+            targetCrew = crew;
+            ClearData();
+            
+            // Initialize with baseline data
+            foreach (BiomarkerType type in System.Enum.GetValues(typeof(BiomarkerType))) {
+                historicalData[type] = new List<float>();
+                // Add some initial values based on crew baseline
+                for (int i = 0; i < 8; i++) {
+                    historicalData[type].Add(crew.GetBaselineBiomarker(type));
+                }
+            }
+            
+            // Apply mission-specific visualization settings
+            MissionType mission = worldState.GetCurrentMission().type;
+            ApplyMissionSpecificSettings(mission);
+        }
+        
+        private void Update() {
+            if (targetCrew == null) return;
+            
+            timeSinceUpdate += Time.deltaTime * timeManager.GetTimeScale();
+            if (timeSinceUpdate >= updateFrequency * 3600f) { // Convert hours to seconds
+                RecordBiomarkers();
+                timeSinceUpdate = 0f;
+            }
+            
+            UpdateVisualizations();
+        }
+        
+        private void RecordBiomarkers() {
+            foreach (BiomarkerType type in System.Enum.GetValues(typeof(BiomarkerType))) {
+                float currentValue = targetCrew.GetBiomarker(type);
+                historicalData[type].Add(currentValue);
+                
+                // Keep a rolling window of data
+                if (historicalData[type].Count > MAX_DATA_POINTS) {
+                    historicalData[type].RemoveAt(0);
+                }
+                
+                // Analyze for concerning trends
+                AnalyzeTrends(type);
+            }
+        }
+        
+        private void AnalyzeTrends(BiomarkerType type) {
+            // Calculate trend over last several readings
+            List<float> recentData = historicalData[type]
+                .GetRange(Mathf.Max(0, historicalData[type].Count - TREND_ANALYSIS_WINDOW), 
+                         Mathf.Min(TREND_ANALYSIS_WINDOW, historicalData[type].Count));
+            
+            float trendSlope = CalculateLinearTrend(recentData);
+            
+            // Check for concerning changes
+            switch (type) {
+                case BiomarkerType.Cortisol:
+                    if (trendSlope > CORTISOL_CONCERN_THRESHOLD) {
+                        GenerateAlert(AlertType.IncreasingStress, targetCrew, type, trendSlope);
+                    }
+                    break;
+                    
+                case BiomarkerType.CognitivePerformance:
+                    if (trendSlope < -COGNITIVE_CONCERN_THRESHOLD) {
+                        GenerateAlert(AlertType.CognitiveDecline, targetCrew, type, trendSlope);
+                    }
+                    break;
+                    
+                case BiomarkerType.SleepQuality:
+                    if (trendSlope < -SLEEP_CONCERN_THRESHOLD) {
+                        GenerateAlert(AlertType.SleepDeterioration, targetCrew, type, trendSlope);
+                    }
+                    break;
+            }
+        }
+        
+        private void UpdateVisualizations() {
+            // Update cortisol graph
+            UpdateCortisolGraph();
+            
+            // Update brain visualization based on mission duration
+            UpdateBrainVisualization();
+            
+            // Update sleep cycle display
+            UpdateSleepCycleDisplay();
+            
+            // Update cognitive metrics
+            UpdateCognitiveMetricsText();
+        }
+        
+        private void UpdateBrainVisualization() {
+            // Subtle visualization of brain changes based on mission duration
+            float adaptationFactor = Mathf.Clamp01(targetCrew.daysInSpace / 365f);
+            
+            // Apply visual changes to brain regions
+            foreach (Transform region in brainVisualizer) {
+                if (region.name == "Hippocampus") {
+                    // Hippocampal changes affect memory
+                    float hippocampalChange = adaptationFactor * MAX_HIPPOCAMPAL_CHANGE;
+                    region.GetComponent<Image>().color = Color.Lerp(
+                        NORMAL_REGION_COLOR,
+                        ALTERED_REGION_COLOR,
+                        hippocampalChange
+                    );
+                }
+                else if (region.name == "VestibularSystem") {
+                    // Vestibular system changes affect balance/orientation
+                    float vestibularChange = adaptationFactor * MAX_VESTIBULAR_CHANGE;
+                    region.GetComponent<Image>().color = Color.Lerp(
+                        NORMAL_REGION_COLOR,
+                        ALTERED_REGION_COLOR,
+                        vestibularChange
+                    );
+                }
+                // Additional regions...
+            }
+        }
+        
+        private void ApplyMissionSpecificSettings(MissionType mission) {
+            switch (mission) {
+                case MissionType.LEO:
+                    // Short-term focus, more emphasis on team dynamics
+                    updateFrequency = 4f; // More frequent updates
+                    break;
+                    
+                case MissionType.Lunar:
+                    // Medium-term focus, balance of metrics
+                    updateFrequency = 6f;
+                    break;
+                    
+                case MissionType.Mars:
+                    // Long-term focus, more emphasis on adaptation
+                    updateFrequency = 8f; // Less frequent updates due to communication delay
+                    break;
+                    
+                case MissionType.DeepSpace:
+                    // Very long-term focus, heavy emphasis on adaptation and isolation
+                    updateFrequency = 12f; // Infrequent updates due to extreme communication delay
+                    break;
+            }
+            
+            // Additional mission-specific settings...
+        }
+    }
+    ```
+
+  - **Data Visualization Techniques:**
+    * Biomarker data visualized through dynamic graphs with reference ranges
+    * Color-coded indicators for normal (green), concerning (yellow), and critical (red) values
+    * Integration with historical data to show trends over mission duration
+    * Crew comparison view displaying team-wide patterns
+  
+  - **Visual Design by Mission Type:**
+    * **LEO Missions:** Simple interface with minimal latency, emphasizing real-time data
+      - Updates every 4 hours (game time)
+      - Direct access to mission control recommendations
+      - Live comparative analysis with historical astronaut data
+      - Emphasis on short-term trends (30-day window)
+    
+    * **Lunar Missions:** Enhanced interface with slight delay visualization
+      - Updates every 6 hours (game time)
+      - Short-delay mission control consultation (1-2 second simulation)
+      - Historical data and onboard expert system recommendations
+      - Balance of short and medium-term trends (90-day window)
+    
+    * **Mars Missions:** Detailed autonomous system with communication delay simulation
+      - Updates every 8 hours (game time)
+      - Mission control recommendations delayed by 20-40 minutes (simulated)
+      - Advanced onboard expert systems with prediction algorithms
+      - Emphasis on medium and long-term trends (180-day window)
+      - Specialized countermeasure efficacy tracking
+    
+    * **Deep Space Missions:** Comprehensive system with minimal Earth assistance
+      - Updates every 12 hours (game time)
+      - Historical mission control guidance with minimal live support
+      - Fully autonomous assessment and intervention recommendations
+      - Heavy emphasis on long-term trends (365+ day window)
+      - Generational tracking for multi-generation missions
+  
+- **Countermeasure Management Interface:**
+  - Interactive UI for scheduling and monitoring psychological interventions:
+    * Countermeasure selection based on crew needs and mission capabilities
+    * Effectiveness tracking with diminishing returns visualization
+    * Resource allocation management (time, power, consumables)
+    * Customization options for individual crew preferences
+  
+  - **Implementation Details:**
+    ```csharp
+    public class CountermeasureScheduler : MonoBehaviour {
+        [SerializeField] private GameObject countermeasureButtonPrefab;
+        [SerializeField] private Transform countermeasureContainer;
+        [SerializeField] private EffectivenessGraph effectivenessGraph;
+        
+        private CrewMember targetCrew;
+        private List<CountermeasureType> availableCountermeasures = new List<CountermeasureType>();
+        private Dictionary<CountermeasureType, float> lastUsedTimes = new Dictionary<CountermeasureType, float>();
+        
+        public void Initialize(CrewMember crew) {
+            targetCrew = crew;
+            
+            // Clear existing UI
+            foreach (Transform child in countermeasureContainer) {
+                Destroy(child.gameObject);
+            }
+            
+            // Get available countermeasures based on ship modules and research
+            availableCountermeasures = GetAvailableCountermeasures();
+            
+            // Initialize tracking dictionary
+            foreach (CountermeasureType type in availableCountermeasures) {
+                if (!lastUsedTimes.ContainsKey(type)) {
+                    lastUsedTimes[type] = -999f; // Never used
+                }
+            }
+            
+            // Create UI elements for each countermeasure
+            foreach (CountermeasureType type in availableCountermeasures) {
+                CreateCountermeasureButton(type);
+            }
+            
+            // Update effectiveness graph
+            UpdateEffectivenessDisplay();
+        }
+        
+        private void CreateCountermeasureButton(CountermeasureType type) {
+            GameObject buttonObject = Instantiate(countermeasureButtonPrefab, countermeasureContainer);
+            CountermeasureButton button = buttonObject.GetComponent<CountermeasureButton>();
+            
+            // Configure button
+            CountermeasureData data = countermeasureDatabase.GetCountermeasureData(type);
+            button.Configure(data);
+            
+            // Set availability based on resources
+            button.SetAvailable(IsCountermeasureAvailable(type));
+            
+            // Set effectiveness preview
+            float effectiveness = CalculateCountermeasureEffectiveness(type, targetCrew);
+            button.SetEffectivenessPreview(effectiveness);
+            
+            // Set click handler
+            button.onApplyCountermeasure.AddListener(() => {
+                ApplyCountermeasure(type);
+            });
+            
+            // Apply mission-specific visual treatment
+            ApplyMissionSpecificButtonStyle(button, worldState.GetCurrentMission().type);
+        }
+        
+        private void ApplyCountermeasure(CountermeasureType type) {
+            // Check resources
+            if (!HasSufficientResources(type)) {
+                uiManager.ShowNotification("Insufficient resources for this countermeasure");
+                return;
+            }
+            
+            // Apply to crew member
+            float effectiveness = CalculateCountermeasureEffectiveness(type, targetCrew);
+            targetCrew.ApplyCountermeasure(type, effectiveness);
+            
+            // Consume resources
+            ConsumeCountermeasureResources(type);
+            
+            // Record usage time
+            lastUsedTimes[type] = timeManager.GetCurrentTime();
+            
+            // Update UI
+            UpdateEffectivenessDisplay();
+            UpdateAvailability();
+            
+            // Show application effects
+            ShowCountermeasureEffects(type);
+        }
+        
+        private float CalculateCountermeasureEffectiveness(CountermeasureType type, CrewMember crew) {
+            // Base effectiveness
+            float baseEffectiveness = countermeasureDatabase.GetBaseEffectiveness(type);
+            
+            // Mission modifier
+            MissionType mission = worldState.GetCurrentMission().type;
+            float missionModifier = GetMissionEffectivenessModifier(type, mission);
+            
+            // Diminishing returns based on recent usage
+            float lastUsedTime = lastUsedTimes.ContainsKey(type) ? lastUsedTimes[type] : -999f;
+            float timeSinceLastUse = timeManager.GetCurrentTime() - lastUsedTime;
+            float diminishingReturns = CalculateDiminishingReturns(type, timeSinceLastUse);
+            
+            // Crew preference modifier
+            float preferenceModifier = crew.GetCountermeasurePreference(type);
+            
+            // Mission duration modifier for certain types
+            float durationModifier = 1.0f;
+            if (type == CountermeasureType.VirtualReality) {
+                float missionDays = worldState.GetCurrentMission().elapsedDays;
+                durationModifier = Mathf.Max(0.5f, 1.0f - (missionDays / 180f) * 0.05f);
+            }
+            
+            return baseEffectiveness * missionModifier * diminishingReturns * preferenceModifier * durationModifier;
+        }
+        
+        private void ApplyMissionSpecificButtonStyle(CountermeasureButton button, MissionType mission) {
+            switch (mission) {
+                case MissionType.LEO:
+                    // Standard mission control style, clean interface
+                    button.SetColorScheme(ColorScheme.Standard);
+                    button.SetResponseTime(0.1f); // Instant
+                    break;
+                    
+                case MissionType.Lunar:
+                    // Slight delay visualization
+                    button.SetColorScheme(ColorScheme.Standard);
+                    button.SetResponseTime(0.5f); // Slight delay
+                    break;
+                    
+                case MissionType.Mars:
+                    // Autonomous system styling with communication delay
+                    button.SetColorScheme(ColorScheme.Autonomous);
+                    button.SetResponseTime(2.0f); // Significant delay
+                    break;
+                    
+                case MissionType.DeepSpace:
+                    // Fully independent system with minimal Earth connection
+                    button.SetColorScheme(ColorScheme.DeepSpace);
+                    button.SetResponseTime(3.0f); // Major delay
+                    break;
+            }
+        }
+    }
+    ```
+
+- **Neuropsychological Crisis Management:**
+  - Specialized interface for addressing psychological conditions:
+    * Real-time condition severity tracking with clinical terminology
+    * Intervention workflow guidance with step-by-step procedures
+    * Treatment efficacy prediction based on crew state and resources
+    * Crisis response team coordination tools
+  
+  - **LEO vs. Deep Space Variances:**
+    * LEO incidents feature direct mission control consultation options
+    * Lunar missions include delayed but available expert guidance
+    * Mars missions rely on onboard AI recommendations with minimal Earth input
+    * Deep space scenarios present fully autonomous decision trees with ethical complexity
+  
+  - **Integration with AI Director:**
+    * Psychological crises trigger narrative opportunities through the AI Director
+    * Successful interventions create positive relationship development events
+    * Untreated conditions lead to cascading crew conflicts and performance issues
+    * Crisis outcomes influence faction dynamics and mission success probabilities
+
+- **Technical Performance Considerations:**
+  - Rendering optimizations for biomarker visualization:
+    * LOD system for brain model reduces polygon count at distance
+    * Line renderer pooling for multiple biomarker graphs
+    * UI element recycling for crew comparison views
+  
+  - Memory efficiency for long-duration data tracking:
+    * Rolling data window with increasing granularity for older samples
+    * Data compression for archived psychological profiles (10:1 reduction ratio)
+    * Streaming of reference datasets based on active monitoring panels
+  
+  - Performance benchmarks:
+    * Maintains 60 FPS during full crew monitoring on target hardware
+    * Memory footprint < 50MB for complete psychological data (6-person crew, 5-year mission)
+    * CPU utilization < 5% during standard monitoring, < 15% during crisis events
+
+4.4.3 Docking Node Depth Visualization
+--------------------------------------
+The existing Zero-G Movement System (Section 4.3) is seamlessly integrated with the view transition system.
+
+- **When transitioning to 2D, physics constraints adapt to the current viewing plane.
+- **Movement trajectories and handholds are visualized differently based on the current module's orientation.
+- **Player commands during transition are buffered to ensure responsive control.
+
+- **Visual Design Principles:**
+  - Hard sci-fi aesthetics are maintained across both views, with consistent color schemes and design language.
+  - Interior details reflect the ship's function, with specialized areas for different modules.
+  - Environmental storytelling elements (described in Section 4.4.4) are visible through transitions.
+  - Orientation markers provide constant spatial awareness during rotation maneuvers.
+
+- **Performance Considerations:**
+  - Texture streaming is optimized to preload only the current and adjacent modules.
+  - Occlusion culling prevents rendering of obscured modules in both 3D and 2D views.
+  - LOD system reduces detail on distant elements in 3D view while maintaining full detail in 2D.
+  - Memory footprint is managed through asset pooling of common interior elements.
+  - **Performance Benchmark:** On low-end hardware (e.g., Intel i3, 4GB RAM), module transitions and blur rendering maintain 30 FPS, with memory usage for render textures capped at 50MB.
+
+4.4.4 AI Director UI Support
+----------------------------
+The user interface provides specialized components and systems to support the AI Director's narrative events, ensuring players can meaningfully engage with emergent storylines without disrupting core gameplay.
+
+- **Confrontation Interface:**
+  - When the AI Director triggers a dramatic confrontation, the system presents a contextual dialogue panel that overlays but doesn't completely obscure the game state.
+  - **Implementation Details:**
+    ```csharp
+    void PresentConfrontation(ConfrontationEvent confrontation) {
+        // Pause background systems but maintain visuals
+        gameplayManager.SetTimeScale(0.1f);
+        
+        // Load character portraits with faction-aligned frames
+        UIElement protagonistPortrait = UIFactory.CreatePortrait(
+            confrontation.protagonist,
+            GetFactionTheme(confrontation.protagonist.factionAlignment)
+        );
+        
+        UIElement antagonistPortrait = UIFactory.CreatePortrait(
+            confrontation.antagonist,
+            GetFactionTheme(confrontation.antagonist.factionAlignment)
+        );
+        
+        // Create dialogue text with dynamic content
+        dialoguePanel.SetText(StringFormatter.Format(
+            confrontation.dialogueTemplate,
+            new Dictionary<string, string> {
+                {"PROTAGONIST", confrontation.protagonist.name},
+                {"ANTAGONIST", confrontation.antagonist.name},
+                {"MISSION", currentMission.name},
+                {"CONTEXT", confrontation.contextDescription}
+            }
+        ));
+        
+        // Generate choice buttons with tooltips showing consequences
+        foreach (ConfrontationChoice choice in confrontation.choices) {
+            Button choiceButton = UIFactory.CreateChoiceButton(choice);
+            
+            // Color-code based on approach
+            switch (choice.approach) {
+                case Approach.Aggressive: choiceButton.SetColorScheme(ColorScheme.Red); break;
+                case Approach.Diplomatic: choiceButton.SetColorScheme(ColorScheme.Green); break;
+                case Approach.Pragmatic: choiceButton.SetColorScheme(ColorScheme.Blue); break;
+                case Approach.Evasive: choiceButton.SetColorScheme(ColorScheme.Gray); break;
+            }
+            
+            // Set tooltip with outcome preview
+            string tooltip = "Potential outcomes:\n";
+            if (choice.relationshipDelta != 0)
+                tooltip += $"• Relationship: {FormatDelta(choice.relationshipDelta)}\n";
+            if (choice.factionInfluenceDelta.Count > 0)
+                tooltip += $"• Faction influence: {FormatInfluenceDelta(choice.factionInfluenceDelta)}\n";
+            if (choice.crewMoraleDelta != 0)
+                tooltip += $"• Crew morale: {FormatDelta(choice.crewMoraleDelta)}\n";
+            
+            choiceButton.SetTooltip(tooltip);
+        }
+        
+        // Animate entry (slide from bottom)
+        confrontationPanel.SetActive(true);
+        confrontationPanel.AnimateEntry();
+    }
+    ```
+  
+  - **Visual Design:**
+    * Character portraits display emotional states through subtle facial animations
+    * Dialogue text renders gradually with voice acting when available
+    * Background elements subtly reflect the confrontation context (red tint for danger, blue for technical issues)
+    * Faction influences manifest through UI accents that align with the dominant faction aesthetic:
+      * Chinese influence > 75: Subdued red borders with golden geometric patterns
+      * US influence > 75: Navy blue headers with white star motifs
+      * Coalition influence > 75: Green/purple accents with multicultural symbolism
+      * Chaos scenario: Mismatched UI elements with visible "wear" effects
+
+- **Side Event Notification System:**
+  - The AI Director's side events appear as contextual notifications that integrate with the existing alert system.
+  - **Implementation Details:**
+    ```csharp
+    void QueueSideEvent(SideEvent sideEvent) {
+        // Create notification with appropriate icon
+        Notification notification = new Notification {
+            title = sideEvent.title,
+            description = sideEvent.shortDescription,
+            priority = CalculateEventPriority(sideEvent),
+            icon = GetEventIcon(sideEvent.type),
+            expirationTime = currentTime + EVENT_NOTIFICATION_DURATION
+        };
+        
+        // Add interaction handler
+        notification.onClick = () => OpenSideEventPanel(sideEvent);
+        
+        // Add to notification system with appropriate styling
+        NotificationManager.AddNotification(notification);
+        
+        // Schedule reminder if not addressed within timeframe
+        if (sideEvent.urgency > UrgencyLevel.Low) {
+            scheduler.ScheduleTask(
+                currentTime + REMINDER_DELAY,
+                () => {
+                    if (!sideEvent.acknowledged) {
+                        NotificationManager.PulseNotification(notification.id);
+                    }
+                }
+            );
+        }
+    }
+    ```
+  
+  - **Visual Design:**
+    * Side event icons reflect event types:
+      * Personal crisis: Heartbeat line icon
+      * Equipment failure: Broken gear icon
+      * Crew conflict: Opposing arrows icon
+      * Discovery: Magnifying glass icon
+    * Notification prominence scales with event urgency:
+      * Critical: Flashing red border, persistent positioning
+      * High: Yellow accent, semi-transparent overlay
+      * Medium: Blue highlight, standard notification area
+      * Low: White text, smaller notification footprint
+    * All notifications include a small faction influence indicator when relevant
+
+- **Environmental Storytelling Visualization:**
+  - The ship/station view dynamically updates to reflect AI Director-managed environmental changes.
+  - **Implementation Details:**
+    ```csharp
+    void ApplyEnvironmentalStoryElement(StoryElement element, ShipSection section) {
+        // Load appropriate visual asset
+        GameObject visualElement = AssetLoader.LoadAsset(element.visualAssetPath);
+        
+        // Position within section
+        Vector3 position = section.GetAvailablePosition(element.size);
+        visualElement.transform.position = position;
+        
+        // Add interaction components
+        InteractableObject interactable = visualElement.AddComponent<InteractableObject>();
+        interactable.SetTooltip(element.description);
+        interactable.OnInteract += () => TriggerEnvironmentalStoryEvent(element);
+        
+        // Apply visual effects based on element type
+        switch (element.type) {
+            case ElementType.Damage:
+                visualElement.AddComponent<FlickeringLight>();
+                AudioSource audio = visualElement.AddComponent<AudioSource>();
+                audio.clip = AssetLoader.LoadAudioClip("effects/electrical_short");
+                audio.spatialBlend = 1.0f; // Fully 3D
+                audio.loop = true;
+                audio.Play();
+                break;
+            
+            case ElementType.Memorial:
+                visualElement.AddComponent<GlowEffect>();
+                break;
+            
+            case ElementType.CrewArtifact:
+                visualElement.AddComponent<HighlightOnProximity>();
+                break;
+        }
+        
+        // Register with ship visualization system
+        section.RegisterEnvironmentalElement(element.id, visualElement);
+        
+        // Apply morale effect to crew in section
+        foreach (CrewMember crew in section.assignedCrew) {
+            crew.ApplyMorale(element.moraleEffect);
+        }
+    }
+    ```
+  
+  - **Visual Design:**
+    * Environmental elements are subtly highlighted when crew interact with them
+    * Hover tooltips provide narrative context for each element (e.g., "This mural was painted by Engineer Chen during the long transit to Jupiter")
+    * Elements accumulate over time, with older items fading slightly but remaining visible
+    * Ship interiors evolve visually across generations, with clear visual language for:
+      * Damage/repairs: Scorch marks, patched panels with mismatched materials
+      * Crew additions: Personal effects, cultural markers, scientific equipment
+      * Historical events: Memorial plaques, trophies from successful missions, salvaged artifacts
+
+- **Chapter Structure Support:**
+  - The UI adapts to each chapter phase (Section 3.4.6), displaying phase-specific elements that enhance the narrative experience.
+  - **Implementation Details:**
+    ```csharp
+    void UpdateUIForChapterPhase(ChapterPhase phase) {
+        // Clear previous phase-specific elements
+        ClearPhaseSpecificUI();
+        
+        // Apply phase-specific UI treatments
+        switch (phase) {
+            case ChapterPhase.Setup:
+                // Display mission briefing overlay with objectives and crew reactions
+                missionBriefingPanel.SetActive(true);
+                
+                // Apply faction-influenced UI coloring based on dominant faction
+                ApplyFactionThemeToUI(factionManager.GetDominantFaction());
+                
+                // Create expectation indicators for upcoming story beats
+                storyBeatIndicator.Initialize(aiDirector.GetProjectedStoryBeats());
+                break;
+                
+            case ChapterPhase.Development:
+                // Enable subtle progression indicators
+                progressionTracker.SetActive(true);
+                
+                // Show relationship development UI elements
+                relationshipChangeIndicators.SetActive(true);
+                
+                // Track player engagement metrics to adjust tension
+                StartCoroutine(MonitorPlayerEngagement());
+                break;
+                
+            case ChapterPhase.Climax:
+                // Apply high-tension UI overlay (red borders, urgent alerts)
+                uiCanvas.ApplyEffect("HighTension");
+                
+                // Enhance choice consequence visualization
+                choiceSystem.SetConsequenceVisualizationLevel(VisualizationLevel.Detailed);
+                
+                // Highlight moral complexity in decision interfaces
+                decisionUI.EnableMoralComplexityIndicators();
+                break;
+                
+            case ChapterPhase.Resolution:
+                // Display crew development summaries
+                crewDevelopmentPanel.SetActive(true);
+                
+                // Show outcome reflection UI
+                outcomeReflectionSystem.Initialize(
+                    aiDirector.GetSignificantOutcomes(),
+                    playerChoiceHistory.GetKeyDecisions()
+                );
+                
+                // Prepare transition elements for next chapter
+                chapterTransitionSystem.PrepareForNextChapter();
+                break;
+        }
+        
+        // Update ambient UI elements to match phase mood
+        UpdateAmbientUI(aiDirector.GetPhaseMood());
+        
+        // Apply Chaos Scenario adjustments if active
+        if (worldState.IsChaosSenario) {
+            ApplyChaosScenarioUIAdjustments();
+        }
+    }
+    
+    void ApplyChaosScenarioUIAdjustments() {
+        // Mix cultural elements from multiple factions
+        uiThemeManager.EnableMulticulturalElements();
+        
+        // Add visible "wear" to UI elements
+        uiCanvas.ApplyEffect("Degradation");
+        
+        // Prioritize survival-focused information
+        informationHierarchy.PrioritizeCategory(InfoCategory.Survival);
+        
+        // Reduce faction-specific styling
+        factionIndicators.SetVisibility(0.3f); // 30% opacity
+        
+        // Apply fragmented communication effects to messages
+        communicationSystem.ApplyEffect("Fragmentation");
+    }
+    ```
+  
+  - **Visual Design:**
+    * Setup Phase UI emphasizes orientation and context:
+      * Mission briefing overlays with faction-influenced visual style
+      * Character introductions with relationship potential indicators
+      * Objective hierarchies with clear visual priority markers
+    
+    * Development Phase UI focuses on progression:
+      * Subtle story thread trackers showing narrative progress
+      * Relationship development indicators highlighting key interactions
+      * Resource management interfaces that reflect mission challenges
+    
+    * Climax Phase UI creates tension through:
+      * High-contrast color schemes with urgent visual language
+      * Decision interfaces emphasizing moral complexity with multi-axis consequence visualization
+      * Critical system status indicators with enhanced prominence
+    
+    * Resolution Phase UI provides reflection:
+      * Crew development summaries showing trait evolution
+      * Outcome comparisons against initial objectives
+      * Visual callbacks to key decisions with their consequences
+
+- **Chaos Scenario UI Adjustments:** In a Chaos Scenario (Section 2.5), the UI reflects the fragmented state with a chaotic mix of cultural elements (e.g., Hindi, French, Mandarin text in notifications), degraded visuals (e.g., flickering overlays, mismatched fonts), and survival-focused overlays (e.g., resource scarcity alerts), ensuring players feel the lack of centralized authority.
+
+- **Player Feedback Loop Support:** The UI displays long-term consequences of player choices through persistent indicators (e.g., a "War Path Tension" meter increases with aggressive choices, +10% conflict chance), and narrative callbacks are highlighted in the UI (e.g., a crew member's dialogue references a past failure, -5% morale), ensuring players feel the impact of their decisions across chapters.
+
+- **Performance Optimization:**
+  - UI components for the AI Director are designed for minimal performance impact:
+    * All narrative UI elements preload during mission initialization
+    * Texture atlases combine common UI elements to reduce draw calls
+    * Confrontation panels use skeletal animation rather than full video for character expressions
+    * Environmental storytelling elements use instanced rendering for similar objects
+  - Measured performance metrics:
+    * Confrontation panel load time: <80ms on target hardware
+    * Memory overhead: <15MB for all narrative UI components
+    * Frame rate impact during narrative events: <5% reduction from baseline
+    * Texture memory: Shared 2K atlas for all narrative elements (~4MB)
+
+- **Accessibility Considerations:**
+  - The narrative UI system includes specific accommodations:
+    * Text-to-speech support for all dialogue with adjustable reading speed
+    * Configurable text size and contrast settings independent of main UI
+    * Option to replace timed choices with pause-based selection
+    * Color-blind friendly indication of emotional states and choice impacts
+    * Subtitle options for all voice acting with customizable timing
+
+4.5 Data Persistence
+--------------------
+A save and load system will preserve game state across chapters, ensuring continuity of crew status, ship data, and world state.
+
+- **Save Data:**
+  - Crew attributes (health, morale, relationships), ship status, and geopolitical balance.
+  - Time skips update crew ages and integrate offspring based on relationships.
+
+- **Implementation:**
+  - Use Unity's serialization system (e.g., JSON or binary formats) for efficient saving and loading.
+
+4.6 Localization
+----------------
+Localization will support multiple languages, particularly English and Mandarin, with dynamic adaptation based on the narrative's geopolitical context.
+
+- **Language Support:**
+  - UI elements, dialogue, and audio adapt to the dominant faction (US or China).
+  - Use Unity's Localization Package for text and audio management.
+
+4.7 Performance Optimization
+----------------------------
+Performance optimization is essential to manage the simulation of orbital mechanics, crew interactions, and UI updates.
+
+- **Techniques:**
+  - Level of Detail (LOD) for distant planets and ships.
+  - Efficient pathfinding for crew movement (e.g., A* algorithm).
+  - UI batching to reduce draw calls.
+
+- **Tools:**
+  - Unity's Profiler and Frame Debugger for identifying bottlenecks.
+
+4.8 Planet Position Calculation
+-------------------------------
+Planet positions will be calculated using a simplified orbital model, updated based on the in-game date.
+
+- **Implementation:**
+  - Use Keplerian approximations with circular orbits and known periods (e.g., Earth: 365.25 days).
+  - Positions are precomputed or calculated once per chapter to minimize runtime impact.
+
+- **Accuracy:**
+  - Sufficient for mission planning, focusing on realism without full n-body simulation.
+
+4.9 Habitat Architecture System
+--------------------------------
+The Habitat Architecture System implements research-based space habitat designs that evolve throughout the game's timeline. This system handles habitat visualization, functionality, and expansion while integrating with crew management, life support, and resource systems.
+
+### 4.9.1 Habitat Typologies
+
+The system supports three primary habitat typologies that scale with mission duration and crew size:
+
+- **Rigid Modules (Small Crews):**
+  - Suitable for 5-10 crew members (initial missions)
+  - ISS-inspired segmented design
+  - Standardized interfaces between modules
+  - Implementation based on prefab assembly system
+
+- **Inflatable Habitats (Medium Settlements):**
+  - Accommodates 100+ settlers (mid-game colonies)
+  - Based on Bigelow B330 expandable module concept
+  - High volume-to-mass ratio
+  - Dynamic mesh generation for expansion visualization
+
+- **Rotating Structures (Large Colonies):**
+  - Supports 1000+ colonists (late-game scenarios)
+  - O'Neill cylinder and torus designs
+  - Artificial gravity through rotation
+  - Procedural interior generation with biome variation
+
+```csharp
+public enum HabitatType
+{
+    RigidModule,
+    InflatableHabitat,
+    RotatingStructure
+}
+
+/// <summary>
+/// Determines the appropriate habitat type based on mission parameters.
+/// </summary>
+/// <param name="crewSize">Current number of crew members</param>
+/// <param name="projectedGrowth">Expected population growth over mission duration</param>
+/// <param name="missionDuration">Duration in years</param>
+/// <returns>The recommended habitat type</returns>
+public HabitatType DetermineHabitatType(int crewSize, int projectedGrowth, float missionDuration)
+{
+    int totalPopulation = crewSize + projectedGrowth;
+    
+    // Small crews or short missions
+    if (totalPopulation <= 10 || missionDuration < 2f)
+    {
+        return HabitatType.RigidModule;
+    }
+    
+    // Medium-sized colonies or medium-duration missions
+    if (totalPopulation <= 250 || missionDuration < 10f)
+    {
+        return HabitatType.InflatableHabitat;
+    }
+    
+    // Large colonies or generation ships
+    return HabitatType.RotatingStructure;
+}
+```
+
+### 4.9.2 Material Selection and Construction
+
+The habitat system incorporates research-based material choices for different environments:
+
+- **Radiation Shielding:**
+  - Polyethylene (hydrogen-rich) for primary shielding
+  - Regolith shielding for planetary habitats
+  - Water jacketing in critical modules
+  - Shield effectiveness calculated based on material thickness and composition
+
+- **Structural Materials:**
+  - Aluminum alloys for rigid modules (high rigidity-to-mass)
+  - Composites for inflatable habitats (flexibility and strength)
+  - Advanced carbon nanotubes for large rotating structures (high tensile strength)
+  - Material properties affect repair mechanics and failure rates
+
+- **Construction Methods:**
+  - Prefabricated for initial modules
+  - Inflatable deployment for mid-game
+  - In-situ 3D printing and robotics for late-game
+  - Construction method affects build time, resource cost, and maintenance requirements
+
+```csharp
+/// <summary>
+/// Calculates radiation protection factor based on material selection and thickness
+/// </summary>
+/// <param name="materials">Dictionary of materials and thicknesses</param>
+/// <returns>Radiation protection percentage (0-100)</returns>
+public float CalculateRadiationProtection(Dictionary<HabitatMaterial, float> materials)
+{
+    float totalProtection = 0f;
+    
+    foreach (KeyValuePair<HabitatMaterial, float> material in materials)
+    {
+        // Get base radiation stopping power per cm for this material
+        float baseProtection = GetMaterialRadiationStoppingPower(material.Key);
+        
+        // Apply thickness modifier (diminishing returns)
+        float effectiveThickness = Mathf.Min(material.Value, MAX_EFFECTIVE_THICKNESS);
+        float thicknessModifier = Mathf.Log10(1f + effectiveThickness) / Mathf.Log10(1f + MAX_EFFECTIVE_THICKNESS);
+        
+        // Calculate protection contribution
+        float materialProtection = baseProtection * thicknessModifier;
+        
+        // Add to total using diminishing returns formula for layered protection
+        totalProtection = totalProtection + materialProtection * (1f - totalProtection / 100f);
+    }
+    
+    return Mathf.Clamp(totalProtection, 0f, MAX_RADIATION_PROTECTION);
+}
+
+/// <summary>
+/// Calculates construction time based on habitat type, size, and construction method
+/// </summary>
+/// <param name="type">Type of habitat</param>
+/// <param name="volume">Total habitable volume in cubic meters</param>
+/// <param name="constructionMethod">Method of construction</param>
+/// <returns>Construction time in days</returns>
+public float CalculateConstructionTime(
+    HabitatType type, 
+    float volume, 
+    ConstructionMethod constructionMethod)
+{
+    // Base construction rates (cubic meters per day)
+    float baseRate = 0f;
+    switch (constructionMethod)
+    {
+        case ConstructionMethod.Prefabricated:
+            baseRate = PREFAB_CONSTRUCTION_RATE;
+            break;
+        case ConstructionMethod.Inflatable:
+            baseRate = INFLATABLE_CONSTRUCTION_RATE;
+            break;
+        case ConstructionMethod.InSituPrinting:
+            baseRate = PRINTING_CONSTRUCTION_RATE;
+            break;
+        case ConstructionMethod.RoboticAssembly:
+            baseRate = ROBOTIC_CONSTRUCTION_RATE;
+            break;
+    }
+    
+    // Apply type-specific modifiers
+    float typeModifier = 1f;
+    switch (type)
+    {
+        case HabitatType.RigidModule:
+            typeModifier = RIGID_CONSTRUCTION_MODIFIER;
+            break;
+        case HabitatType.InflatableHabitat:
+            typeModifier = INFLATABLE_CONSTRUCTION_MODIFIER;
+            break;
+        case HabitatType.RotatingStructure:
+            typeModifier = ROTATING_CONSTRUCTION_MODIFIER;
+            break;
+    }
+    
+    // Calculate construction time with increasing difficulty for larger volumes
+    float scaledVolume = volume * Mathf.Log10(1f + volume / 1000f);
+    float constructionTime = scaledVolume / (baseRate * typeModifier);
+    
+    return Mathf.Max(constructionTime, MINIMUM_CONSTRUCTION_TIME);
+}
+```
+
+### 4.9.3 Environmental Systems Integration
+
+The habitat system integrates life support and environmental controls based on research findings:
+
+- **Life Support Integration:**
+  - 30m² per person for bioregenerative systems
+  - Tiered recovery efficiency (98% water, 75% oxygen)
+  - Physical representation of systems in habitat layout
+  - Greenhouse modules provide both life support and psychological benefits
+
+- **Thermal Management:**
+  - 70kW heat rejection capacity for medium habitats
+  - Radiator systems with efficiency based on environmental location
+  - Thermal gradient visualization for crew comfort and system placement
+  - Failure progression from hotspots to critical shutdown
+
+- **Power Management:**
+  - Solar arrays with scaling efficiency based on distance from Sun
+  - Nuclear systems for deep space and nightside operations
+  - Power distribution network with redundancy paths
+  - Failure cascades require crew intervention
+
+```csharp
+/// <summary>
+/// Calculates required thermal rejection capacity based on habitat size and systems
+/// </summary>
+/// <param name="populationCount">Number of inhabitants</param>
+/// <param name="activeSystemCount">Number of active technical systems</param>
+/// <param name="habitatVolume">Total habitat volume in cubic meters</param>
+/// <returns>Required thermal rejection capacity in kilowatts</returns>
+public float CalculateThermalRejectionRequirement(
+    int populationCount, 
+    int activeSystemCount, 
+    float habitatVolume)
+{
+    // Base human heat generation
+    float humanHeatGeneration = populationCount * HEAT_PER_PERSON;
+    
+    // System heat generation
+    float systemHeatGeneration = activeSystemCount * HEAT_PER_SYSTEM;
+    
+    // Environmental heat transfer based on volume
+    float environmentalHeat = habitatVolume * HEAT_PER_VOLUME;
+    
+    // Total thermal rejection requirement
+    float totalHeatRejection = humanHeatGeneration + systemHeatGeneration + environmentalHeat;
+    
+    // Add safety margin
+    return totalHeatRejection * THERMAL_SAFETY_MARGIN;
+}
+
+/// <summary>
+/// Calculates power requirements for habitat operations
+/// </summary>
+/// <param name="populationCount">Number of inhabitants</param>
+/// <param name="habitatType">Type of habitat</param>
+/// <param name="activeSystems">Dictionary of active systems and their power requirements</param>
+/// <returns>Total power requirement in kilowatts</returns>
+public float CalculatePowerRequirement(
+    int populationCount, 
+    HabitatType habitatType, 
+    Dictionary<SystemType, float> activeSystems)
+{
+    // Base life support power requirement
+    float lifeSupportPower = populationCount * POWER_PER_PERSON;
+    
+    // Habitat-specific power requirements
+    float habitatPower = 0f;
+    switch (habitatType)
+    {
+        case HabitatType.RigidModule:
+            habitatPower = RIGID_BASE_POWER;
+            break;
+        case HabitatType.InflatableHabitat:
+            habitatPower = INFLATABLE_BASE_POWER;
+            break;
+        case HabitatType.RotatingStructure:
+            // Rotation systems require significant power
+            habitatPower = ROTATING_BASE_POWER + (populationCount * ROTATING_POWER_PER_PERSON);
+            break;
+    }
+    
+    // Sum power requirements of active systems
+    float systemsPower = 0f;
+    foreach (KeyValuePair<SystemType, float> system in activeSystems)
+    {
+        systemsPower += system.Value;
+    }
+    
+    // Total power requirement
+    return lifeSupportPower + habitatPower + systemsPower;
+}
+```
+
+### 4.9.4 Human-Centered Design
+
+The habitat system implements human-centered design principles based on research findings:
+
+- **Spatial Requirements:**
+  - 30m² per person plus 20% for equipment (based on research)
+  - Private quarters scaling with mission duration
+  - Community spaces sized for population subgroups
+  - Visual representation in 2D cutaway views
+
+- **Psychological Considerations:**
+  - Anti-isolation design patterns (community spaces, sightlines)
+  - Earth-reminiscent elements (gardens, natural light simulation)
+  - Customization options that evolve with gameplay progression
+  - Morale effects from habitat quality and personalization
+
+- **Artificial Gravity Implementation:**
+  - Rotation parameters based on radius and velocity
+  - Gradient visualization of gravity levels
+  - Coriolis effects on movement and tasks
+  - Transition zones between gravity and zero-G areas
+
+```csharp
+/// <summary>
+/// Calculates required habitable space based on population and mission parameters
+/// </summary>
+/// <param name="populationCount">Number of inhabitants</param>
+/// <param name="missionDuration">Mission duration in years</param>
+/// <param name="hasArtificialGravity">Whether artificial gravity is available</param>
+/// <returns>Space requirements in square meters</returns>
+public HabitableSpaceRequirements CalculateHabitableSpace(
+    int populationCount,
+    float missionDuration,
+    bool hasArtificialGravity)
+{
+    HabitableSpaceRequirements requirements = new HabitableSpaceRequirements();
+    
+    // Base personal space (private quarters)
+    float basePersonalSpace = BASE_PERSONAL_SPACE;
+    
+    // Long duration missions require more personal space
+    if (missionDuration > 1f)
+    {
+        basePersonalSpace *= 1f + (missionDuration - 1f) * DURATION_SPACE_FACTOR;
+    }
+    
+    // Artificial gravity allows more efficient space usage
+    if (hasArtificialGravity)
+    {
+        basePersonalSpace *= GRAVITY_SPACE_EFFICIENCY;
+    }
+    
+    // Calculate private space total
+    requirements.privateSpace = populationCount * basePersonalSpace;
+    
+    // Community space scales sub-linearly with population
+    requirements.communitySpace = COMMUNITY_BASE_SPACE + 
+        (populationCount * COMMUNITY_SPACE_PER_PERSON * 
+        Mathf.Pow(populationCount, COMMUNITY_SCALING_EXPONENT));
+    
+    // Technical space for equipment (20% of habitable)
+    float habitableSpace = requirements.privateSpace + requirements.communitySpace;
+    requirements.technicalSpace = habitableSpace * TECHNICAL_SPACE_RATIO;
+    
+    // Total space
+    requirements.totalSpace = habitableSpace + requirements.technicalSpace;
+    
+    // Calculate morale impact of space adequacy
+    float spaceAdequacy = (requirements.privateSpace / populationCount) / IDEAL_PERSONAL_SPACE;
+    requirements.moraleImpact = Mathf.Clamp(
+        (spaceAdequacy - 0.5f) * 2f * MAX_SPACE_MORALE_IMPACT,
+        -MAX_SPACE_MORALE_IMPACT,
+        MAX_SPACE_MORALE_IMPACT
+    );
+    
+    return requirements;
+}
+
+/// <summary>
+/// Calculates artificial gravity parameters for rotating habitats
+/// </summary>
+/// <param name="desiredGravityLevel">Desired gravity as fraction of Earth gravity (0-1)</param>
+/// <param name="maxRotationRate">Maximum comfortable rotation rate in RPM</param>
+/// <returns>Rotation parameters for the habitat</returns>
+public RotationParameters CalculateRotationParameters(
+    float desiredGravityLevel,
+    float maxRotationRate)
+{
+    RotationParameters parameters = new RotationParameters();
+    
+    // Convert desired gravity to m/s²
+    float targetAcceleration = desiredGravityLevel * EARTH_GRAVITY;
+    
+    // Convert max rotation rate to rad/s
+    float maxAngularVelocity = maxRotationRate * RPM_TO_RADIANS;
+    
+    // Calculate minimum radius to achieve desired gravity at max rotation rate
+    // a = ω²r
+    float minimumRadius = targetAcceleration / (maxAngularVelocity * maxAngularVelocity);
+    
+    // If minimum radius is below comfort threshold, increase radius and reduce rotation rate
+    if (minimumRadius < MINIMUM_COMFORT_RADIUS)
+    {
+        minimumRadius = MINIMUM_COMFORT_RADIUS;
+        // ω = sqrt(a/r)
+        maxAngularVelocity = Mathf.Sqrt(targetAcceleration / minimumRadius);
+    }
+    
+    // Set output parameters
+    parameters.radius = minimumRadius;
+    parameters.rotationRate = maxAngularVelocity * RADIANS_TO_RPM;
+    parameters.targetGravity = desiredGravityLevel;
+    
+    // Calculate Coriolis effect strength (0-1 scale)
+    // Stronger at higher rotation rates and lower radii
+    parameters.coriolisStrength = Mathf.Clamp01(
+        (parameters.rotationRate / MAX_COMFORTABLE_RPM) * 
+        (REFERENCE_CORIOLIS_RADIUS / parameters.radius)
+    );
+    
+    return parameters;
+}
+```
+
+### 4.9.5 Habitat Resilience and Failure Modes
+
+The habitat system implements research-based failure mechanics and resilience measures:
+
+- **Threat Modeling:**
+  - Micrometeorite impacts based on environment and shielding
+  - Radiation events affecting both habitat and crew
+  - Decompression scenarios with propagation mechanics
+  - Cascading failure visualization and mitigation
+
+- **Redundancy Systems:**
+  - Triple redundancy for critical systems (99.997% reliability)
+  - Compartmentalization mechanics for damage containment
+  - Backup systems with activation logic
+  - Failure recovery gameplay mechanics
+
+- **Maintenance Requirements:**
+  - Mean time between failures: 8,750 hours for filtration, 12,500 hours for recycling
+  - Maintenance task generation based on usage patterns
+  - Skill-based repair mechanics with success modifiers
+  - Progressive degradation visualization
+
+```csharp
+/// <summary>
+/// Simulates micrometeorite impact on habitat structure
+/// </summary>
+/// <param name="habitat">The affected habitat</param>
+/// <param name="impactEnergy">Impact energy in joules</param>
+/// <param name="targetSection">Section of the habitat that was hit</param>
+/// <returns>Impact result including damage assessment</returns>
+public ImpactResult SimulateMicrometeoroidImpact(
+    Habitat habitat,
+    float impactEnergy,
+    HabitatSection targetSection)
+{
+    ImpactResult result = new ImpactResult();
+    
+    // Get shield effectiveness for the target section
+    float shieldEffectiveness = habitat.GetShieldEffectiveness(targetSection);
+    
+    // Calculate penetration threshold
+    float penetrationThreshold = targetSection.GetPenetrationThreshold();
+    
+    // Reduce impact energy based on shielding
+    float attenuatedEnergy = impactEnergy * (1f - shieldEffectiveness);
+    
+    // Determine if penetration occurred
+    bool penetration = attenuatedEnergy > penetrationThreshold;
+    result.penetration = penetration;
+    
+    if (penetration)
+    {
+        // Calculate breach size
+        result.breachSize = CalculateBreachSize(attenuatedEnergy, penetrationThreshold);
+        
+        // Initialize pressure loss simulation
+        result.pressureLossRate = CalculatePressureLossRate(
+            result.breachSize,
+            targetSection.GetVolume(),
+            habitat.GetCurrentPressure()
+        );
+        
+        // Determine if automatic sealing is possible
+        result.canAutoSeal = result.breachSize < targetSection.GetAutoSealThreshold();
+        
+        // Calculate repair requirements
+        result.repairTimeRequired = CalculateRepairTime(result.breachSize);
+        result.repairMaterialsRequired = CalculateRepairMaterials(result.breachSize);
+        
+        // Set up cascading failures
+        result.cascadingFailures = DetermineCascadingFailures(
+            targetSection,
+            attenuatedEnergy,
+            habitat.GetSystemsInSection(targetSection)
+        );
+    }
+    else
+    {
+        // Non-penetrating impact still causes shield damage
+        result.shieldDamage = CalculateShieldDamage(attenuatedEnergy, penetrationThreshold);
+    }
+    
+    return result;
+}
+
+/// <summary>
+/// Calculates system reliability based on redundancy level and component MTBF
+/// </summary>
+/// <param name="systemType">Type of system</param>
+/// <param name="redundancyLevel">Level of redundancy (1=no redundancy, 2=dual, 3=triple)</param>
+/// <param name="componentMTBF">Mean time between failures for individual component in hours</param>
+/// <param name="hoursOfOperation">Total hours the system has been operating</param>
+/// <returns>Current reliability percentage (0-100)</returns>
+public float CalculateSystemReliability(
+    SystemType systemType,
+    int redundancyLevel,
+    float componentMTBF,
+    float hoursOfOperation)
+{
+    // Base reliability using exponential failure model
+    float baseReliability = Mathf.Exp(-hoursOfOperation / componentMTBF);
+    
+    // System-specific modifier
+    float systemModifier = GetSystemReliabilityModifier(systemType);
+    baseReliability *= systemModifier;
+    
+    // Apply redundancy effect
+    float systemReliability = 0f;
+    
+    if (redundancyLevel <= 1)
+    {
+        // No redundancy
+        systemReliability = baseReliability;
+    }
+    else
+    {
+        // Calculate probability of all redundant units failing
+        // R = 1 - (1-r)^n where r is component reliability and n is redundancy level
+        systemReliability = 1f - Mathf.Pow(1f - baseReliability, redundancyLevel);
+    }
+    
+    return systemReliability * 100f; // Convert to percentage
+}
+```
+
+### 4.9.6 Habitat Evolution Over Time
+
+The habitat system implements research-based evolution of structures through multi-generational gameplay:
+
+- **Expansion Mechanics:**
+  - Modular growth with visual representation
+  - Retrofit of older modules with tech upgrades
+  - Cultural adaptation of spaces over time
+  - Evolution from functional to cultural architecture
+
+- **Technological Progression:**
+  - Materials technology upgrades
+  - Construction method advances
+  - System efficiency improvements
+  - Scale increases with experience
+
+- **Implementation Sample:**
+  ```csharp
+  /// <summary>
+  /// Projects habitat evolution over a time skip
+  /// </summary>
+  /// <param name="habitat">Current habitat state</param>
+  /// <param name="yearsSkipped">Number of years to simulate</param>
+  /// <param name="populationGrowth">Expected population growth</param>
+  /// <param name="techProgress">Technology progression curve</param>
+  /// <returns>Evolved habitat state</returns>
+  public Habitat ProjectHabitatEvolution(
+      Habitat habitat,
+      int yearsSkipped,
+      PopulationGrowthModel populationGrowth,
+      TechnologyProgressionCurve techProgress)
+  {
+      // Create evolved habitat
+      Habitat evolvedHabitat = new Habitat(habitat);
+      
+      // Population projection
+      int currentPopulation = habitat.GetPopulation();
+      int projectedPopulation = populationGrowth.ProjectPopulation(currentPopulation, yearsSkipped);
+      evolvedHabitat.SetPopulation(projectedPopulation);
+      
+      // Technology advancement
+      float techAdvancement = techProgress.GetAdvancementFactor(yearsSkipped);
+      
+      // Material upgrades
+      Dictionary<HabitatMaterial, float> upgradedMaterials = UpgradeMaterials(
+          habitat.GetMaterials(),
+          techAdvancement
+      );
+      evolvedHabitat.SetMaterials(upgradedMaterials);
+      
+      // Calculate required expansion
+      int additionalPopulation = projectedPopulation - currentPopulation;
+      if (additionalPopulation > 0)
+      {
+          // Calculate additional space needed
+          HabitableSpaceRequirements additionalSpace = CalculateHabitableSpace(
+              additionalPopulation,
+              habitat.GetMissionDuration() + yearsSkipped,
+              evolvedHabitat.HasArtificialGravity()
+          );
+          
+          // Expand habitat
+          List<HabitatExpansion> expansions = DetermineOptimalExpansions(
+              evolvedHabitat,
+              additionalSpace,
+              techAdvancement
+          );
+          
+          foreach (HabitatExpansion expansion in expansions)
+          {
+              evolvedHabitat.AddSection(expansion.GenerateSection());
+          }
+      }
+      
+      // Cultural adaptation of spaces
+      evolvedHabitat.ApplyCulturalEvolution(
+          yearsSkipped,
+          CULTURAL_ADAPTATION_RATE,
+          habitat.GetCulturalFactors()
+      );
+      
+      // System upgrades
+      evolvedHabitat.UpgradeSystems(techAdvancement);
+      
+      // Weathering and aging
+      evolvedHabitat.ApplyAging(yearsSkipped * AGING_RATE_PER_YEAR);
+      
+      return evolvedHabitat;
+  }
+  ```
+
+**4.2.2 Advanced AI Systems Architecture**
+------------------------------------------
+The game implements a layered AI architecture that simulates the evolution of artificial intelligence systems throughout the generational mission, with increasing capability, complexity, and integration with human crew.
+
+- **Computational Resource System:**
+  ```csharp
+  /// <summary>
+  /// Manages AI computational resources and dynamic allocation based on priorities
+  /// </summary>
+  public class AIComputationalResources
+  {
+      // Base resources available to the AI system, expanding with upgrades
+      private float processingPower; // measured in GFLOPS
+      private float memoryCapacity;  // measured in GB
+      private float powerDraw;       // measured in W
+      
+      // Currently allocated resources to various subsystems
+      private Dictionary<AISubsystemType, float> allocatedProcessing;
+      private Dictionary<AISubsystemType, float> allocatedMemory;
+      
+      /// <summary>
+      /// Attempts to allocate computational resources to a subsystem based on priority
+      /// </summary>
+      /// <returns>True if allocation successful, false if insufficient resources</returns>
+      public bool RequestAllocation(AISubsystemType subsystem, float processingRequest, 
+                                  float memoryRequest, AllocationPriority priority)
+      {
+          // Check if resources are available
+          if (GetAvailableProcessing() < processingRequest || 
+              GetAvailableMemory() < memoryRequest)
+          {
+              // If high priority, attempt to preempt lower priority tasks
+              if (priority == AllocationPriority.Critical)
+              {
+                  PreemptLowerPriorityTasks(processingRequest, memoryRequest);
+              }
+              else
+              {
+                  return false;
+              }
+          }
+          
+          // Allocate resources
+          allocatedProcessing[subsystem] = processingRequest;
+          allocatedMemory[subsystem] = memoryRequest;
+          
+          // Recalculate power draw
+          CalculatePowerRequirements();
+          
+          return true;
+      }
+      
+      /// <summary>
+      /// Calculates performance metrics for AI tasks based on available resources
+      /// </summary>
+      public AIPerformanceMetrics CalculatePerformanceMetrics(AISubsystemType subsystem)
+      {
+          AIPerformanceMetrics metrics = new AIPerformanceMetrics();
+          
+          // Base metrics depend on allocated resources
+          float processingRatio = allocatedProcessing[subsystem] / 
+                                 GetIdealProcessingRequirement(subsystem);
+          
+          float memoryRatio = allocatedMemory[subsystem] / 
+                             GetIdealMemoryRequirement(subsystem);
+          
+          // Calculate accuracy based on available resources with diminishing returns
+          metrics.taskAccuracy = BASE_ACCURACY * 
+                               (1f - Mathf.Exp(-ACCURACY_CURVE_FACTOR * 
+                                            Mathf.Min(processingRatio, memoryRatio)));
+          
+          // Calculate response time (inversely proportional to processing power)
+          metrics.responseTimeSeconds = BASE_RESPONSE_TIME / processingRatio;
+          
+          // Learning capability depends primarily on memory
+          metrics.learningRate = BASE_LEARNING_RATE * 
+                               (1f - Mathf.Exp(-LEARNING_CURVE_FACTOR * memoryRatio));
+          
+          return metrics;
+      }
+  }
+  ```
+
+- **Evolutionary AI System:**
+  - AI systems evolve across generational missions through:
+    * Hardware upgrades (player decisions)
+    * Software optimization (automatic over time)
+    * Learning from mission data (influenced by experiences)
+  - Evolution is tracked through technical capabilities:
+    * Processing capacity: 100 GFLOPS (2045) to 1 TFLOPS (2075)
+    * Memory capacity: 100 GB (2045) to 1 TB (2075)
+    * Power efficiency: 1 GFLOPS/W (2045) to 2 GFLOPS/W (2075)
+  - Implemented as a progression system with defined thresholds:
+    ```csharp
+    public enum AIGenerationLevel
+    {
+        Gen1_Specialized,    // Chapter 1: Task-specific, limited learning
+        Gen2_Adaptive,       // Chapter 2: Multi-domain, improved learning
+        Gen3_Autonomous,     // Chapter 3: Self-improving, minimal oversight
+        Gen4_Collaborative   // Chapter 4+: Human-AI integration, emergent capabilities
+    }
+    
+    public AICapabilityThresholds GetCapabilityThresholds(AIGenerationLevel level)
+    {
+        switch(level)
+        {
+            case AIGenerationLevel.Gen1_Specialized:
+                return new AICapabilityThresholds{
+                    maxTaskDomains = 3,
+                    maxConcurrentTasks = 5,
+                    decisionAutonomyLevel = 0.3f, // 30% decisions without oversight
+                    learningRate = 0.01f,         // 1% improvement per mission
+                    humanIntegrationLevel = AIIntegrationLevel.Basic
+                };
+                
+            case AIGenerationLevel.Gen2_Adaptive:
+                return new AICapabilityThresholds{
+                    maxTaskDomains = 8,
+                    maxConcurrentTasks = 12,
+                    decisionAutonomyLevel = 0.5f,
+                    learningRate = 0.03f,
+                    humanIntegrationLevel = AIIntegrationLevel.Augmented
+                };
+                
+            // Additional generations defined similarly
+        }
+    }
+    ```
+
+- **Neural Interface Simulation:**
+  - High-fidelity simulation of neural interfaces for advanced human-AI integration:
+    * Technical limitations modeled (bandwidth, latency, noise)
+    * Risk factors calculated per usage and cumulatively
+    * Performance benefits applied to crew tasks
+  - Implementation includes both hardware and software components:
+    ```csharp
+    public class NeuralInterface
+    {
+        // Technical specifications
+        public float bandwidthMbps;
+        public float latencyMs;
+        public float signalNoiseRatio;
+        public float powerDraw;
+        
+        // Risk calculation
+        public float GetFailureChance(CrewMember crew)
+        {
+            // Base chance of interface failure
+            float baseChance = BASE_INTERFACE_FAILURE_CHANCE;
+            
+            // Adjust for crew adaptation to interface
+            float adaptationFactor = Mathf.Clamp01(crew.neuralInterfaceExperience / 
+                                                FULL_ADAPTATION_THRESHOLD);
+            
+            // Adjust for interface quality
+            float qualityFactor = CalculateQualityFactor();
+            
+            return baseChance * (1f - adaptationFactor * ADAPTATION_BENEFIT) * qualityFactor;
+        }
+        
+        // Performance enhancement calculation
+        public float CalculatePerformanceBoost(CrewMember crew, TaskType taskType)
+        {
+            // Base performance boost for this task type
+            float baseBoost = TASK_TYPE_BOOSTS[taskType];
+            
+            // Adjust for crew proficiency with interface
+            float proficiencyFactor = Mathf.Clamp01(crew.neuralInterfaceExperience / 
+                                                 PROFICIENCY_THRESHOLD);
+            
+            // Calculate effective boost with diminishing returns
+            return baseBoost * (1f - Mathf.Exp(-BOOST_CURVE_FACTOR * proficiencyFactor));
+        }
+    }
+    ```
+
+- **Ethical Framework System:**
+  - Parameterized ethical constraints that evolve based on crew decisions:
+    * Dynamic priority weighting for mission safety vs. human autonomy
+    * Learning from past dilemmas and crew responses
+    * Faction influence on ethical parameters
+  - Implementation allows player influence on AI ethical boundaries:
+    ```csharp
+    public class AIEthicalFramework
+    {
+        // Core ethical priorities (0.0-1.0 range)
+        private float missionSuccessPriority;
+        private float crewSafetyPriority;
+        private float humanAutonomyPriority;
+        private float resourceEfficiencyPriority;
+        
+        // Calculate decision authority for specific scenarios
+        public float CalculateAIAuthorityLevel(ScenarioType scenario)
+        {
+            // Base authority level depends on AI generation
+            float baseAuthority = aiSystem.GetBaseAuthorityLevel();
+            
+            // Adjust based on scenario type
+            switch(scenario)
+            {
+                case ScenarioType.LifeSupport:
+                    return baseAuthority * LIFE_SUPPORT_AUTHORITY_MULTIPLIER * 
+                           (missionSuccessPriority + crewSafetyPriority) / 2f;
+                           
+                case ScenarioType.Navigation:
+                    return baseAuthority * NAVIGATION_AUTHORITY_MULTIPLIER * 
+                           (missionSuccessPriority + resourceEfficiencyPriority) / 2f;
+                           
+                case ScenarioType.CrewAssignment:
+                    // Crew assignments have lower AI authority due to human factors
+                    return baseAuthority * CREW_ASSIGNMENT_AUTHORITY_MULTIPLIER * 
+                           (1f - humanAutonomyPriority);
+                           
+                // Additional scenarios defined similarly
+            }
+        }
+        
+        // Update ethical framework based on crew decisions
+        public void LearnFromDecision(AIDecision decision, bool wasOverridden)
+        {
+            // If crew overrode the AI decision, adjust priorities
+            if (wasOverridden)
+            {
+                // Analyze the nature of the override and adjust accordingly
+                AdjustPriorities(decision.scenarioType, 
+                                decision.aiRecommendedAction, 
+                                decision.crewAction);
+                
+                // Record override for future reference
+                decisionHistory.RecordOverride(decision);
+            }
+            
+            // Update learning model with outcome data if available
+            if (decision.outcomeData != null)
+            {
+                learningModel.UpdateWithOutcome(decision, decision.outcomeData);
+            }
+        }
+    }
+    ```
+
+4.3 Medical Systems Implementation
+----------------------------------
+The game implements a comprehensive medical and biological adaptation simulation that tracks physiological changes in crew members over time, models medical interventions, and simulates the effects of space environments on human biology.
+
+- **Physiological Simulation Core:**
+  ```csharp
+  /// <summary>
+  /// Central system for tracking and updating crew physiological state
+  /// </summary>
+  public class PhysiologicalSimulation
+  {
+      // Update frequency for different simulation aspects
+      private const float BONE_DENSITY_UPDATE_INTERVAL = 86400f; // daily update
+      private const float MUSCLE_MASS_UPDATE_INTERVAL = 43200f;  // twice daily
+      private const float RADIATION_UPDATE_INTERVAL = 3600f;     // hourly
+      
+      // Accumulates time since last update for each system
+      private float timeSinceBoneUpdate = 0f;
+      private float timeSinceMuscleUpdate = 0f;
+      private float timeSinceRadiationUpdate = 0f;
+      
+      /// <summary>
+      /// Main update loop for physiological simulation
+      /// </summary>
+      public void Update(float deltaTime)
+      {
+          // For performance optimization, different systems update at different rates
+          timeSinceBoneUpdate += deltaTime;
+          timeSinceMuscleUpdate += deltaTime;
+          timeSinceRadiationUpdate += deltaTime;
+          
+          // Process radiation frequently as it can change rapidly with environment
+          if (timeSinceRadiationUpdate >= RADIATION_UPDATE_INTERVAL)
+          {
+              UpdateRadiationExposure(timeSinceRadiationUpdate);
+              timeSinceRadiationUpdate = 0f;
+          }
+          
+          // Process muscle changes every half day of simulation time
+          if (timeSinceMuscleUpdate >= MUSCLE_MASS_UPDATE_INTERVAL)
+          {
+              UpdateMuscleMass(timeSinceMuscleUpdate);
+              timeSinceMuscleUpdate = 0f;
+          }
+          
+          // Process bone density changes daily
+          if (timeSinceBoneUpdate >= BONE_DENSITY_UPDATE_INTERVAL)
+          {
+              UpdateBoneDensity(timeSinceBoneUpdate);
+              timeSinceBoneUpdate = 0f;
+          }
+          
+          // Performance-based effects update every frame
+          UpdatePerformanceEffects(deltaTime);
+      }
+      
+      /// <summary>
+      /// Updates bone density for all crew members
+      /// </summary>
+      private void UpdateBoneDensity(float timeElapsed)
+      {
+          foreach (CrewMember crew in crewManager.GetAllCrewMembers())
+          {
+              // Calculate base bone loss rate
+              float gravityFactor = Mathf.Clamp01(environmentManager.GetCurrentGravity() / EARTH_GRAVITY);
+              float baseBoneLossRate = BASE_BONE_LOSS_RATE * (1f - gravityFactor);
+              
+              // Apply countermeasures and adaptations
+              float effectiveLossRate = CalculateEffectiveBoneLossRate(crew, baseBoneLossRate);
+              
+              // Apply change with time conversion (daily rate to elapsed time)
+              float actualLoss = effectiveLossRate * (timeElapsed / 86400f);
+              crew.boneDensity = Mathf.Max(crew.boneDensity - actualLoss, MIN_BONE_DENSITY);
+              
+              // Trigger events when crossing thresholds
+              CheckBoneDensityThresholds(crew);
+          }
+      }
+  }
+  ```
+
+- **Medical Treatment System:**
+  - Object-oriented design for extensibility with treatment types
+  - Resource consumption and equipment requirements
+  - Success probability based on multiple factors
+  ```csharp
+  /// <summary>
+  /// Base class for all medical treatments
+  /// </summary>
+  public abstract class MedicalTreatment
+  {
+      // Treatment properties
+      public string treatmentName;
+      public TreatmentType type;
+      public float baseSuccessRate;
+      public float treatmentDuration;
+      public Dictionary<ResourceType, float> resourceRequirements;
+      public Dictionary<EquipmentType, int> equipmentRequirements;
+      public float powerRequired;
+      
+      // Apply treatment to a crew member
+      public virtual TreatmentResult Apply(CrewMember target, CrewMember medic, MedicalBay medBay)
+      {
+          TreatmentResult result = new TreatmentResult();
+          
+          // Check if requirements are met
+          if (!CheckRequirements(medBay, out result.failureReason))
+          {
+              result.success = false;
+              return result;
+          }
+          
+          // Calculate success chance
+          float successChance = CalculateSuccessChance(target, medic, medBay);
+          
+          // Roll for success
+          result.success = UnityEngine.Random.value < successChance;
+          
+          if (result.success)
+          {
+              // Apply treatment effects
+              ApplyEffects(target);
+              
+              // Calculate and apply side effects
+              ApplySideEffects(target, medic, medBay);
+              
+              // Consume resources
+              ConsumeResources(medBay);
+              
+              // Log treatment for medical records
+              medicalLogger.LogTreatment(target.id, type, true);
+          }
+          else
+          {
+              // Failed treatment might still consume resources or have side effects
+              ConsumePartialResources(medBay);
+              
+              // Log failed treatment
+              medicalLogger.LogTreatment(target.id, type, false);
+          }
+          
+          return result;
+      }
+      
+      // Calculate success chance based on multiple factors
+      protected virtual float CalculateSuccessChance(CrewMember target, CrewMember medic, MedicalBay medBay)
+      {
+          // Base chance from treatment definition
+          float chance = baseSuccessRate;
+          
+          // Medic skill factor (0.5 to 1.5 multiplier based on skill)
+          float medicSkillFactor = medic != null ? 
+              0.5f + (medic.GetSkill(SkillType.Medical) / 100f) : 0.5f;
+          
+          // Equipment quality factor
+          float equipmentFactor = medBay.GetEquipmentQualityFactor(type);
+          
+          // Patient condition factor (worse condition = lower success chance)
+          float patientFactor = CalculatePatientFactor(target);
+          
+          // Combine all factors (multiplicative)
+          return chance * medicSkillFactor * equipmentFactor * patientFactor;
+      }
+      
+      // Treatment-specific effects implementation
+      protected abstract void ApplyEffects(CrewMember target);
+  }
+  ```
+
+- **Gravity Adaptation System:**
+  - Physics-based simulation of different gravity environments
+  - Transition effects when moving between gravity levels
+  - Performance impacts during adaptation periods
+  ```csharp
+  /// <summary>
+  /// Manages crew adaptation to changing gravity environments
+  /// </summary>
+  public class GravityAdaptationSystem
+  {
+      // Currently tracked adaptation states for all crew
+      private Dictionary<int, GravityAdaptationState> crewAdaptationStates;
+      
+      // Track a gravity transition for a crew member
+      public void RegisterGravityTransition(CrewMember crew, float fromGravity, float toGravity)
+      {
+          // Create new adaptation state
+          GravityAdaptationState state = new GravityAdaptationState
+          {
+              crewId = crew.id,
+              previousGravity = fromGravity,
+              targetGravity = toGravity,
+              transitionStartTime = timeManager.CurrentTime,
+              adaptationProgress = 0f
+          };
+          
+          // Calculate expected adaptation time
+          state.expectedAdaptationTime = CalculateAdaptationTime(crew, fromGravity, toGravity);
+          
+          // Register state
+          crewAdaptationStates[crew.id] = state;
+          
+          // Apply initial adaptation effects
+          ApplyInitialAdaptationEffects(crew, fromGravity, toGravity);
+      }
+      
+      // Calculate adaptation effects for tasks
+      public float GetAdaptationPerformanceModifier(CrewMember crew, TaskType taskType)
+      {
+          // Check if crew is adapting
+          if (!crewAdaptationStates.TryGetValue(crew.id, out GravityAdaptationState state))
+          {
+              return 1f; // No adaptation in progress, no modifier
+          }
+          
+          // Calculate current modifier based on adaptation progress
+          float baseModifier = Mathf.Lerp(
+              INITIAL_ADAPTATION_PENALTY,
+              1f,
+              state.adaptationProgress
+          );
+          
+          // Some task types are more affected by gravity changes
+          float taskSensitivity = TASK_GRAVITY_SENSITIVITY[taskType];
+          
+          // Calculate final modifier
+          return Mathf.Lerp(1f, baseModifier, taskSensitivity);
+      }
+      
+      // Update adaptation progress for all adapting crew
+      public void Update(float deltaTime)
+      {
+          List<int> completedAdaptations = new List<int>();
+          
+          foreach (var kvp in crewAdaptationStates)
+          {
+              int crewId = kvp.Key;
+              GravityAdaptationState state = kvp.Value;
+              
+              // Update adaptation progress
+              float previousProgress = state.adaptationProgress;
+              
+              // Progress adaptation based on time and crew attributes
+              state.adaptationProgress = Mathf.Clamp01(
+                  (timeManager.CurrentTime - state.transitionStartTime) / state.expectedAdaptationTime
+              );
+              
+              // If crew member is fully adapted, mark for removal
+              if (state.adaptationProgress >= 1f)
+              {
+                  completedAdaptations.Add(crewId);
+                  
+                  // Apply final adaptation completion effects
+                  CrewMember crew = crewManager.GetCrewById(crewId);
+                  if (crew != null)
+                  {
+                      ApplyAdaptationCompletionEffects(crew, state);
+                  }
+              }
+              // Check for threshold crossings for partial adaptation effects
+              else if (CrossedAdaptationThreshold(previousProgress, state.adaptationProgress))
+              {
+                  CrewMember crew = crewManager.GetCrewById(crewId);
+                  if (crew != null)
+                  {
+                      ApplyPartialAdaptationEffects(crew, state);
+                  }
+              }
+          }
+          
+          // Remove completed adaptations
+          foreach (int crewId in completedAdaptations)
+          {
+              crewAdaptationStates.Remove(crewId);
+          }
+      }
+  }
+  ```
+
+- **Generational Adaptation System:**
+  - Tracks gradual adaptation of human physiology across generations
+  - Inheritable traits from parents to offspring
+  - Space-born advantage implementations
+  ```csharp
+  /// <summary>
+  /// Manages long-term biological adaptation across generations
+  /// </summary>
+  public class GenerationalAdaptationSystem
+  {
+      // Tracks population-level adaptation metrics
+      private Dictionary<AdaptationType, float> populationAdaptationLevels;
+      
+      // Calculate adaptation inheritance for a new crew member
+      public void CalculateOffspringAdaptations(CrewMember offspring, CrewMember parentA, 
+                                             CrewMember parentB)
+      {
+          foreach (AdaptationType adaptationType in System.Enum.GetValues(typeof(AdaptationType)))
+          {
+              // Base inheritance is average of parents' adaptations
+              float baseAdaptation = (parentA.GetAdaptation(adaptationType) + 
+                                   parentB.GetAdaptation(adaptationType)) / 2f;
+              
+              // Apply minor random variation
+              float randomFactor = UnityEngine.Random.Range(
+                  1f - ADAPTATION_VARIATION, 
+                  1f + ADAPTATION_VARIATION
+              );
+              
+              // Population-level factors can enhance specific adaptations
+              float populationFactor = 1f;
+              if (populationAdaptationLevels.TryGetValue(adaptationType, out float popLevel))
+              {
+                  populationFactor = 1f + (popLevel * POPULATION_INFLUENCE_FACTOR);
+              }
+              
+              // Calculate final adaptation level with generation bonus
+              int generation = offspring.GetGeneration();
+              float generationBonus = GENERATION_ADAPTATION_BONUS * (generation - 1);
+              
+              // Set adaptation level with caps
+              float finalAdaptation = Mathf.Clamp(
+                  baseAdaptation * randomFactor * populationFactor + generationBonus,
+                  0f,
+                  MAX_ADAPTATION_LEVEL
+              );
+              
+              offspring.SetAdaptation(adaptationType, finalAdaptation);
+          }
+          
+          // Apply special space-born traits if applicable
+          if (offspring.IsBornInSpace())
+          {
+              ApplySpaceBornTraits(offspring);
+          }
+      }
+      
+      // Apply gameplay effects of adaptations to a crew member
+      public void ApplyAdaptationEffects(CrewMember crew, EnvironmentParameters environment)
+      {
+          // Zero-G adaptation effects
+          float zeroGAdaptation = crew.GetAdaptation(AdaptationType.ZeroGravity);
+          if (environment.gravity < LOW_GRAVITY_THRESHOLD)
+          {
+              // Apply movement bonus in zero-G
+              crew.SetSkillModifier(
+                  SkillType.Mobility, 
+                  zeroGAdaptation * ZERO_G_MOBILITY_BONUS
+              );
+              
+              // Apply reduced physiological degradation
+              crew.SetPhysiologicalModifier(
+                  PhysiologicalAttribute.BoneLoss, 
+                  1f - (zeroGAdaptation * ZERO_G_BONE_PROTECTION)
+              );
+          }
+          
+          // Radiation adaptation effects
+          float radiationAdaptation = crew.GetAdaptation(AdaptationType.Radiation);
+          crew.SetPhysiologicalModifier(
+              PhysiologicalAttribute.RadiationResistance,
+              1f + (radiationAdaptation * RADIATION_RESISTANCE_BONUS)
+          );
+          
+          // Other adaptation effects applied similarly...
+      }
+  }
+  ```
+
+- **Medical Equipment Simulation:**
+  - Technical implementation of diagnostic and treatment devices
+  - Progressive technology tiers with improving capabilities
+  - Resource and power requirements with performance trade-offs
+  
+  ```csharp
+  /// <summary>
+  /// Base class for medical equipment with progressive capabilities
+  /// </summary>
+  public abstract class MedicalEquipment
+  {
+      public EquipmentType type;
+      public int tier; // 1-4 corresponding to tech levels
+      public float powerConsumption;
+      public float accuracy;
+      public List<TreatmentType> supportedTreatments;
+      public Dictionary<ResourceType, float> maintenanceRequirements;
+      
+      // Equipment-specific diagnostic capability
+      public abstract DiagnosticResult PerformDiagnosis(CrewMember target, CrewMember operator, 
+                                                   ConditionType condition);
+      
+      // Equipment-specific treatment support
+      public abstract float GetTreatmentEfficiencyBonus(TreatmentType treatment);
+      
+      // Calculate power draw for this equipment
+      public virtual float CalculatePowerDraw(OperationalMode mode)
+      {
+          switch (mode)
+          {
+              case OperationalMode.Standby:
+                  return powerConsumption * STANDBY_POWER_FACTOR;
+              case OperationalMode.Active:
+                  return powerConsumption;
+              case OperationalMode.Emergency:
+                  return powerConsumption * EMERGENCY_POWER_FACTOR;
+              default:
+                  return 0f;
+          }
+      }
+  }
+  ```

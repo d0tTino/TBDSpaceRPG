@@ -1,0 +1,85 @@
+Table of Contents: Lore and Story Structure Document
+====================================================
+
+1. Overview
+-----------
+  1.1 Game Vision
+    - Hard sci-fi, multi-generational space opera shaping humanity’s future.
+  1.2 Narrative Themes
+    - Sacrifice, legacy, competition vs. cooperation.
+  1.3 Inspirations
+    - For All Mankind, The Expanse, Rimworld, The Sims.
+
+2. Setting
+----------
+  2.1 The Solar System
+    - Realistic depiction, key locations (Earth, Moon, Mars, etc.).
+  2.2 Time Period
+    - Starts 2040s, spans generations with time skips (20-50 years).
+  2.3 Geopolitical Context
+    - US-China space race, evolving based on player choices.
+
+3. Story Structure
+------------------
+  3.1 Chapter System
+    - Mission-based chapters, time skips, narrative progression.
+  3.2 Macro Story: Space Race
+    - US vs. China, war/peace paths, societal outcomes (democracy, communism).
+  3.3 Micro Story: Crew
+    - Personal arcs, relationships, generational succession.
+  3.4 Mission Variety
+    - Exploration, colonization, combat/diplomacy (e.g., Mars missile).
+  3.5 Endgame
+    - Humanity’s solar system fate, crew epilogues.
+
+4. Characters
+-------------
+  4.1 Crew Overview
+    - Small roster (5-10), roles and traits as story drivers (e.g., Alex Chen - Calm Pilot).
+  4.2 Crew Arcs
+    - Backstories, relationships (e.g., romance leading to offspring), development over chapters.
+  4.3 Recruitment Narrative
+    - Earth recruits reflecting geopolitics, offspring carrying legacies.
+  4.4 Notable NPCs
+    - Rival captains, mission control, their narrative roles.
+
+5. Aesthetics
+-------------
+  5.1 Visual Style
+    - Realistic 3D solar system, 2D interiors (US vs. Chinese influence).
+  5.2 Audio Design
+    - Ship sounds, crew chatter (English/Mandarin), music themes.
+  5.3 Evolution Across Chapters
+    - Aesthetic shifts based on dominance (e.g., Mandarin labels).
+  5.4 Ship Legacy
+    - Past ships as museums/wrecks, narrative flavor via logs/cutscenes.
+
+6. Sample Chapter: Chapter 1 Narrative
+--------------------------------------
+  6.1 Story Setup
+    - Mars race against China, geopolitical stakes.
+  6.2 Ship: Red Horizon Lore
+    - Chemically propelled, current-tech pioneer ship, US-built.
+  6.3 Crew Stories
+    - Sample crew (e.g., Diego Ramirez - Hot-headed Scientist), personal stakes.
+  6.4 Narrative Objectives
+    - Land first, missile choice as story pivot (war vs. peace).
+  6.5 Outcomes and World Impact
+    - Success (US prestige), missile (war), loss (peace), failure (China rises).
+
+7. Appendices
+-------------
+  7.1 Glossary
+    - Narrative terms: Macro story, micro story, chapter, time skip.
+  7.2 Inspirational References
+    - Media links (For All Mankind, The Expanse), narrative influences.
+  7.3 Open Story Questions
+    - Narrative branch details, crew arc specifics, endgame flavor.
+  7.4 Timeline (Optional)
+    - Chronology (e.g., 2065 Mars mission, 2090 asteroids).
+
+Rationale
+---------
+- Focus: Purely narrative and lore—setting, story structure, characters, aesthetics, with minimal mechanics beyond what drives the story (e.g., missile as a plot point).
+- Structure: Starts with narrative vision, details the world and story, then characters and aesthetics, ending with a sample chapter focused on story beats, not tech specifics.
+- Appendices: Includes narrative glossary, inspirations, story questions, and an optional timeline, keeping it creative and world-focused for writers/artists.

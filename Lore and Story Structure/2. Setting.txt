@@ -1,0 +1,40 @@
+2. Setting
+==========
+
+2.1 The Solar System
+--------------------
+The solar system is no longer a distant dream—it is humanity’s last hope. Scarred by war and strained by overpopulation, Earth can no longer sustain its billions. The planets, moons, and asteroids beyond offer salvation, but they are unforgiving. This is a universe where every breath of air, every sip of water, and every meter of delta-v must be earned. The game’s missions unfold across key locations, each a crucible for survival and ambition.
+
+- **Earth:** The cradle of civilization is a shadow of its former self. World War III left its cities in ruins, its ecosystems collapsing, and its nations fractured. Coastal megacities are half-submerged, and the scars of orbital strikes mar the landscape. Yet, Earth remains the industrial heart of humanity, its shipyards and launch complexes fueling the desperate push into space.
+
+- **The Moon:** A gray, cratered battleground, the Moon is humanity’s first off-world foothold. Domed cities and helium-3 mines sprawl across its surface, but they are flashpoints of tension. Rival factions—US, China, and others—maintain a fragile truce, their missile batteries and spy drones locked in a silent standoff. The Moon is both a launchpad and a powder keg.
+
+- **Mars:** The Red Planet is the ultimate prize—a harsh, rusty world of towering volcanoes and frozen deserts. Early colonies huddle in pressurized habitats, battling thin air and brutal dust storms. Mars is a beacon of hope for a second home, but its potential for terraforming is a distant dream, and its surface is contested by those who dare to claim it.
+
+- **Asteroid Belt:** Beyond Mars lies a chaotic ring of rock and metal, a lawless frontier where fortunes are made or lost. Mining rigs cling to spinning boulders, harvesting iron, nickel, and water ice. But the belt is a graveyard of shattered dreams—collisions, pirate raids, and the void’s indifference claim many who venture too far.
+
+- **Outer Planets:** The gas giants and their moons—Europa’s icy oceans, Titan’s methane lakes, Enceladus’s geysers—beckon as the next frontier. These worlds promise scientific breakthroughs and untapped resources, but their distance and lethal radiation make them a graveyard for the unprepared. Only the boldest crews dare to explore them.
+
+2.2 Time Period
+----------------
+The story ignites in the 2040s, a decade born from the ashes of World War III. The war’s end in the 2030s left Earth battered, but it also accelerated space technology—reusable rockets, fusion drives, and orbital habitats are now reality. The game’s narrative spans generations, with time skips of 20 to 50 years between chapters, reflecting the slow, grinding pace of space colonization.
+
+Starting in the 2040s, players captain a crew at the dawn of this new era, launching from Earth’s orbit to stake humanity’s claim among the stars. Each chapter’s end triggers a time skip, revealing a solar system reshaped by the player’s choices: colonies rise or fall, technologies advance or stagnate, and the descendants of your crew carry forward the triumphs or burdens of their forebears. These skips are marked by pivotal events—catastrophic failures, diplomatic breakthroughs, or quiet revolutions—that frame a saga where every decision echoes across decades.
+
+2.3 Geopolitical Context
+------------------------
+The solar system is a chessboard for the 21st century’s defining rivalry: the United States versus China. World War III reshaped the world—the US, weakened and desperate, annexed Canada, Greenland, and parts of Europe to secure resources and territory. But these bold moves fractured alliances, breeding resentment and resistance within its sprawling, brittle empire. The Artemis Accords, once a symbol of unity, now bind a fragile coalition of nations still willing to follow the US—Japan, Australia, a few others—but trust is thin, and dissent festers.
+
+- **Initial State (2040s):** The US leads the Artemis Coalition, but it’s a shadow of its former self. Annexed territories simmer with rebellion, and former allies eye the stars with suspicion. China, disciplined and state-driven, commands vast fleets and megaprojects, challenging the US at every turn. Other powers—India’s tech-savvy crews, Russia’s ruthless pragmatism, and a resurgent European federation—maneuver in the shadows, forming uneasy alliances or striking out alone.
+
+- **Player’s Role:** As captain, your choices steer this cold war. Will you uphold the Artemis Coalition’s fragile unity, or exploit its cracks for personal gain? Will you sabotage a Chinese outpost to secure a Martian foothold, or broker a truce to share resources? Every decision—ethical or not—carries weight. Success through unethical means might win short-term victories but breed long-term chaos: rebellions in annexed territories, betrayals within your crew, or a solar system teetering on war.
+
+- **Possible Futures:** Your legacy will shape the solar system:
+  - **War:** A single misstep ignites all-out conflict—fleets clash over Mars, debris chokes orbits, and colonies become battlegrounds.
+  - **Peace:** Diplomacy forges a coalition, pooling resources for mutual survival.
+  - **Democracy:** Independent colonies rise, free from Earth’s shadow, governed by charters or councils.
+  - **Communism:** One power consolidates control, enforcing unity across the void.
+
+---
+
+This is a universe where the US didn’t win the war, where annexations built a brittle empire, and where the stars are both a refuge and a battleground. Your choices—successful or unethical—will decide if humanity rises from the ashes or falls into the void.

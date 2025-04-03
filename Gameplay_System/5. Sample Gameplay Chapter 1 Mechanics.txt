@@ -1,0 +1,65 @@
+5. Sample Gameplay: Chapter 1 Mechanics
+=======================================
+
+5.1 Mission Setup
+-----------------
+The mission begins with the *Endeavor* in lunar orbit, having arrived via a smaller moon-based lander in the tutorial and prologue. Players must:
+- Perform a trans-Mars injection burn to leave lunar orbit and enter a trajectory toward Mars, requiring approximately 1.0 km/s delta-v.
+- Plot the trajectory using the 3D navigation interface, selecting an optimal transfer window for fuel efficiency (windows occur every 26 months).
+- Manage fuel for chemical propulsion, ensuring enough delta-v for course corrections, Mars orbital insertion, and landing.
+
+Key Mechanics:
+- Players use chemical rockets for propulsion, with limited fuel. Transit time to Mars is 6-9 months.
+- The ship’s systems include life support, power (solar panels), and communications, all requiring crew maintenance.
+
+5.2 Ship Systems
+----------------
+The *Endeavor* is a chemically propelled spacecraft with modular systems:
+- **Propulsion:** Chemical rockets (e.g., liquid oxygen/methane) with finite fuel. Players manage burns for efficiency.
+- **Aerobraking Shield and Landing Craft:** The shield is used for Mars atmospheric entry; the attached landing craft detaches after orbit insertion for descent.
+- **Crew Module:** Similar to Orion CSM, can undock for separate operations (e.g., docking with a Chinese ship, exploring a low gravity object).
+- **Hab Modules:** Remain in orbit for experiments and living quarters, supporting NASA-like scientific tasks.
+
+Mechanics:
+- Aerobraking involves managing descent angle and heat buildup via a mini-game or precise timing.
+- The crew module can be used for EVA or docking with other ships.
+- System failures (e.g., life support) trigger crew repair tasks, with success based on skills and traits.
+
+5.3 Crew Mechanics
+------------------
+The crew consists of 6 customizable members, each with roles and traits:
+- **Customization:** Players select crew traits, backgrounds, and appearances (e.g., faces, hairstyles) at mission start.
+- **Roles:** Pilot, Engineer, Scientist, Medic, Communications Officer, and one additional role (e.g., Navigator).
+- **Traits:** Examples include Calm, Genius, Hot-headed, Empathetic, affecting task performance and interactions.
+
+Mechanics:
+- Crew automatically perform tasks based on ship status (e.g., experiments during transit, strapping in during burns).
+- Relationships (friendships, rivalries) evolve, impacting task efficiency and morale.
+- Crew suggest solutions during crises (e.g., solar flares), with outcomes tied to their status.
+
+5.4 Objectives and Mechanics
+----------------------------
+The mission has primary and secondary objectives:
+- **Primary Objective:** Land on Mars before the Chinese ship, managing fuel, navigation, and landing.
+- **Secondary Objectives:**
+  - Conduct scientific experiments (e.g., Martian soil analysis).
+  - Maintain crew health and morale.
+  - Manage resources (fuel, power, life support).
+
+Crisis Management:
+- Events like solar flares or system malfunctions require player decisions.
+- Crew suggestions during crises are influenced by traits (e.g., a Calm Pilot suggests safer options).
+
+5.5 Outcome Triggers
+--------------------
+Outcomes are dynamic, shaped by player choices and crew performance:
+- **Success (Optimal):** Land first without conflict, boosting US prestige.
+- **Cooperation Path:** Assist a distressed Chinese ship (e.g., docking, rescuing via EVA), potentially leading to joint operations.
+- **Conflict Path:** Sabotage the Chinese ship (e.g., using a missile), escalating tensions.
+- **Exploration Path:** If the Chinese ship crashes, explore wreckage for survivors, with choices to save or ignore.
+- **Failure:** Fail to land (e.g., crash, abort), shifting power to China.
+
+Mechanics:
+- Cooperation involves spending delta-v to intercept and dock, with 2D crew tasks (e.g., resource transfer).
+- Cascading failures (e.g., navigation error leading to missed burn) require management to prevent further issues.
+- Emergent arcs (e.g., saving a crew member’s child) are tracked via crew histories and relationship meters.

@@ -1,0 +1,55 @@
+5. Aesthetics
+=============
+
+5.1 Visual Style
+----------------
+The game’s visual style is a stark, unflinching portrayal of a hard sci-fi universe—one where humanity’s expansion into space is as breathtaking as it is brutal. Every frame reflects the cold realities of physics, the scars of a war-torn Earth, and the fragile hope of survival among the stars. The aesthetic is rooted in realism, with a hint of retro-futurism that evokes the 2040s—a blend of near-future technology and the remnants of a broken world.
+
+- **3D Solar System:**
+  - The solar system is rendered with meticulous accuracy: planets and moons follow real orbits, their surfaces marked by craters, storms, and the faint glow of distant colonies. Lighting is harsh and unforgiving—long shadows stretch across lunar plains, and the Sun’s glare underscores the void’s indifference.
+  - Ships are utilitarian, pieced together from salvaged parts and jury-rigged tech. Hulls show the wear of micrometeoroid impacts, and solar panels gleam with a patchwork of repairs. The *Endeavor*, a central ship, is a rugged workhorse, its chemical rockets and aerobraking shield embodying humanity’s scrappy resilience.
+
+- **2D Ship Interiors:**
+  - Inside, the ship is a claustrophobic network of riveted panels, flickering screens, and humming machinery. The 2D cutaway view reveals a lived-in space: cables drape across walls, tools drift in zero-G, and personal items—like a faded photo or a scrawled note—hint at the crew’s humanity.
+  - **Cultural Influence:** The interior evolves with the narrative’s geopolitical shifts. In a US-led world, the ship features English labels, star-spangled patches, and a cluttered, individualistic feel. If China rises to dominance, Mandarin script and red accents prevail, with a more uniform, state-driven design.
+
+- **Character Design:**
+  - Crew sprites are detailed yet weathered—spacesuits are patched, and faces carry the marks of stress or resolve. Character traits subtly shape appearances: a **Hot-headed** Pilot might have a scarred visor, while a **Genius** Engineer’s toolkit brims with gadgets.
+
+5.2 Audio Design
+-----------------
+The game’s soundscape is a blend of isolation and tension, punctuated by the hum of life support and the crackle of distant communications. It’s a universe where silence is as threatening as the vacuum itself.
+
+- **Ship Ambiance:**
+  - The interior hums with the low drone of engines, the hiss of air recyclers, and the occasional clank of tools. Alarms are sharp but rare—saved for critical moments, their wail delivering a surge of adrenaline.
+  - Crew chatter animates the space: English dominates in US-led chapters, Mandarin in Chinese-led ones. The language shifts with the story, deepening the player’s immersion in the cultural stakes.
+
+- **Space:**
+  - Beyond the ship, sound drops away. The 3D view is eerily silent, broken only by the faint hiss of thrusters or the muted thud of debris strikes. Radio chatter crackles through static, delayed by distance, serving as a lifeline to Earth or a warning from a rival.
+
+- **Music:**
+  - The score is minimalist—haunting strings, distant synths, and occasional percussion pulses during crises. It rises during pivotal moments, like a successful landing or a crew member’s sacrifice, but never overshadows the starkness of space.
+
+5.3 Evolution Across Chapters
+-----------------------------
+As the narrative unfolds, the aesthetic adapts to reflect player choices and the passage of time. Each time skip (20-50 years) introduces subtle yet striking changes, mirroring the story’s evolving drama.
+
+- **Visual Shifts:**
+  - **Ship Design:** Early chapters showcase makeshift vessels; later ones might feature sleek, advanced hulls—or battered wrecks, depending on the player’s outcomes.
+  - **Cultural Dominance:** A US-led path adorns ships and colonies with stars and stripes, evoking a rugged, frontier spirit. Chinese dominance introduces red banners and orderly, state-sanctioned designs. Cooperative paths merge these elements into a patchwork of flags and scripts.
+
+- **Audio Evolution:**
+  - Crew chatter adjusts: English, Mandarin, or a blend, based on the geopolitical balance. Music themes shift subtly—optimistic chords signal peace, while dissonant tones accompany conflict.
+
+5.4 Ship Legacy
+----------------
+Past ships endure as haunting relics, their fates a testament to the player’s journey. These vessels—retired to orbit as museums or abandoned as wrecks on distant worlds—act as narrative anchors, their stories revealed through logs and cutscenes.
+
+- **Visual Legacy:**
+  - In the 3D view, players might pass the *Endeavor*’s husk, its aerobraking shield charred from a doomed descent. Alternatively, they could dock with a museum ship, its halls whispering of past crews.
+  - Cutscenes portray these ships’ final moments: a heroic sacrifice, a diplomatic victory, or a quiet retirement.
+
+- **Narrative Flavor:**
+  - Logs and artifacts aboard these ships unveil crew tales—a **Medic**’s final entry before a fatal EVA, or a **Scientist**’s breakthrough that saved a colony. These fragments connect the player’s legacy to the broader saga.
+
+---

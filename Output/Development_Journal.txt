@@ -1,0 +1,244 @@
+# TBD Space Game - Development Journal
+
+## Purpose
+This living document tracks the development process of the TBD Space Game project, recording decisions, implementation details, and workflow information. It is specifically designed to facilitate collaboration with AI assistants by providing context, history, and technical specifications in an accessible format.
+
+## Project Overview
+- **Game Title:** TBD Space Game
+- **Genre:** Hard sci-fi, multi-generational space opera RPG
+- **Core Mechanics:** Crew management, orbital mechanics, time skips
+- **Primary Technologies:** Unity, C#, MCP Unity
+
+## Development History
+
+### Current Phase: Foundation
+- Setting up documentation structure
+- Establishing core systems
+- Integrating MCP Unity server
+- Creating technical foundation
+
+### Key Milestones
+1. **Initial Concept Development** - Completed
+   - Core gameplay loop defined
+   - Narrative themes established
+   - Technical approach selected
+
+2. **Documentation Structure** - In Progress
+   - Game Design Document structure created
+   - Narrative Design Document structure created
+   - Master plan established
+
+3. **Technical Foundation** - In Progress
+   - MCP Unity server integration
+   - Basic crew management system implementation
+   - Time skip system prototype
+
+## Technical Architecture
+
+### Core Systems
+1. **MCP (Machine Control Protocol) Integration**
+   - Purpose: Communication between Unity and external systems
+   - Implementation: WebSocket-based communication
+   - Status: Basic functionality working, optimization needed
+   - Key Files:
+     - mcpWebSocketClient-simple.ps1
+     - MCP-PowerShell-Guide.md
+     - Unity-MCP-Integration-Manual.md
+
+2. **Ship Customization System**
+   - Purpose: Allow upgrades and modifications to ships
+   - Implementation: Menu-driven system via MCP
+   - Status: Basic functionality working
+   - Key Files:
+     - ShipUpgradeMenuHelperV2.cs
+     - ShipCustomizationManager.cs
+
+3. **Time Skip Manager**
+   - Purpose: Handle generational progression
+   - Implementation: Complex system for aging, relationships, events
+   - Status: Core functionality implemented
+   - Key Files:
+     - TimeSkipManager.cs
+     - CrewManager.cs
+     - WorldStateManager.cs
+     - ChapterManager.cs
+
+4. **Crew System**
+   - Purpose: Manage crew members, relationships, skills
+   - Implementation: Object-oriented system with state tracking
+   - Status: Core models implemented
+   - Key Files:
+     - CrewMember.cs
+     - Relationship.cs
+
+## AI Collaboration Guidelines
+
+### Context Provision
+When seeking AI assistance, provide:
+1. **Current focus:** What specific aspect you're working on
+2. **Related files:** Which files are relevant to the task
+3. **Current challenges:** What specific problems need solving
+4. **Implementation constraints:** Any technical limitations
+
+### Directory Structure Reference
+- **Scripts/**: Core gameplay code
+  - **Managers/**: System managers (Crew, World, Chapter, UI)
+  - **Models/**: Data structures (CrewMember, Relationship)
+  - **UI/**: User interface components
+- **Gameplay_System/**: Game design documentation
+- **Lore and Story Structure/**: Narrative documentation
+- **Output/**: Compiled documentation and reports
+- **MCP/**: Machine Control Protocol integration
+
+### Common Commands
+For MCP interaction:
+```powershell
+# Start MCP server
+env UNITY_PORT=8001 node [path-to-server]/build/index.js
+
+# Test menu item
+./mcpWebSocketClient-simple.ps1 -menuPath "MCP/Ship/V2/Create Test Ship"
+
+# Check server status
+netstat -ano | findstr :8001
+```
+
+## Development Workflow
+
+### Current Process
+1. Design systems in documentation
+2. Implement core functionality
+3. Test through MCP interface
+4. Document results and challenges
+5. Iterate based on feedback
+
+### Tools
+- **Unity**: Primary development environment
+- **Cursor IDE**: Code editing and AI collaboration
+- **PowerShell**: Scripts and MCP interaction
+- **Git**: Version control
+
+## Known Challenges
+
+### Technical Challenges
+1. **MCP Connection Issues**
+   - Status: Partially resolved
+   - Workaround: Use configured command in Cursor IDE
+
+2. **Unity Editor GUI Errors**
+   - Status: Monitoring
+   - Error: "Invalid GUILayout state in McpUnityEditorWindow"
+   - Impact: Visual only, doesn't affect functionality
+
+### Design Challenges
+1. **Balancing Crew System Complexity**
+   - Need to maintain depth while ensuring playability
+   - Current focus on core mechanics before expanding
+
+2. **Time Skip Narrative Integration**
+   - Ensuring player choices have meaningful impacts
+   - Balancing procedural elements with authored content
+
+## Next Steps
+
+### Immediate Focus
+1. Complete documentation structure
+2. Finalize MCP integration
+3. Expand crew system implementation
+4. Create test scenarios
+
+### Areas Needing AI Assistance
+1. Code optimization for complex systems
+2. Technical documentation improvements
+3. Implementation of designed systems
+4. Bug troubleshooting
+
+## Version History
+- v0.1: Initial journal creation
+- v0.2: Added system details
+- v0.3: Expanded AI collaboration guidelines
+- v0.4: Added known challenges section
+
+## April 3, 2025
+Major research implementation milestone achieved today. All planned research topics have now been successfully integrated into the game documentation:
+
+1. Religious and Cultural Evolution research has been fully implemented across multiple documents:
+   - Added comprehensive section to Gameplay_System/6. Appendices.txt (Section 6.5.12)
+   - Created detailed Cultural and Religious Dynamics system in Gameplay_System/3. Crew System.txt (Section 3.7)
+   - Added narrative context in Lore and Story Structure/7. Appendices.txt (Section 7.5)
+
+2. Updated Documentation Status Report to reflect 100% completion of research implementation phase.
+
+3. Next Steps:
+   - Begin technical implementation planning
+   - Start asset pipeline documentation
+   - Expand UI/UX specifications
+
+The research implementation provides a solid scientific foundation for the game's mechanics and narrative. All major systems now have concrete values, formulas, and gameplay impacts derived from actual research, ensuring an authentic and cohesive experience.
+
+## April 2, 2025
+Continued implementation of research findings:
+
+1. Added Advanced Energy Systems to Technical Implementation document, including:
+   - Power generation system specifications
+   - Energy storage mechanics
+   - Distribution and management systems
+
+2. Integrated Education and Knowledge Transfer research into Crew System document:
+   - Added training and skill development mechanics
+   - Implemented knowledge preservation systems
+   - Created intergenerational knowledge transfer mechanics
+
+3. Updated appendices with comprehensive research on:
+   - Space Medicine Advancements
+   - Biological Adaptation
+   - Artificial Intelligence Evolution
+
+## April 1, 2025
+Major progress on documentation today:
+
+1. Completed the Table of Contents for both Gameplay System and Lore documents.
+
+2. Implemented research findings on Near-Future Propulsion Technology:
+   - Added detailed propulsion systems with realistic values
+   - Created delta-v calculation mechanics
+   - Implemented mission duration estimates based on propulsion type
+
+3. Expanded Crew System documentation:
+   - Enhanced psychological effects systems
+   - Implemented multi-generational mechanics
+   - Added closed-loop life support systems
+
+## March 29, 2025
+Project documentation framework established:
+
+1. Created initial structure for all core documents:
+   - Gameplay System documentation
+   - Lore and Story Structure documentation
+
+2. Implemented first chapter samples:
+   - Sample Gameplay for Chapter 1
+   - Sample Narrative for Chapter 1
+
+3. Established initial research priorities:
+   - Psychological effects of long-duration spaceflight
+   - Multi-generational space societies
+   - Closed-loop life support systems
+
+## March 28, 2025
+Project kick-off:
+
+1. Established project vision and scope:
+   - Multi-generational space exploration game
+   - Focus on realistic science and human dynamics
+   - Chapter-based narrative structure
+
+2. Created initial research plan:
+   - Identified key topics requiring scientific research
+   - Established methodology for research implementation
+   - Created tracking system for research findings
+
+3. Set up development infrastructure:
+   - Created GitHub repository
+   - Established documentation standards
+   - Defined file structure and organization 

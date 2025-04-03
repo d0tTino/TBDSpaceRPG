@@ -1,0 +1,126 @@
+Gameplay/System Document
+========================
+
+Purpose
+-------
+This document details the technical and mechanical framework of the game, focusing on how it plays, the systems driving it, and the implementation details. It's for developers, engineers, and designers who need to build and balance the game's functionality, omitting narrative fluff to keep it concise and actionable.
+
+Table of Contents: Gameplay/System Document
+===========================================
+
+1. Overview
+-----------
+  1.1 Core Concept
+    - Brief description: Hard sci-fi game with 3D orbital navigation and 2D crew management.
+  1.2 Gameplay Goals
+    - Define player objectives: Navigate, manage crew, complete missions.
+  1.3 Target Platforms (TBD)
+    - Placeholder for PC, consoles, etc.
+
+2. Gameplay Mechanics
+---------------------
+  2.1 Core Loop
+    - Phases: Prep, transit, destination, conclusion.
+  2.2 3D Orbital Navigation
+    - Trajectory plotting, system management, realism level (e.g., chemical propulsion).
+  2.3 2D Crew Management
+    - Roles (Pilot, Engineer), traits (Hot-headed, Genius), task assignment, status effects (morale, health).
+  2.4 Critical Moments
+    - Event triggers (e.g., solar flares), crew-suggested options, outcome mechanics.
+  2.5 Difficulty and Failure
+    - Failure scale, rival setbacks, recovery options (e.g., missile choice).
+    - Faction influence system, geopolitical context, and scenario outcomes.
+    - Edge case: Faction Collapse (Chaos) Scenario when all influence scores are low.
+    - Testing and validation framework for faction influence scenarios.
+  2.6 Mission Types and Mechanics
+    - Exploration missions: scanning, probes, EVA surveys, and sample collection.
+    - Colonization missions: construction, life support, population growth, and crisis response.
+    - Science missions: experimentation, field research, technology implementation, and ethics.
+    - Combat missions: orbital tactics, weapons management, damage control, and decision-making.
+    - Espionage missions: intelligence gathering, infiltration, asset recruitment, and sabotage.
+    - Diplomacy missions: negotiation, resource trading, alliance building, and crisis resolution.
+
+3. Crew System
+--------------
+  3.1 Crew Design
+    - Roles, traits, attributes (skills, morale), mechanical impact on tasks.
+  3.2 Crew Dynamics
+    - Relationship mechanics (friendships, rivalries), effects on performance.
+  3.3 Recruitment Mechanics
+    - Earth recruits (geopolitical influence), offspring (trait inheritance), integration into gameplay.
+  3.4 AI Director for Narrative Dynamics
+    - Character modeling and arcs: desires, fears, objectives, and experience-based learning.
+    - Dramatic confrontations: conflict detection, event generation, faction-influenced scenarios.
+    - Additional functionalities: narrative pacing, difficulty calibration, side events.
+    - Environmental storytelling: ship modifications, historical elements, generational artifacts.
+    - Implementation details: technical architecture, performance optimization, edge case handling.
+  3.4.5 AI Director Testing Framework
+    - Character arc testing, confrontation testing, faction-influenced event validation.
+    - Performance validation, player engagement metrics, and long-term narrative testing.
+  3.4.6 Chapter Structure and Narrative Arc Management
+    - Chapter phase architecture: setup, development, climax, and resolution.
+    - Dynamic content generation and slot filling algorithms for mission variation.
+    - Callbacks and continuity maintenance across generational gameplay.
+    - Thoughtful moments for character development and pacing contrast.
+    - Serialized storytelling techniques adapted from prestige television.
+
+4. Technical Implementation
+---------------------------
+  4.1 Game Engine
+    - Unity, justification, capabilities for 2D/3D.
+  4.2 Orbital Mechanics
+    - Plugin (Simple Kepler Orbits), trajectory calculations, performance optimization.
+  4.3 Crew Management System
+    - 2D sprite system, AI (state machines/behavior trees), pathfinding.
+    - Zero-G Movement System: physics-based movement with handholds, trajectory visualization, and realistic momentum.
+    - Emergent Behavior System: need-based autonomy, trait-driven interactions, and experience-based learning.
+    - Crew AI prioritization and task assignment based on specialization, proximity, and workload.
+    - Relationship development through shared experiences, compatibility, and stress situations.
+  4.4 User Interface
+    - View switching (3D/2D), controls, accessibility features.
+  4.4.1 View Transition System
+    - 3D-to-2D transition mechanics using scroll wheel and fade effects.
+    - Dynamic 2D view rotation that adjusts with ship orientation.
+    - Multi-module habitat representation with blurred views for adjacent modules.
+    - Docking node depth visualization using render textures and blur effects.
+  4.4.4 AI Director UI Support
+    - Confrontation interface: dialogue panels, character portraits, choice presentation.
+    - Side event notification system: contextual alerts, priority-based display.
+    - Environmental storytelling visualization: dynamic ship/station updates.
+    - Performance optimization and accessibility considerations for narrative UI.
+  4.5 Data Persistence
+    - Save/load system, crew and ship data, world state across chapters.
+  4.6 Localization
+    - English/Mandarin support, dynamic language switching.
+  4.7 Performance Optimization
+    - LOD, efficient pathfinding, UI batching.
+  4.8 Planet Position Calculation
+    - Simplified orbital model, date-based updates.
+
+5. Sample Gameplay: Chapter 1 Mechanics
+---------------------------------------
+  5.1 Mission Setup
+    - Launch, transit, landing with chemical propulsion and aerobraking.
+  5.2 Ship Systems
+    - Red Horizon: Chemical rockets, aerobraking shield, modular design.
+  5.3 Crew Mechanics
+    - Sample crew (e.g., Alex Chen - Pilot), task examples, crisis responses.
+  5.4 Objectives and Mechanics
+    - Primary (land on Mars), secondary (research, health), missile choice mechanics.
+  5.5 Outcome Triggers
+    - Success/failure conditions, mechanical impacts (e.g., resource loss).
+
+6. Appendices
+-------------
+  6.1 Glossary
+    - Technical terms: Delta-V, transfer window, morale, etc.
+  6.2 Technical References
+    - Unity docs, plugin links (e.g., Simple Kepler Orbits), optimization guides.
+  6.3 Open Technical Questions
+    - Trait impact formulas, UI specifics, data persistence solutions.
+
+Rationale
+---------
+- Focus: Strictly technical—mechanics, systems, implementation. No lore or story beyond what's needed to contextualize mechanics (e.g., missile choice as a system trigger).
+- Structure: Starts with gameplay overview, dives into mechanics and crew systems, then technical details, ending with a sample chapter focused on implementation, not narrative flavor.
+- Appendices: Limited to technical glossary, references, and questions, keeping it practical for coders and engineers.

@@ -1,0 +1,324 @@
+Gameplay/System Document
+========================
+
+Purpose
+-------
+This document details the technical and mechanical framework of the game, focusing on how it plays, the systems driving it, and the implementation details. It's for developers, engineers, and designers who need to build and balance the game's functionality, omitting narrative fluff to keep it concise and actionable.
+
+Table of Contents: Gameplay/System Document
+===========================================
+
+1. Overview
+-----------
+  1.1 Core Concept
+    - Brief description: Hard sci-fi game with 3D orbital navigation and 2D crew management.
+  1.2 Gameplay Goals
+    - Define player objectives: Navigate, manage crew, complete missions.
+  1.3 Target Platforms (TBD)
+    - Placeholder for PC, consoles, etc.
+
+2. Gameplay Mechanics
+---------------------
+  2.1 Core Loop
+    - Phases: Prep, transit, destination, conclusion.
+  2.2 3D Orbital Navigation
+    - Trajectory plotting, system management, realism level (e.g., chemical propulsion).
+  2.3 2D Crew Management
+    - Roles (Pilot, Engineer), traits (Hot-headed, Genius), task assignment, status effects (morale, health).
+  2.4 Critical Moments
+    - Event triggers (e.g., solar flares), crew-suggested options, outcome mechanics.
+  2.5 Difficulty and Failure
+    - Failure scale, rival setbacks, recovery options (e.g., missile choice).
+
+3. Crew System
+==============
+
+3.1 Crew Design
+---------------
+Each crew member is defined by three core components: roles, traits, and attributes. These elements determine how crew members perform tasks, interact with each other, and evolve over time.
+
+- Roles: Crew members are assigned specific roles that tie directly to ship systems and tasks. Roles include:
+  - Pilot: Responsible for navigation and maneuvering the spacecraft.
+  - Engineer: Manages repairs, maintenance, and system upgrades.
+  - Scientist: Conducts research and handles scientific equipment.
+  - Medic: Maintains crew health and manages medical emergencies.
+  - Communications Officer: Handles external communications and diplomacy.
+
+- Traits: Each crew member has one or more personality traits that influence their behavior and task performance. Traits are static and do not change. Examples include:
+  - Hot-headed: Increases the likelihood of conflicts but boosts performance under pressure.
+  - Genius: Enhances problem-solving, increasing the success rate of complex tasks.
+  - Calm: Reduces stress during crises, improving decision-making.
+  - Empathetic: Boosts morale of nearby crew members but may reduce efficiency in high-stress situations.
+
+- Attributes: Crew members have dynamic attributes that change based on gameplay:
+  - Skills: Proficiency in role-specific tasks, which improves with experience (e.g., successful repairs increase an Engineer's repair skill).
+  - Health: Physical condition, affected by injuries or illnesses, which impacts task performance.
+  - Morale: Emotional state, influenced by relationships, workload, and mission outcomes. Low morale reduces task efficiency.
+  - Relationships: Bonds with other crew members, ranging from friendships to rivalries, which affect cooperation and task outcomes.
+
+Mechanical Impact:
+- Task Success: A crew member's skill level, morale, and relevant traits determine the success rate of assigned tasks. For example, a Genius Engineer has a higher chance of successfully repairing a critical system.
+- Crisis Resolution: During critical moments (e.g., solar flares), crew members suggest solutions based on their role and traits. The player's choice of solution is influenced by the crew member's status (e.g., a Calm Pilot's suggestion is more reliable).
+
+3.2 Crew Dynamics
+------------------
+Crew dynamics are driven by relationships and interpersonal interactions, which directly impact task performance and mission outcomes.
+
+- Relationship Types:
+  - Friendships: Boost morale and increase cooperation when crew members work together on tasks.
+  - Rivalries: Decrease morale and reduce efficiency when rival crew members are assigned to the same task.
+  - Romances: Can boost morale but may cause complications (e.g., jealousy) if not managed properly.
+
+- Mechanics:
+  - Relationship Meter: Each pair of crew members has a relationship value (e.g., -100 to +100), which evolves based on shared tasks, events, and player interventions.
+  - Task Impact: Crew members with positive relationships gain a performance bonus when working together (e.g., +10% task speed). Negative relationships incur penalties (e.g., -15% task success rate).
+  - Player Intervention: Players can mediate conflicts or encourage bonds by assigning compatible crew members to tasks or using dialogue options during events.
+
+- Stress and Morale:
+  - Stress accumulates during crises or overwork, reducing morale and increasing the likelihood of conflicts.
+  - Morale affects overall task efficiency: high morale grants bonuses, low morale incurs penalties.
+
+3.3 Recruitment Mechanics
+-------------------------
+New crew members are added to the team through two primary methods: recruitment from Earth and offspring from existing crew members.
+
+- Recruitment from Earth:
+  - After each chapter, players can select new crew members from a pool of candidates.
+  - The candidate pool is influenced by the geopolitical situation:
+    - US dominance: Recruits have traits aligned with American training (e.g., Charismatic, Innovative).
+    - Chinese dominance: Recruits have traits reflecting Chinese values (e.g., Disciplined, Efficient).
+  - Players choose recruits based on their roles, traits, and skills to fit the team's needs.
+
+- Offspring:
+  - Crew members in romantic relationships may have children, who join the crew after a time skip (e.g., 20-50 years).
+  - Offspring inherit traits from their parents, with a chance for new traits based on a combination (e.g., Hot-headed + Calm = Stubborn).
+  - Offspring join as young adults with basic skills, which can be developed over time.
+
+- Integration:
+  - New recruits and offspring are integrated into the crew roster at the start of a new chapter.
+  - Their traits and relationships are initialized based on their background (Earth recruits) or parentage (offspring).
+  - Players must manage the integration process, as new crew members may disrupt existing dynamics.
+
+4. Technical Implementation
+===========================
+
+4.1 Game Engine
+---------------
+The game will be developed using Unity, selected for its robust support for both 2D and 3D game development, extensive community resources, and proven success in similar titles like *Kerbal Space Program* and *Rimworld*. Unity's flexibility enables seamless integration of the game's dual mechanics: 3D orbital navigation and 2D crew management.
+
+- **Key Features:**
+  - 3D rendering for the solar system simulation.
+  - 2D tools (sprite rendering, tilemaps) for the ship's interior.
+  - Physics engine for realistic orbital mechanics (augmented with plugins).
+  - Scripting in C# for gameplay logic and AI behavior.
+
+- **Third-Party Plugins:**
+  - **Simple Kepler Orbits:** For simulating realistic orbital mechanics.
+  - **Yarn Spinner:** For managing dialogue trees and narrative branching.
+
+4.2 Orbital Mechanics
+---------------------
+Orbital mechanics will be implemented using the Simple Kepler Orbits plugin from the Unity Asset Store, which provides tools for simulating spacecraft trajectories based on Keplerian mechanics.
+
+- **Trajectory Plotting:**
+  - Players plot courses using a 3D interface, selecting pre-calculated paths or adjusting parameters (e.g., delta-v, burn timing).
+  - Crew members (e.g., Pilot) can suggest course corrections based on new data (e.g., rival ship movements).
+
+- **Propulsion:**
+  - Spacecraft use chemical rockets, with realistic fuel consumption and transit times (e.g., 6-9 months to Mars).
+
+- **EVA System:**
+  - An extravehicular activity (EVA) feature allows crew to perform tasks outside the ship (e.g., repairs, rescues).
+  - Crew are represented as 3D models during EVA, with success rates tied to skills and traits (e.g., Engineering skill, Calm trait).
+
+4.3 Crew Management System
+--------------------------
+Crew management will be handled in a 2D top-down view of the ship's interior, leveraging Unity's 2D tools.
+
+- **2D Interior View:**
+  - Side-facing and back-facing sprites for a cutaway effect, similar to *Barotrauma*.
+  - Players can move via WASD or click interactable objects (e.g., computers, panels) for tasks like scanning or comms.
+
+- **Crew AI:**
+  - Crew automatically perform tasks based on ship status (e.g., experiments during coasting, strapping in during maneuvers).
+  - AI uses state machines or behavior trees to manage behavior, with schedules for routine tasks and event-driven responses.
+
+- **Interpersonal Dynamics:**
+  - Relationship system tracks friendships, rivalries, and romances, with a meter (-100 to +100) evolving based on interactions.
+  - Failures cause resentment, potentially leading to risky recommendations (e.g., suggesting disliked crew for EVA).
+
+4.4 User Interface
+------------------
+The user interface (UI) will enable seamless transitions between the 3D space view and the 2D ship interior view, with intuitive controls for navigation and crew management.
+
+- **View Switching:**
+  - Players switch between views via UI buttons or hotkeys, with smooth camera transitions.
+
+- **Controls:**
+  - Navigation tools for plotting orbits and selecting EVA crew.
+  - Crew task assignment via drag-and-drop or schedules.
+
+- **Communications System:**
+  - Implements realistic delays based on distance (e.g., 4-20 minutes to Earth, minimal for nearby ships).
+  - Dialog trees update over time, with contextual options for character arcs and worldbuilding.
+
+4.5 Data Persistence
+--------------------
+A save and load system will preserve game state across chapters, ensuring continuity of crew status, ship data, and world state.
+
+- **Save Data:**
+  - Crew attributes (health, morale, relationships), ship status, and geopolitical balance.
+  - Time skips update crew ages and integrate offspring based on relationships.
+
+- **Implementation:**
+  - Use Unity's serialization system (e.g., JSON or binary formats) for efficient saving and loading.
+
+4.6 Localization
+----------------
+Localization will support multiple languages, particularly English and Mandarin, with dynamic adaptation based on the narrative's geopolitical context.
+
+- **Language Support:**
+  - UI elements, dialogue, and audio adapt to the dominant faction (US or China).
+  - Use Unity's Localization Package for text and audio management.
+
+4.7 Performance Optimization
+----------------------------
+Performance optimization is essential to manage the simulation of orbital mechanics, crew interactions, and UI updates.
+
+- **Techniques:**
+  - Level of Detail (LOD) for distant planets and ships.
+  - Efficient pathfinding for crew movement (e.g., A* algorithm).
+  - UI batching to reduce draw calls.
+
+- **Tools:**
+  - Unity's Profiler and Frame Debugger for identifying bottlenecks.
+
+4.8 Planet Position Calculation
+-------------------------------
+Planet positions will be calculated using a simplified orbital model, updated based on the in-game date.
+
+- **Implementation:**
+  - Use Keplerian approximations with circular orbits and known periods (e.g., Earth: 365.25 days).
+  - Positions are precomputed or calculated once per chapter to minimize runtime impact.
+
+- **Accuracy:**
+  - Sufficient for mission planning, focusing on realism without full n-body simulation.
+
+5. Sample Gameplay: Chapter 1 Mechanics
+=======================================
+
+5.1 Mission Setup
+-----------------
+The mission begins with the *Endeavor* in lunar orbit, having arrived via a smaller moon-based lander in the tutorial and prologue. Players must:
+- Perform a trans-Mars injection burn to leave lunar orbit and enter a trajectory toward Mars, requiring approximately 1.0 km/s delta-v.
+- Plot the trajectory using the 3D navigation interface, selecting an optimal transfer window for fuel efficiency (windows occur every 26 months).
+- Manage fuel for chemical propulsion, ensuring enough delta-v for course corrections, Mars orbital insertion, and landing.
+
+Key Mechanics:
+- Players use chemical rockets for propulsion, with limited fuel. Transit time to Mars is 6-9 months.
+- The ship's systems include life support, power (solar panels), and communications, all requiring crew maintenance.
+
+5.2 Ship Systems
+----------------
+The *Endeavor* is a chemically propelled spacecraft with modular systems:
+- **Propulsion:** Chemical rockets (e.g., liquid oxygen/methane) with finite fuel. Players manage burns for efficiency.
+- **Aerobraking Shield and Landing Craft:** The shield is used for Mars atmospheric entry; the attached landing craft detaches after orbit insertion for descent.
+- **Crew Module:** Similar to Orion CSM, can undock for separate operations (e.g., docking with a Chinese ship, exploring a low gravity object).
+- **Hab Modules:** Remain in orbit for experiments and living quarters, supporting NASA-like scientific tasks.
+
+Mechanics:
+- Aerobraking involves managing descent angle and heat buildup via a mini-game or precise timing.
+- The crew module can be used for EVA or docking with other ships.
+- System failures (e.g., life support) trigger crew repair tasks, with success based on skills and traits.
+
+5.3 Crew Mechanics
+------------------
+The crew consists of 6 customizable members, each with roles and traits:
+- **Customization:** Players select crew traits, backgrounds, and appearances (e.g., faces, hairstyles) at mission start.
+- **Roles:** Pilot, Engineer, Scientist, Medic, Communications Officer, and one additional role (e.g., Navigator).
+- **Traits:** Examples include Calm, Genius, Hot-headed, Empathetic, affecting task performance and interactions.
+
+Mechanics:
+- Crew automatically perform tasks based on ship status (e.g., experiments during transit, strapping in during burns).
+- Relationships (friendships, rivalries) evolve, impacting task efficiency and morale.
+- Crew suggest solutions during crises (e.g., solar flares), with outcomes tied to their status.
+
+5.4 Objectives and Mechanics
+----------------------------
+The mission has primary and secondary objectives:
+- **Primary Objective:** Land on Mars before the Chinese ship, managing fuel, navigation, and landing.
+- **Secondary Objectives:**
+  - Conduct scientific experiments (e.g., Martian soil analysis).
+  - Maintain crew health and morale.
+  - Manage resources (fuel, power, life support).
+
+Crisis Management:
+- Events like solar flares or system malfunctions require player decisions.
+- Crew suggestions during crises are influenced by traits (e.g., a Calm Pilot suggests safer options).
+
+5.5 Outcome Triggers
+--------------------
+Outcomes are dynamic, shaped by player choices and crew performance:
+- **Success (Optimal):** Land first without conflict, boosting US prestige.
+- **Cooperation Path:** Assist a distressed Chinese ship (e.g., docking, rescuing via EVA), potentially leading to joint operations.
+- **Conflict Path:** Sabotage the Chinese ship (e.g., using a missile), escalating tensions.
+- **Exploration Path:** If the Chinese ship crashes, explore wreckage for survivors, with choices to save or ignore.
+- **Failure:** Fail to land (e.g., crash, abort), shifting power to China.
+
+Mechanics:
+- Cooperation involves spending delta-v to intercept and dock, with 2D crew tasks (e.g., resource transfer).
+- Cascading failures (e.g., navigation error leading to missed burn) require management to prevent further issues.
+- Emergent arcs (e.g., saving a crew member's child) are tracked via crew histories and relationship meters.
+
+6. Appendices
+=============
+
+6.1 Glossary
+------------
+This glossary defines key technical terms used throughout the Gameplay/System Document to ensure clarity and consistency.
+
+- **Crew Traits:** Static personality characteristics (e.g., "Hot-headed," "Genius") that influence a crew member's behavior, task performance, and interactions with other crew members.
+- **Orbital Mechanics:** The simulation of spacecraft movement based on real-world physics, including gravity, velocity, and trajectory calculations.
+- **Delta-V (Δv):** A measure of the change in velocity required for spacecraft maneuvers, such as course corrections or orbital insertions.
+- **Transfer Window:** A specific period when planets are aligned optimally for interplanetary travel, minimizing fuel consumption.
+- **Morale:** A dynamic attribute representing a crew member's emotional state, which affects their task efficiency and likelihood of conflicts.
+- **Relationship Meter:** A numerical value (e.g., -100 to +100) that tracks the bond between two crew members, influencing their cooperation and task performance.
+- **EVA (Extravehicular Activity):** A feature allowing crew members to perform tasks outside the spacecraft, such as repairs or rescues, with success tied to their skills and traits.
+- **Aerobraking:** A maneuver using a planet's atmosphere to reduce spacecraft velocity, requiring precise control to avoid damage.
+- **Cascading Failures:** A series of system or task failures that compound over time if not addressed, potentially leading to mission-critical issues.
+
+6.2 Technical References
+------------------------
+This section provides links to external resources and documentation relevant to the game's technical implementation.
+
+- **Unity Documentation:**
+  - [Unity - Scripting API: Transform.position](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Transform-position.html): For handling object positions in 3D space.
+  - [Unity - Data Persistence](https://docs.unity3d.com/Manual/script-Serialization.html): For saving and loading game state.
+  - [Unity - Localization Package](https://docs.unity3d.com/Packages/com.unity.localization@1.0/manual/index.html): For managing multiple languages.
+
+- **Plugins:**
+  - [Simple Kepler Orbits](https://assetstore.unity.com/packages/tools/physics/simple-kepler-orbits-97048): Plugin for simulating orbital mechanics.
+  - [Yarn Spinner](https://github.com/YarnSpinnerTool/YarnSpinner-Unity): For managing dialogue trees and narrative branching.
+
+- **Optimization Guides:**
+  - [Performance Recommendations for Unity](https://learn.microsoft.com/en-us/windows/mixed-reality/develop/unity/performance-recommendations-for-unity): Best practices for optimizing Unity projects.
+  - [Unity Profiler](https://docs.unity3d.com/Manual/Profiler.html): Tool for identifying performance bottlenecks.
+
+- **Orbital Mechanics Resources:**
+  - [NASA: Basics of Space Flight](https://solarsystem.nasa.gov/basics/chapter1-1/): Introduction to orbital mechanics concepts.
+  - [Kerbal Space Program Wiki](https://wiki.kerbalspaceprogram.com/wiki/Main_Page): Community-driven resource for spaceflight simulation mechanics.
+
+6.3 Open Technical Questions
+----------------------------
+This section lists areas of the design that require further clarification or decision-making. These questions will be addressed in future iterations.
+
+- How will crew traits mechanically affect task success rates and crisis resolutions? (e.g., percentage bonuses for Genius trait)
+- What is the exact user interface design for switching between 3D navigation and 2D crew management views? (e.g., button placement, transition animations)
+- How will the narrative branches be structured following key decisions, such as the missile choice in Chapter 1? (e.g., data structure for tracking choices)
+- What technical solutions will be used for data persistence across chapters, especially regarding crew and world state? (e.g., JSON vs. binary serialization)
+- How will localization be implemented to support dynamic language changes based on the narrative's geopolitical context? (e.g., real-time switching of UI and audio)
+- What algorithms will be used for crew pathfinding in the 2D ship interior? (e.g., A* pathfinding)
+- How will the EVA system be integrated into the 3D view, including crew movement and task mechanics? (e.g., physics-based movement vs. scripted paths)
+- What is the performance budget for crew AI and relationship simulations, especially with 6 crew members? (e.g., CPU cycles per frame)
+
+Final document compiled on March 29, 2025 - Awaiting final approval. 

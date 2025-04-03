@@ -1,0 +1,1141 @@
+2. Gameplay Mechanics
+=====================
+
+2.1 Core Loop
+-------------
+The core gameplay loop is structured around four phases for each mission (chapter):
+- Preparation: Players select crew (if applicable), review mission objectives, and plan the spacecraft's trajectory using the 3D solar system view.
+- Transit: Players manage the spacecraft's journey, monitoring systems and adjusting course as needed. Simultaneously, they oversee the crew in the 2D interior view, assigning tasks and handling interpersonal dynamics.
+- Destination: Upon arrival, players complete mission-specific objectives, such as landing on a planet or conducting research. This may involve additional navigation or crew tasks.
+- Conclusion: The mission ends with an evaluation of outcomes, which affect resources, crew status, and the geopolitical landscape for the next chapter.
+
+2.2 3D Orbital Navigation
+-------------------------
+Players navigate the solar system using realistic orbital mechanics:
+- Trajectory Plotting: Players use a 3D interface to select pre-calculated paths or adjust parameters (e.g., delta-v, burn timing) for custom trajectories.
+- Propulsion: Spacecraft use chemical rockets, requiring careful fuel management. Transit times are realistic (e.g., 6-9 months to Mars).
+- Tools: The navigation system provides visual aids for transfer windows, fuel consumption, and travel time, ensuring accessibility while maintaining realism.
+- Constraints: Players must consider fuel limits, gravity assists, and orbital alignment for efficient travel.
+
+2.3 2D Crew Management
+----------------------
+Crew management occurs in a 2D top-down view of the ship's interior:
+- Crew Roles: Each crew member has a role (e.g., Pilot, Engineer) tied to specific tasks (e.g., navigation, repairs).
+- Traits: Crew have traits (e.g., "Hot-headed," "Genius") that influence behavior and task performance.
+- Task Assignment: Players assign tasks manually or via schedules, balancing workload and crew needs.
+- Status Effects: Morale, health, and relationships affect task efficiency. Low morale or conflicts can delay tasks or cause errors.
+- Crew Influence: Crew status directly impacts ship systems (e.g., a stressed Engineer might fail a repair).
+
+2.4 Critical Moments
+--------------------
+Critical moments are random or scripted events that disrupt missions:
+- Triggers: Events like solar flares, micrometeoroid impacts, or crew conflicts occur during transit or at destinations.
+- Crew Suggestions: Crew members propose solutions based on their roles and traits (e.g., Pilot suggests course correction, Engineer proposes system fix).
+- Player Choice: Players select an option, with success determined by crew status (e.g., skill level, morale).
+- Outcomes: Choices can avert disaster, cause damage, or create new challenges, affecting mission success and crew health.
+
+2.5 Difficulty and Failure
+--------------------------
+The game is designed to be forgiving, with failure leading to alternative paths:
+- Failure Scale: Ranges from minor setbacks (e.g., crew injury) to major failures (e.g., mission abort).
+- Rival Setbacks: If players struggle, the rival faction (e.g., China) may face random setbacks, balancing difficulty.
+- Recovery Options: Players can recover via choices like using a missile to sabotage rivals, altering the story but keeping progression.
+- Outcome Carryover: Mission results affect resources, crew composition, and geopolitical balance in future chapters.
+
+- **Faction Influence System:**
+  - Player choices impact faction influence values (us_influence, china_influence, independent_coalition)
+  - Influence thresholds define geopolitical context:
+    - US Dominance (us_influence > 75): Favors individualistic approaches and frontier expansion
+    - Chinese Dominance (china_influence > 75): Emphasizes collective goals and centralized planning
+    - Coalition Rise (independent_coalition > 60): Promotes collaborative governance and technological sharing
+  - Influence scores determine UI aesthetics, recruitment pools, and narrative paths
+
+- **Edge Case: Faction Collapse Scenario**
+  - **Chaotic Fragmentation** (all influence scores < 40): When major factions fail to establish dominance and the coalition lacks cohesion, the solar system fragments into isolated pockets of habitation without centralized authority.
+    
+    - **Aesthetic Impact:** UI adopts a utilitarian patchwork design prioritizing function over form. Color schemes trend toward muted grays and browns with frequent maintenance warnings and system alerts. Multiple languages appear haphazardly across interfaces—English technical terms might appear alongside Mandarin warning labels, Hindi navigation markers, and French distress signals, reflecting the chaotic mix of surviving technologies. Interfaces show visible wear, with flickering displays, static interference during communications, and irregular power fluctuations affecting readability.
+    
+    - **Environmental Representation:** Habitats display visible degradation—hull patches made from mismatched materials, life support systems jury-rigged with components from different manufacturers, and repurposed military hardware protecting vital resources. Space stations operate independently with minimal communication networks, surrounded by defensive measures against raiders.
+    
+    - **Narrative Themes:** Storylines focus on basic survival and resource security in a lawless environment. Missions center on maintaining essential supplies, protecting settlements from opportunistic raiders, and securing critical technology before knowledge is lost. Long-term planning becomes nearly impossible as immediate survival takes precedence.
+    
+    - **Gameplay Impact:** Recruits disproportionately manifest "Self-Reliant," "Resourceful," and "Suspicious" traits (70% probability), with backgrounds in salvage operations, security contracting, and isolated research outposts. Task success rates decrease by specific system:
+      - Life support maintenance: -15% success rate due to non-standardized filtration components
+      - Propulsion systems: -12% success rate from mismatched fuel injectors and control systems
+      - Navigation: -10% accuracy from degraded sensor arrays and unreliable star maps
+      - Communications: -20% range and clarity from incompatible transmission protocols
+      Crew morale begins 15% lower than baseline, with integration challenges intensified (+10% relationship penalty) due to inherent distrust among survivors from different isolated enclaves.
+    
+    - **Implementation Details:**
+      ```csharp
+      bool IsChaosScenario() {
+          return worldState.us_influence < 40 && 
+                 worldState.china_influence < 40 && 
+                 worldState.independent_coalition < 40;
+      }
+      
+      void ApplyChaosEffects() {
+          // Modify available mission types
+          missionGenerator.SetPriority(MissionType.Salvage, 0.35f);
+          missionGenerator.SetPriority(MissionType.Defense, 0.30f);
+          missionGenerator.SetPriority(MissionType.Rescue, 0.25f);
+          missionGenerator.SetPriority(MissionType.Diplomacy, 0.05f); // Nearly impossible
+          missionGenerator.SetPriority(MissionType.Expansion, 0.05f); // Nearly impossible
+          
+          // Apply resource scarcity
+          resourceManager.ApplyMultiplier(0.7f); // 30% reduction across all resources
+          
+          // Increase hostile encounter probability
+          encounterGenerator.SetRaidProbability(baseRaidProbability * 2.0f);
+          encounterGenerator.SetPiracyProbability(basePiracyProbability * 2.5f);
+          
+          // Load chaos-specific UI assets and language mix
+          uiManager.LoadTheme("chaos");
+          uiManager.EnableMultilingualChaos(true); // Random language elements
+      }
+      ```
+
+- **Testing and Validation:**
+  - **Debug Interface:** A development console allows real-time manipulation of faction influence values:
+    ```csharp
+    // Debug command examples
+    SetFactionInfluence("US", 85); // Force US dominance scenario
+    SetFactionInfluence("China", 85); // Force Chinese dominance scenario
+    SetFactionInfluence("Coalition", 85); // Force Coalition dominance scenario
+    SetFactionInfluence("All", 30); // Force Chaos scenario
+    
+    // Validate specific transitions
+    TestInfluenceTransition("US", 74, 76); // Test threshold crossing
+    TestUIAdaptation("China", 85); // Verify Chinese UI elements
+    ```
+    
+  - **Visualization Tools:** Development builds include diagnostic visualizations:
+    - Influence history graphs tracking score evolution throughout test playthroughs
+    - UI preview panels showing faction-specific interfaces without requiring full gameplay
+    - Environmental sample viewers displaying how habitats adapt to different faction influences
+    
+  - **Automated Testing:** Continuous integration pipeline includes:
+    - Script-driven simulations of diverse influence scenarios
+    - Performance benchmarks measuring UI transition smoothness across different hardware
+    - Regression tests ensuring narrative coherence when influence scores fluctuate
+    - Edge case validation for all possible faction combinations
+    
+  - **Chaos Scenario Testing:** Automated tests simulate the Chaos Scenario by setting all influence scores to 30, verifying UI transitions (e.g., multilingual chaos), environmental changes (e.g., degraded habitats), and gameplay impacts (e.g., reduced task success rates, increased raid probability).
+    ```csharp
+    [Test]
+    void ValidateChaosScenario() {
+        // Set all influence scores to 30
+        testFramework.SetFactionInfluence("All", 30);
+        
+        // Verify UI transitions
+        Assert.IsTrue(uiManager.IsMultilingualChaosActive());
+        Assert.AreEqual(UIColorScheme.Utilitarian, uiManager.GetCurrentScheme());
+        
+        // Validate environmental changes
+        Assert.IsTrue(environmentManager.AreHabitatsDegraded());
+        Assert.Greater(environmentManager.GetDebrisCount(), standardDebrisThreshold * 1.5f);
+        
+        // Confirm gameplay impacts
+        Assert.AreEqual(0.85f, taskManager.GetSuccessMultiplier(SystemType.LifeSupport));
+        Assert.AreEqual(0.88f, taskManager.GetSuccessMultiplier(SystemType.Propulsion));
+        Assert.AreEqual(0.9f, taskManager.GetSuccessMultiplier(SystemType.Navigation));
+        Assert.AreEqual(0.8f, taskManager.GetSuccessMultiplier(SystemType.Communications));
+        
+        // Verify increased hazards
+        Assert.AreEqual(
+            encounterGenerator.GetRaidProbability(),
+            baseRaidProbability * 2.0f,
+            0.01f
+        );
+    }
+    ```
+
+2.6 Mission Types and Mechanics
+-------------------------------
+The game features diverse mission types that test player strategy, morality, and leadership while advancing the narrative and influencing faction dynamics. Each mission type offers distinct gameplay challenges that tie into the AI Director system and faction influence mechanics.
+
+- **Exploration Missions:**
+  - **Core Mechanics:** Players navigate uncharted sectors of the solar system, plotting trajectories using orbital mechanics (Section 4.8) to reach distant bodies. Gameplay centers on:
+    * Scanning operations using ship sensors (directional controls, power allocation)
+    * Probe deployment and telemetry analysis (data visualization puzzles)
+    * EVA surveys of anomalies (manual control of suited astronauts)
+    * Sample collection and analysis (laboratory mini-games)
+  
+  - **Technical Implementation:**
+    ```csharp
+    float CalculateExplorationSuccess(CrewMember astronaut, Anomaly target) {
+        float baseChance = 50f;
+        
+        // Skill and trait modifiers
+        baseChance += astronaut.GetSkill(SkillType.Science) * 0.5f;
+        baseChance += astronaut.GetSkill(SkillType.EVA) * 0.3f;
+        
+        // Equipment quality
+        baseChance += equipment.GetQualityModifier(EquipmentType.Scanner) * 10f;
+        
+        // Environmental hazards
+        if (target.radiationLevel > 200) {
+            baseChance -= (target.radiationLevel - 200) * 0.1f;
+            astronaut.AddRadiationExposure(target.radiationLevel * 0.5f * timeExposed);
+        }
+        
+        // Faction-specific bonuses
+        if (worldState.us_influence > 75 && astronaut.HasTrait("Innovative")) {
+            baseChance += 10f; // US technological advantage
+        }
+        if (worldState.china_influence > 75 && astronaut.HasTrait("Methodical")) {
+            baseChance += 10f; // Chinese methodical approach
+        }
+        
+        return Mathf.Clamp(baseChance, 5f, 95f); // Always a chance of success or failure
+    }
+    ```
+  
+  - **Challenges:**
+    * Environmental hazards (radiation storms: +20 mSv exposure, gravity wells: +15% fuel consumption)
+    * Equipment failures (sensor malfunctions: -25% scan accuracy, suit tears: -5% oxygen per minute)
+    * Navigation errors (missed burns: +10% fuel consumption, orbit miscalculations: +2 days mission time)
+    * Unknown phenomena (magnetic anomalies: communications disruption, micrometeoroid swarms: -5% hull integrity)
+  
+  - **Narrative Integration:**
+    * Discoveries can dramatically increase faction influence (+5-15 points based on significance)
+    * First contact with new phenomena may trigger scientific or military response chains
+    * The AI Director creates crew confrontations over resource allocation and research priorities
+    * Alien artifacts or phenomena become central plot elements in subsequent chapters
+    * Crew who make significant discoveries may develop new traits (e.g., "Visionary" or "Obsessive")
+    
+  - **Chapter Structure Integration:**
+    * Exploration missions align with the AI Director's chapter structure (Section 3.4.6):
+      * Setup Phase: Mysterious signals or anomalous readings establish exploration objectives
+      * Development Phase: Initial sensor sweeps reveal partial information, leading to crew theories/debates
+      * Climax Phase: Major discoveries occur at mission peak, often with moral dimensions (e.g., finding evidence of extinct civilization vs. exploitable resources)
+      * Resolution Phase: Scientific data processing contextualizes findings within solar system history
+    * Discovery timing is carefully paced to match narrative tension curves:
+      * Minor findings (geometric formations, unusual mineral compositions) appear in early phases
+      * Significant discoveries (artificial structures, biological samples) coincide with the climax
+      * Scientific analysis and implications extend into the resolution phase and subsequent chapters
+    * The AI Director adjusts anomaly detection probability based on current chapter phase:
+      ```csharp
+      float CalculateDiscoveryProbability(ScanOperation scan, ChapterPhase currentPhase) {
+          float baseChance = scan.GetBaseProbability();
+          
+          // Adjust based on chapter phase
+          switch (currentPhase) {
+              case ChapterPhase.Setup:
+                  return baseChance * 0.4f; // Reduced early discoveries
+              case ChapterPhase.Development:
+                  return baseChance * 0.8f; // Moderate hints and minor findings
+              case ChapterPhase.Climax:
+                  return baseChance * 1.5f; // Dramatically increased major discovery chance
+              case ChapterPhase.Resolution:
+                  return baseChance * 0.6f; // Follow-up discoveries to contextualize
+              default:
+                  return baseChance;
+          }
+      }
+      ```
+
+  - **Failure State Handling:** If an exploration mission fails (e.g., equipment malfunction prevents data collection), the AI Director schedules a follow-up event in the Resolution Phase (Section 3.4.6), such as a crew member's guilt (-10% morale) or a rival faction's discovery of the same site (+10 rival influence), setting up future conflicts.
+
+  - **Callback Generation:** The AI Director logs exploration failures in the narrative memory, using them to generate callbacks in future chapters (e.g., a rival faction's discovery in Chapter 1 leads to a territorial dispute in Chapter 3, +15 rival influence), ensuring long-term consequences.
+
+- **Colonization Missions:**
+  - **Core Mechanics:** Players establish and manage settlements on distant worlds:
+    * Landing site selection (terrain analysis, resource proximity, safety assessment)
+    * Habitat construction (module placement, resource pipeline management, expansion planning)
+    * Life support management (atmosphere cycling, water purification, food production)
+    * Population growth (crew relationships, birth rate factors, genetic diversity management)
+  
+  - **Technical Implementation:**
+    ```csharp
+    bool EvaluateColonyViability(LandingSite site, ColonyType colonyType) {
+        // Score factors
+        float resourceScore = EvaluateResourceAvailability(site, colonyType);
+        float safetyScore = EvaluateSafety(site);
+        float habitabilityScore = EvaluateHabitability(site);
+        
+        // Different colony types weight factors differently
+        float totalScore = 0f;
+        
+        switch (colonyType) {
+            case ColonyType.Research:
+                totalScore = resourceScore * 0.3f + safetyScore * 0.3f + habitabilityScore * 0.4f;
+                break;
+            case ColonyType.Mining:
+                totalScore = resourceScore * 0.6f + safetyScore * 0.3f + habitabilityScore * 0.1f;
+                break;
+            case ColonyType.Agricultural:
+                totalScore = resourceScore * 0.4f + safetyScore * 0.2f + habitabilityScore * 0.4f;
+                break;
+        }
+        
+        // Apply faction modifiers
+        if (worldState.us_influence > 75) {
+            // US prefers resource-rich sites
+            totalScore *= (1f + resourceScore * 0.2f);
+        }
+        if (worldState.china_influence > 75) {
+            // China prefers safer, long-term sustainable sites
+            totalScore *= (1f + safetyScore * 0.2f);
+        }
+        
+        return totalScore > VIABILITY_THRESHOLD;
+    }
+    ```
+  
+  - **Challenges:**
+    * Environmental hazards (dust storms: -20% solar efficiency, seismic activity: structure damage)
+    * Resource scarcity (water shortages: population growth limits, mineral depletion: manufacturing delays)
+    * Social dynamics (isolation effects: -10% morale per Earth-year, faction tensions: labor disputes)
+    * External threats (rival claims: territory disputes, micrometeoroid impacts: -5% structure integrity)
+  
+  - **Narrative Integration:**
+    * Colony success significantly increases faction influence (+15-25 points)
+    * Established colonies become critical locations in the solar system's geopolitical landscape
+    * The AI Director creates confrontations over colony governance and resource distribution
+    * Colonial development affects future mission availability and crew recruitment pools
+    
+  - **Generational Impact:**
+    * Colonies develop distinct cultural identities over multi-generational timeframes:
+      * First generation (0-30 years): Maintains strong ties to originating faction with 90% cultural alignment
+      * Second generation (30-60 years): Develops hybrid identity with 60% faction alignment and 40% unique colonial traits
+      * Third generation (60+ years): Forms autonomous cultural identity with only 30% original faction influence
+    * Cultural evolution manifests through visible changes:
+      * Architectural adaptations to local conditions (e.g., Martian colonies developing deeper subterranean structures)
+      * Language drift with unique terminology (specialized vocabulary for environmental features appears in dialogue)
+      * Art and cultural practices reflecting colonial experiences (visible in habitat decorations and ceremonies)
+    * Colonies influence future crew recruitment and traits:
+      ```csharp
+      CrewMember GenerateColonialRecruit(Colony sourceColony) {
+          CrewMember recruit = new CrewMember();
+          
+          // Base attributes reflect colony environment
+          recruit.physicalAttributes.SetGravityAdaptation(sourceColony.localGravity);
+          recruit.socialAttributes.SetCulturalIdentity(
+              sourceColony.GetCulturalBlend(worldState.currentYear - sourceColony.foundingYear)
+          );
+          
+          // Colonial generation affects trait distribution
+          int colonialGeneration = CalculateGeneration(sourceColony);
+          
+          switch (colonialGeneration) {
+              case 1: // First generation
+                  recruit.AddProbableTrait("Pioneering", 0.7f);
+                  recruit.AddProbableTrait("Homesick", 0.5f);
+                  recruit.SetFactionLoyalty(sourceColony.foundingFaction, 0.9f);
+                  break;
+                  
+              case 2: // Second generation
+                  recruit.AddProbableTrait("Resourceful", 0.6f);
+                  recruit.AddProbableTrait("Xenophilic", 0.4f); // Interest in other colonies/cultures
+                  recruit.SetFactionLoyalty(sourceColony.foundingFaction, 0.6f);
+                  recruit.SetColonyIdentity(sourceColony.name, 0.4f);
+                  break;
+                  
+              case 3: // Third+ generation
+                  recruit.AddProbableTrait("Colonial Pride", 0.8f);
+                  recruit.AddProbableTrait("Environmental Adaptation", 0.7f);
+                  recruit.SetFactionLoyalty(sourceColony.foundingFaction, 0.3f);
+                  recruit.SetColonyIdentity(sourceColony.name, 0.7f);
+                  break;
+          }
+          
+          return recruit;
+      }
+      ```
+    * Generational events can reshape colony development:
+      * Resource discoveries trigger colonial golden ages (population growth +25%, cultural development +15%)
+      * Disasters create foundational myths and cultural resilience (+20% crisis response efficiency)
+      * Colonial rebellions against founding factions can permanently alter faction influence (-30-50 points)
+      * Inter-colonial conflicts establish lasting rivalries that persist across multiple chapters
+    
+  - **Failure State Handling:** A failed colonization attempt (e.g., habitat collapse, -20% population) triggers an AI Director event in the Resolution Phase (Section 3.4.6), such as a crew member developing a "Traumatized" trait (-5% task success) or a faction withdrawing support (-15 influence), impacting future chapters.
+
+  - **Callback Generation:** The AI Director records colonization failures, triggering callbacks in future chapters (e.g., a habitat collapse in Chapter 1 leads to a "Traumatized" crew member's breakdown in Chapter 2, -10% morale, or a faction's withdrawal impacting resource availability, -10% supplies), creating generational impact.
+
+- **Science Missions:**
+  - **Core Mechanics:** Players conduct scientific research in space environments:
+    * Experiment design (hypothesis formulation, equipment selection, procedure planning)
+    * Data collection (sensor array operation, sample analysis, calibration tasks)
+    * Observation management (telescope positioning, detection threshold configuration)
+    * Theory development (data interpretation mini-games, peer review processes)
+  
+  - **Technical Implementation:**
+    ```csharp
+    ResearchOutcome ConductExperiment(Experiment experiment, CrewMember scientist) {
+        float successChance = 50f;
+        
+        // Scientist capability
+        successChance += scientist.GetSkill(SkillType.Science) * 0.6f;
+        
+        // Equipment factors
+        successChance += experiment.equipment.quality * 0.2f;
+        if (experiment.equipment.condition < 50f) {
+            successChance -= (50f - experiment.equipment.condition) * 0.5f;
+        }
+        
+        // Environmental factors
+        if (experiment.requiresStability && shipStatus.currentAcceleration > 0.001f) {
+            successChance -= 20f; // Movement disrupts sensitive experiments
+        }
+        
+        // Faction bonuses
+        if (worldState.china_influence > 75 && experiment.type == ExperimentType.Materials) {
+            successChance += 10f; // Chinese advantage in materials science
+        }
+        if (worldState.us_influence > 75 && experiment.type == ExperimentType.Biotech) {
+            successChance += 10f; // US advantage in biotechnology
+        }
+        
+        // Check for success
+        bool experimentSuccess = Random.Range(0f, 100f) < successChance;
+        
+        // Generate results
+        ResearchData resultData = experimentSuccess 
+            ? experiment.GenerateSuccessData(scientist.GetSkill(SkillType.Science)) 
+            : experiment.GenerateFailureData();
+            
+        // Return outcome
+        return new ResearchOutcome {
+            success = experimentSuccess,
+            data = resultData,
+            scientistExperience = CalculateExperienceGain(experiment, experimentSuccess),
+            researchProgress = CalculateResearchProgress(experiment, resultData)
+        };
+    }
+    ```
+  
+  - **Challenges:**
+    * Experiment failures (contamination: data corruption, equipment misuse: -20% accuracy)
+    * Environmental interference (solar radiation: signal noise, gravity fluctuations: calibration errors)
+    * Knowledge gaps (insufficient baseline data: -15% theory accuracy, methodological flaws: experimental bias)
+    * Resource limitations (power constraints: experiment timeline extensions, bandwidth limits: data transfer delays)
+  
+  - **Narrative Integration:**
+    * Research breakthroughs increase faction influence (+10-20 points)
+    * Scientific discoveries unlock new technologies and mission types in future chapters
+    * The AI Director generates confrontations over research ethics and knowledge sharing
+    * Crew who make breakthroughs develop enhanced skills and new scientific specializations
+    
+  - **Research System Integration:**
+    * Scientific progress accumulates in a persistent research tree:
+      * Discoveries build upon previous findings with prerequisite relationships
+      * Research branches follow distinct methodologies aligned with faction approaches
+      * Breakthrough moment cinematics signify major scientific milestones with narrative implications
+    * Research directly unlocks technological advancements:
+      ```csharp
+      void UnlockTechnology(ResearchBreakthrough breakthrough) {
+          // Add to discovered technologies
+          worldState.discoveredTechnologies.Add(breakthrough.technology);
+          
+          // Apply immediate benefits
+          switch (breakthrough.technology) {
+              case TechnologyType.AdvancedLifeSupport:
+                  shipSystems.resourceConsumption[ResourceType.Oxygen] *= 0.8f; // 20% more efficient
+                  break;
+                  
+              case TechnologyType.IonPropulsion:
+                  shipSystems.fuelEfficiency *= 1.25f; // 25% more efficient
+                  break;
+                  
+              case TechnologyType.QuantumCommunications:
+                  communicationSystem.latency *= 0.6f; // 40% reduced delay
+                  break;
+                  
+              case TechnologyType.FusionPower:
+                  shipSystems.powerOutput *= 1.5f; // 50% more power
+                  colonizationSystem.UnlockHabitatModule(ModuleType.FusionReactor);
+                  break;
+          }
+          
+          // Schedule narrative event for breakthrough
+          aiDirector.ScheduleBreakthroughEvent(breakthrough);
+          
+          // Check for prerequisite completions that unlock new research
+          List<ResearchProject> newlyAvailableProjects = 
+              researchTree.GetNewlyAvailableProjects(breakthrough.technology);
+          
+          foreach (ResearchProject project in newlyAvailableProjects) {
+              researchManager.AddAvailableProject(project);
+          }
+      }
+      ```
+    * Specialized research facilities enhance capabilities:
+      * Orbital observatories improve sensor range (+50%) and detection accuracy (+25%)
+      * Zero-G laboratories enable unique experimental conditions for materials research
+      * Planetary research stations provide continuous long-term data collection
+      * Deep space probes extend observation ranges beyond direct human presence
+    * Research progress creates inter-chapter continuity:
+      * Scientific mysteries introduced in early chapters resolve through multi-generation research
+      * Technology forecasting allows players to prioritize research with long-term strategic goals
+      * Scientific paradigm shifts can dramatically recontextualize previous discoveries
+      * Knowledge preservation across generations becomes critical to research advancement
+
+  - **Failure State Handling:** If a science mission fails (e.g., experiment contamination), the AI Director creates a Resolution Phase event (Section 3.4.6), such as a "Genius" Scientist becoming "Obsessive" (+5% research speed, -10% morale), or a rival faction gaining the tech (+10 rival influence), driving future rivalry.
+
+  - **Callback Generation:** Failed science missions are logged by the AI Director, leading to callbacks in future chapters (e.g., a contaminated experiment in Chapter 1 results in a rival faction's tech advantage in Chapter 3, +15 rival influence, or a crew member's "Obsessive" trait causing a risky experiment, -10% crew health), driving narrative progression.
+
+- **Combat Missions:**
+  - **Core Mechanics:** Players engage in ship-to-ship or ground operations against rival factions:
+    * Weapon systems management (targeting computers, payload selection, firing solutions)
+    * Defensive operations (countermeasure deployment, evasive maneuvers, shield management)
+    * Tactical positioning (orbital dynamics, sensor shadows, firing arc optimization)
+    * Damage control (system prioritization, crew assignment, resource allocation)
+  
+  - **Technical Implementation:**
+    ```csharp
+    bool CalculateWeaponHit(Weapon weapon, Ship target, float distance) {
+        float baseHitChance = weapon.baseAccuracy;
+        
+        // Range modifiers
+        float rangeModifier = 1f - (distance / weapon.maxRange) * 0.8f;
+        baseHitChance *= rangeModifier;
+        
+        // Target evasion
+        if (target.isPerformingEvasiveManeuvers) {
+            baseHitChance *= 0.7f; // 30% reduction when target is evading
+        }
+        
+        // Crew skill (gunner)
+        CrewMember gunner = shipSystems.GetSystemOperator(ShipSystem.Weapons);
+        if (gunner != null) {
+            baseHitChance += gunner.GetSkill(SkillType.Weapons) * 0.03f; // +3% per skill level
+        }
+        
+        // Environmental factors
+        if (currentLocation.radiationLevel > 200) {
+            baseHitChance *= 0.9f; // Radiation interferes with targeting
+        }
+        
+        // Faction tech advantages
+        if (weapon.faction == Faction.US && worldState.us_influence > 75) {
+            baseHitChance *= 1.1f; // US targeting systems advantage
+        }
+        
+        // Final calculation
+        return Random.Range(0f, 1f) < Mathf.Clamp01(baseHitChance);
+    }
+    ```
+  
+  - **Challenges:**
+    * System damage (power fluctuations: -15% weapon efficiency, targeting system failures: -25% accuracy)
+    * Crew limitations (combat stress: -10% performance per minute, injury: system operator incapacitation)
+    * Collateral concerns (civilian stations proximity: restricted firing arcs, debris: +10% collision risk)
+    * Crew psychology (combat stress: +15% per engagement round, PTSD: recurring performance penalties)
+  
+  - **Narrative Integration:**
+    * Victories dramatically increase faction influence (+15-25 points) but escalate war paths
+    * Defeats decrease influence significantly (-15-25 points) and may force retreat scenarios
+    * The AI Director generates confrontations over rules of engagement and surrender terms
+    * Combat outcomes have lasting consequences on diplomatic options in subsequent chapters
+    * Crew who participate in combat have increased chances of developing "Traumatized" traits
+    
+  - **Chaos Scenario Impact:**
+    * During faction collapse (Section 2.5), combat dynamics fundamentally transform:
+      * Traditional military engagements give way to asymmetric skirmishes with diverse motives
+      * Combat focuses on resource defense rather than territorial control
+      * Rules of engagement become highly inconsistent between fragmented groups
+      * Victory conditions shift from political/strategic objectives to immediate survival concerns
+    * Chaos combat introduces unique mechanical modifiers:
+      ```csharp
+      void ApplyChaosScenarioCombatModifiers(CombatEncounter encounter) {
+          // Adjust encounter parameters for chaos scenario
+          encounter.victoryInfluenceGain *= 0.5f; // Reduced faction influence gains
+          encounter.defeatInfluenceLoss *= 0.5f; // Reduced faction influence losses
+          
+          // Increase equipment diversity and unpredictability
+          encounter.enemyWeaponVariability = WeaponVariability.High;
+          encounter.enemyTacticsCoherence = TacticalCoherence.Low;
+          
+          // Apply scavenger faction parameters
+          if (encounter.enemyFaction.type == FactionType.Scavenger) {
+              encounter.enemyMoraleVolatility = MoraleVolatility.VeryHigh; // Quick to retreat if losing
+              encounter.salvageValueMultiplier = 1.5f; // More valuable salvage from defeating scavengers
+              encounter.ambushProbability = 0.4f; // 40% chance of starting with an ambush
+          }
+          
+          // Modify crew response to combat
+          foreach (CrewMember crew in crewManager.GetActiveCrew()) {
+              // Combat in chaos scenario actually increases morale for some crew
+              // (survivors feel validated in their resilience)
+              if (crew.HasTrait("Survivor") || crew.HasTrait("Hardened")) {
+                  crew.combatMoraleModifier = 0.05f; // 5% morale increase during combat
+              }
+              
+              // Adjust stress accumulation based on previous chaos exposure
+              if (crew.chaosExposureTime > YEAR_IN_SECONDS) {
+                  crew.combatStressAccumulation *= 0.7f; // 30% reduced stress for veterans
+              }
+          }
+      }
+      ```
+    * Visual and audio design reflects chaotic combat:
+      * Enemy vessels display patchwork designs with mismatched components
+      * Targeting systems struggle to identify cohesive faction signatures
+      * Combat communications feature degraded audio quality and language mixing
+      * Weapon effects show improvised nature (e.g., mining charges repurposed as weapons)
+    * Post-combat narrative emphasizes survival over victory:
+      * Debriefings focus on resource acquisition rather than strategic advantage
+      * Crew interactions reflect pragmatic assessment rather than patriotic sentiment
+      * AI Director selects dialogue emphasizing the cost of conflict in resource-scarce conditions
+      * Morale impacts trend positive (+5-10%) after successful defense of essential resources
+
+  - **Failure State Handling:** A combat mission failure (e.g., ship damage, -20% hull integrity) leads to an AI Director event in the Resolution Phase (Section 3.4.6), such as crew trauma (-15% morale) or a rival faction gaining territory (+20 rival influence), escalating war paths.
+
+  - **Callback Generation:** The AI Director uses combat failures to create callbacks in future chapters (e.g., a ship damage failure in Chapter 1 leads to a crew member's trauma affecting a mission in Chapter 2, -15% morale, or a rival faction's territorial gain escalating conflict, +20 rival influence), ensuring ongoing tension.
+
+- **Realistic Space Combat Mechanics:**
+  - **Physics-Based Warfare:** The game implements realistic orbital mechanics and physics in combat scenarios:
+    * **Orbital Dynamics:** Combat takes place within the constraints of orbital mechanics, with battles occurring over days or weeks rather than minutes.
+    * **Delta-V Budgeting:** Maneuvers require careful fuel management, with each burn calculated for optimal positioning and interception.
+    * **Projectile Trajectories:** Weapons fire follows predictable orbital paths, requiring lead targeting and accounting for gravity effects.
+    * **No-Atmosphere Behavior:** Ships move according to Newtonian physics without atmospheric drag, continuing on trajectories until thrust is applied.
+  
+  - **Technical Implementation:**
+    ```csharp
+    Vector3 CalculateInterceptTrajectory(Ship attacker, Ship target, float projectileSpeed) {
+        // Calculate time to intercept based on current positions and velocities
+        Vector3 relativePosition = target.position - attacker.position;
+        Vector3 relativeVelocity = target.velocity - attacker.velocity;
+        
+        // Quadratic equation coefficients for intercept time
+        float a = Vector3.Dot(relativeVelocity, relativeVelocity) - (projectileSpeed * projectileSpeed);
+        float b = 2f * Vector3.Dot(relativeVelocity, relativePosition);
+        float c = Vector3.Dot(relativePosition, relativePosition);
+        
+        // Solve quadratic equation for intercept time
+        if (!SolveQuadratic(a, b, c, out float t1, out float t2))
+            return Vector3.zero; // No solution possible
+            
+        // Use earliest positive intercept time
+        float interceptTime = (t1 < 0) ? t2 : ((t2 < 0) ? t1 : Mathf.Min(t1, t2));
+        
+        if (interceptTime < 0)
+            return Vector3.zero; // No future intercept possible
+            
+        // Calculate target's future position
+        Vector3 targetFuturePosition = target.position + target.velocity * interceptTime;
+        
+        // Calculate required velocity vector for projectile
+        Vector3 requiredVelocity = (targetFuturePosition - attacker.position) / interceptTime;
+        
+        return requiredVelocity;
+    }
+    ```
+  
+  - **Realistic Weapon Systems:**
+    * **Kinetic Kill Vehicles:** Tungsten rods or guided projectiles that rely on kinetic energy, traveling at 5-15 km/s.
+    * **Directed Energy Weapons:** Lasers and particle beams with limited range due to divergence and power requirements.
+    * **Nuclear Missiles:** Long-range weapons with 1-2G acceleration, using nuclear thermal rockets for efficient burns.
+    * **Point Defense Systems:** Close-in weapon systems (CIWS) to intercept incoming projectiles, effective within 5-10km.
+    * **Electronic Warfare:** Signal jamming, sensor blinding, and communication disruption.
+  
+  - **Engagement Phases:**
+    * **Detection:** Combat begins with sensor detection at extreme ranges (50,000+ km), using infrared, radar, and visual systems.
+    * **Maneuver:** Ships adjust orbits for optimal positioning, often taking days to establish firing solutions.
+    * **Engagement:** Weapon exchange occurs at medium ranges (5,000-30,000 km), with kinetics and directed energy.
+    * **Point Defense:** Close-range defense systems activate as threats approach (1-5,000 km).
+    * **Damage Control:** Crew responds to damage by prioritizing critical systems and sealing breaches.
+  
+  - **Space Warfare Realities:**
+    * **Debris Generation:** Combat creates orbital debris fields that persist for decades, threatening future operations.
+    * **Heat Management:** Weapon firing and system operation generate heat that must be dissipated to avoid detection and system failure.
+    * **Communication Delays:** Light-speed limitations impose command delays (e.g., 3-22 minutes for Earth-Mars communications).
+    * **Crew Vulnerability:** No quick rescue options exist in space, making crew survival a critical concern.
+    
+  - **Impact on Gameplay:**
+    * Combat occurs over extended timeframes, with tactical planning phases between action periods.
+    * Players balance offensive capabilities against heat signatures that increase detection probability.
+    * Strategic positioning becomes more important than reflexes, with interception points planned days in advance.
+    * Combat failures create persistent hazards in strategic regions rather than temporary setbacks.
+    ```csharp
+    void GenerateCombatDebris(Vector3 collisionPosition, float collisionForce, ShipType shipType)
+    {
+        int debrisCount = Mathf.FloorToInt(collisionForce / DEBRIS_FORCE_THRESHOLD);
+        
+        for (int i = 0; i < debrisCount; i++)
+        {
+            // Calculate random ejection velocity based on collision force
+            Vector3 ejectionDirection = Random.onUnitSphere;
+            float ejectionSpeed = Random.Range(
+                collisionForce * 0.05f, 
+                collisionForce * 0.15f
+            );
+            
+            // Create debris object with appropriate size based on ship type
+            float debrisSize = Random.Range(0.1f, 1.5f) * GetShipSizeMultiplier(shipType);
+            
+            // Add to persistent orbital debris tracking system
+            OrbitalDebris debris = new OrbitalDebris(
+                collisionPosition,
+                ejectionDirection * ejectionSpeed,
+                debrisSize,
+                CalculateDebrisLifespan(debrisSize, ejectionSpeed)
+            );
+            
+            worldState.orbitalDebrisManager.AddDebris(debris);
+            
+            // Increase regional hazard level
+            worldState.IncreaseRegionalHazard(
+                OrbitMapper.GetRegionForPosition(collisionPosition),
+                debrisSize * DEBRIS_HAZARD_MULTIPLIER
+            );
+        }
+    }
+    ```
+
+  - **Failure State Handling:** Combat tactics that ignore orbital mechanics and physics (e.g., excessive maneuvering, -60% fuel) trigger AI Director events in the Resolution Phase (Section 3.4.6), such as stranded ships (-20% crew morale) or environmental damage (persistent debris fields, +15% navigation hazard).
+
+  - **Narrative Integration:**
+    * Combat decisions reflect realistic consequences—missile launches create debris that affects future missions in the same region.
+    * Crew discussions incorporate orbital mechanics terminology and realistic combat tactics.
+    * Mission planning emphasizes the strategic rather than tactical nature of space combat.
+    * Time skips between chapters show the long-term consequences of space warfare, including debris fields and environmental damage.
+
+- **Espionage Missions:**
+  - **Core Mechanics:** Players conduct covert operations against rival factions:
+    * Intelligence gathering (communications interception, data mining mini-games)
+    * Infiltration (stealth mechanics, disguise systems, social engineering)
+    * Asset recruitment (dialogue systems, incentive management, loyalty assessment)
+    * Sabotage operations (system targeting, plausible deniability, exfiltration planning)
+  
+  - **Technical Implementation:**
+    ```csharp
+    float CalculateInfiltrationSuccess(CrewMember agent, Facility target) {
+        float successChance = BASE_INFILTRATION_CHANCE;
+        
+        // Agent skills and traits
+        successChance += agent.GetSkill(SkillType.Subterfuge) * 0.7f;
+        successChance += agent.GetSkill(SkillType.Social) * 0.4f;
+        
+        if (agent.HasTrait("Charismatic")) successChance += 15f;
+        if (agent.HasTrait("Suspicious")) successChance -= 10f;
+        
+        // Target security level
+        successChance -= target.securityLevel * 5f;
+        
+        // Faction context modifications
+        if (worldState.us_influence > 60 && target.faction == Faction.China) {
+            successChance -= 10f; // Heightened security during high tensions
+        }
+        if (worldState.independent_coalition > 50) {
+            successChance += 5f; // Coalition informants may help
+        }
+        
+        // Detection chance increases with each operation at the same facility
+        successChance -= target.previousInfiltrations * 5f;
+        
+        return Mathf.Clamp(successChance, 5f, 95f);
+    }
+    ```
+  
+  - **Challenges:**
+    * Detection risk (security systems: 30% chance of alarm per action, patrols: timing-based evasion)
+    * Counterintelligence (disinformation: -20% intelligence reliability, double agents: sabotage risk)
+    * Extraction difficulties (pursuit scenarios, injured agent: -50% movement speed)
+    * Moral hazards (civilian casualties: -15% crew morale, compromising informants: -10% independent_coalition)
+  
+  - **Narrative Integration:**
+    * Successful espionage boosts faction influence (+10 points) while reducing rival influence (-10 points)
+    * Failed operations severely impact diplomatic relations and may trigger retaliation missions
+    * The AI Director creates confrontations between Security Officers and Diplomats over ethics
+    * Intelligence gathered unlocks special options in later diplomatic or combat missions
+    
+  - **Chapter Structure Integration:**
+    * Espionage operations align strategically with chapter phases (Section 3.4.6):
+      * Setup Phase: Intelligence gaps are identified and infiltration plans developed
+      * Development Phase: Initial intelligence gathering builds comprehensive target profiles
+      * Climax Phase: Critical intelligence secured or high-value assets recruited at narrative peak
+      * Resolution Phase: Intelligence analysis reveals implications that shape future missions
+    * Intelligence payoffs are timed for maximum narrative impact:
+      ```csharp
+      void ScheduleIntelligenceReveal(IntelligenceData intel, ChapterPhase targetPhase) {
+          // Register intelligence with narrative system
+          intelligenceManager.RegisterIntelligence(intel);
+          
+          // Calculate ideal revelation timing based on chapter phase
+          float revealTime;
+          switch (targetPhase) {
+              case ChapterPhase.Development:
+                  // Early intelligence provides guidance for mission development
+                  revealTime = chapterManager.GetPhaseStartTime(ChapterPhase.Development) + 
+                              (chapterManager.GetPhaseDuration(ChapterPhase.Development) * 0.3f);
+                  break;
+                  
+              case ChapterPhase.Climax:
+                  // Critical intelligence revealed during climax for maximum impact
+                  revealTime = chapterManager.GetPhaseStartTime(ChapterPhase.Climax) +
+                              (chapterManager.GetPhaseDuration(ChapterPhase.Climax) * 0.2f);
+                  break;
+                  
+              case ChapterPhase.Resolution:
+                  // Contextual intelligence that sets up future chapters
+                  revealTime = chapterManager.GetPhaseStartTime(ChapterPhase.Resolution) +
+                              (chapterManager.GetPhaseDuration(ChapterPhase.Resolution) * 0.4f);
+                  break;
+                  
+              default:
+                  // Default to mid-chapter if no specific phase targeted
+                  revealTime = chapterManager.GetCurrentTime() + 
+                              (chapterManager.GetTotalDuration() * 0.5f);
+                  break;
+          }
+          
+          // Schedule the intelligence reveal event
+          aiDirector.ScheduleEvent(
+              EventType.IntelligenceReveal,
+              revealTime,
+              new Dictionary<string, object> {
+                  { "intelligence", intel },
+                  { "source", intel.sourceName },
+                  { "reliability", intel.reliabilityRating }
+              }
+          );
+      }
+      ```
+    * Asset recruitment creates persistent narrative threads:
+      * Assets developed in early chapters become key contacts in later missions
+      * Betrayal risks increase with each chapter an asset remains active
+      * The most valuable intelligence comes from long-term cultivated sources
+      * Double-agent revelations create dramatic climax moments with significant faction impacts
+    * Espionage consequences cascade through subsequent chapters:
+      * Exposed operations reduce future infiltration success rates (-15% base chance)
+      * Compromised assets can become antagonists in later chapters
+      * Uncovered sabotage creates lasting diplomatic tensions (+20% conflict chance)
+      * Failed extraction operations lead to hostage recovery missions
+
+  - **Failure State Handling:** If an espionage mission fails (e.g., agent detected, -15 influence), the AI Director schedules a Resolution Phase event (Section 3.4.6), such as a diplomatic crisis (-20 faction relations) or a crew member's betrayal risk increasing (+10% betrayal chance), setting up future tension.
+
+  - **Callback Generation:** Espionage failures are recorded by the AI Director, triggering callbacks in future chapters (e.g., a detected agent in Chapter 1 leads to a diplomatic crisis in Chapter 3, -20 faction relations, or a crew member's increased betrayal risk causing a sabotage event, -10% ship integrity), maintaining narrative stakes.
+
+- **Diplomacy Missions:**
+  - **Core Mechanics:** Players negotiate with rival factions and neutral parties:
+    * Dialogue systems (topic selection, response options, relationship tracking)
+    * Resource negotiation (trading offers, concession management, agreement terms)
+    * Alliance building (trust mechanics, mutual benefit assessment, competing interests)
+    * Crisis resolution (de-escalation options, compromise finding, saving face mechanics)
+  
+  - **Technical Implementation:**
+    ```csharp
+    NegotiationOutcome ProcessDiplomaticRound(
+        CrewMember diplomat, 
+        FactionRepresentative representative,
+        NegotiationTopic topic
+    ) {
+        float baseSuccessChance = 50f;
+        
+        // Diplomat capabilities
+        baseSuccessChance += diplomat.GetSkill(SkillType.Diplomacy) * 0.6f;
+        baseSuccessChance += diplomat.GetSkill(SkillType.Psychology) * 0.3f;
+        
+        if (diplomat.HasTrait("Charismatic")) baseSuccessChance += 15f;
+        if (diplomat.HasTrait("Abrasive")) baseSuccessChance -= 15f;
+        
+        // Faction relationship factors
+        FactionRelations relations = worldState.GetFactionRelations(
+            playerFaction, 
+            representative.faction
+        );
+        
+        baseSuccessChance += relations.trustLevel * 0.5f;
+        
+        // Topic-specific modifications
+        switch (topic) {
+            case NegotiationTopic.ResourceSharing:
+                if (worldState.resources[ResourceType.Water] < 50) {
+                    baseSuccessChance -= 20f; // Can't offer what you don't have
+                }
+                break;
+            case NegotiationTopic.MilitaryCooperation:
+                if (relations.pastConflicts > 3) {
+                    baseSuccessChance -= 15f; // Historic enemies are suspicious
+                }
+                break;
+        }
+        
+        // Random factors (representative's mood, external events)
+        float randomFactor = Random.Range(-10f, 10f);
+        
+        float finalChance = Mathf.Clamp(baseSuccessChance + randomFactor, 5f, 95f);
+        bool success = Random.Range(0f, 100f) < finalChance;
+        
+        // Results affect faction influence
+        if (success) {
+            if (representative.faction == Faction.Independent) {
+                worldState.independent_coalition += 5f;
+            } else if (representative.faction == Faction.China) {
+                worldState.china_influence += 3f;
+            } else if (representative.faction == Faction.US) {
+                worldState.us_influence += 3f;
+            }
+        }
+        
+        return new NegotiationOutcome {
+            success = success,
+            concessionsMade = CalculateConcessions(topic, success),
+            benefitsGained = CalculateBenefits(topic, success),
+            relationshipChange = success ? 10f : -5f
+        };
+    }
+    ```
+  
+  - **Challenges:**
+    * Cultural misunderstandings (translation errors: -15% negotiation success, protocol violations: offense taken)
+    * Hidden agendas (deception detection mini-games, trust verification challenges)
+    * Time pressure (crisis deadlines: -5% success chance per day delayed, media leaks: public opinion shifts)
+    * Conflicting interests (resource demands: -10% economic output, sovereignty disputes: territory access limitations)
+  
+  - **Narrative Integration:**
+    * Successful diplomacy significantly boosts independent_coalition influence (+10-20 points)
+    * Agreements shape narrative options in subsequent chapters (trade routes, joint missions)
+    * The AI Director generates confrontations between ideologically opposed crew during negotiations
+    * Failed diplomacy may lock certain story paths and escalate toward combat scenarios
+    
+  - **Crew Development Impact:**
+    * Diplomatic missions profoundly shape crew capabilities and perspectives:
+      * Cultural adaptation systems track exposure to foreign practices:
+        ```csharp
+        void UpdateCulturalAdaptation(CrewMember diplomat, FactionType exposureFaction, float duration) {
+            // Calculate adaptation rate based on traits and skills
+            float adaptationRate = BASE_ADAPTATION_RATE;
+            
+            if (diplomat.HasTrait("Xenophilic")) {
+                adaptationRate *= 1.5f; // 50% faster adaptation for xenophiles
+            }
+            if (diplomat.HasTrait("Traditional")) {
+                adaptationRate *= 0.7f; // 30% slower adaptation for traditionalists
+            }
+            
+            // Calculate adaptation amount
+            float adaptationAmount = adaptationRate * duration * 
+                                   (1f + diplomat.GetSkill(SkillType.Diplomacy) * 0.05f);
+            
+            // Update cultural understanding
+            diplomat.culturalUnderstanding[exposureFaction] += adaptationAmount;
+            
+            // Check for cultural understanding threshold crossings
+            if (diplomat.CheckUnderstandingThreshold(exposureFaction, BASIC_UNDERSTANDING)) {
+                // Grant "Cultural Awareness" trait for basic understanding
+                diplomat.AddTrait("Cultural Awareness - " + exposureFaction.name);
+                
+                // Notify AI Director of character development
+                aiDirector.RegisterCharacterDevelopment(
+                    diplomat,
+                    CharacterDevelopmentType.CulturalAwareness,
+                    exposureFaction
+                );
+            }
+            
+            if (diplomat.CheckUnderstandingThreshold(exposureFaction, DEEP_UNDERSTANDING)) {
+                // Grant "Cultural Expert" specialization
+                diplomat.AddSpecialization(Specialization.CulturalExpert, exposureFaction);
+                
+                // Improve diplomatic skills
+                diplomat.ModifySkill(SkillType.Diplomacy, EXPERTISE_SKILL_BONUS);
+                
+                // Add unique dialogue options in future negotiations
+                dialogueManager.UnlockCulturalOptions(diplomat, exposureFaction);
+            }
+        }
+        ```
+      * Extended diplomatic missions may yield permanent trait changes:
+        * "Ethnocentric" can transform to "Culturally Aware" after sufficient positive exposure
+        * "Rigid" may evolve to "Flexible" through successful compromise negotiations
+        * "Isolationist" can develop into "Cosmopolitan" through alliance-building
+        * New trait "Cultural Bridge" may emerge in crew who successfully mediate between factions
+      * Language acquisition improves communication efficiency:
+        * Learning key phrases reduces translation errors by 35%
+        * Fluency grants +15% negotiation success chance with matched faction
+        * Dialect understanding reveals cultural subtexts and implied meanings
+        * Multilingual crew become valuable assets for complex multi-faction negotiations
+    * Diplomatic experiences create specialized knowledge:
+      * Faction-specific protocol expertise reduces offense probability by 75%
+      * Negotiation style familiarity improves offer optimization
+      * Personal relationship networks with specific factions provide intelligence benefits
+      * Crisis resolution experience improves future de-escalation success rates by 25%
+
+  - **Failure State Handling:** A failed diplomacy mission (e.g., negotiation breakdown, -10 independent_coalition) triggers an AI Director event in the Resolution Phase (Section 3.4.6), such as a crew member losing trust in leadership (-10% morale) or escalating tensions (+15% conflict chance), impacting future chapters.
+
+  - **Callback Generation:** The AI Director logs diplomacy failures, using them for callbacks in future chapters (e.g., a negotiation breakdown in Chapter 1 leads to escalated tensions in Chapter 3, +15% conflict chance, or a crew member's loss of trust impacting leadership decisions, -10% morale), ensuring long-term consequences.
+
+- Each mission type introduces unique gameplay systems while maintaining cohesive connections to the core mechanics of orbital science, crew management, and factional dynamics. The AI Director weaves these elements into a narrative tapestry, ensuring player choices have meaningful, cascading effects across both immediate gameplay and generational outcomes.
+
+2.3 Health and Resource Management
+----------------------------------
+
+The game features a complex health and resource management system that models both physical and psychological well-being of crew members, as well as ship-wide resource constraints.
+
+### 2.3.1 Life Support and Crew Health
+
+- **Core Life Support Mechanics:**
+  - Players manage critical life support parameters including:
+    * Oxygen generation and consumption (1.5 kg/person/day)
+    * Water recycling systems (85-93% efficiency depending on system quality)
+    * Temperature regulation (18-24°C optimal range, with 5% efficiency loss per 2°C deviation)
+    * Atmospheric pressure (5% cognitive impairment below 93kPa)
+    * CO2 scrubbing (cognitive impairment begins at 1000ppm, serious health risks above 5000ppm)
+  
+  - **Physical Health System:**
+    * Injury modeling (cuts, fractures, burns, radiation damage)
+    * Chronic condition development (microgravity effects on bone density: -1% per month)
+    * Medical treatment workflows requiring specific skills and resources
+    * Progressive aging effects during time skips (scaled performance decline by attribute)
+  
+  - **Psychological Health Modeling:**
+    * **Neurobiological Changes:** The system tracks specific brain changes based on mission duration and exposure:
+      - Macrostructural shifts affecting spatial orientation (+15% error in spatial tasks after 6+ months)
+      - Vestibular system degradation (35% increased fall risk after 1+ year missions)
+      - Hippocampal alterations affecting memory formation (-10-20% recall accuracy)
+      - Sleep cycle disruption (cognitive performance: -5% per hour below 6-hour sleep average)
+    
+    * **Mission-specific Stressors:**
+      - LEO Missions: Social dynamics (-5% morale if crew compatibility < 50%), noise (+2% stress/day in cramped modules)
+      - Lunar Missions: Sensory deprivation (+5% stress/week), Earth observation opportunities (-10% stress when available)
+      - Mars Missions: Communication delays (+15% stress during critical events), isolation (+0.5% stress/day, plateauing after 120 days)
+      - Outer System: Existential perspective (+25% philosophical trait development), complete communication isolation (+35% stress)
+    
+    * **Countermeasure Systems:**
+      ```csharp
+      float CalculateCountermeasureEffectiveness(CountermeasureType type, CrewMember crew, MissionProfile mission) {
+          float baseEffectiveness = countermeasureBaseValues[type];
+          
+          // Adjust for mission type
+          float missionModifier = 1.0f;
+          switch (mission.type) {
+              case MissionType.LEO:
+                  if (type == CountermeasureType.EarthCommunication)
+                      missionModifier = 1.0f; // Full effectiveness
+                  if (type == CountermeasureType.VirtualReality)
+                      missionModifier = 0.8f; // Less critical in LEO
+                  break;
+                  
+              case MissionType.Lunar:
+                  if (type == CountermeasureType.EarthCommunication)
+                      missionModifier = 0.9f; // Slight delay
+                  if (type == CountermeasureType.VirtualReality)
+                      missionModifier = 0.9f;
+                  break;
+                  
+              case MissionType.Mars:
+                  if (type == CountermeasureType.EarthCommunication)
+                      missionModifier = 0.5f; // Significant delay
+                  if (type == CountermeasureType.VirtualReality)
+                      missionModifier = 1.2f; // More important
+                  if (type == CountermeasureType.CrewCohesionActivity)
+                      missionModifier = 1.3f; // Critical for Mars
+                  break;
+                  
+              case MissionType.DeepSpace:
+                  if (type == CountermeasureType.EarthCommunication)
+                      missionModifier = 0.2f; // Minimal usefulness
+                  if (type == CountermeasureType.VirtualReality)
+                      missionModifier = 1.5f; // Essential
+                  if (type == CountermeasureType.AICounseling)
+                      missionModifier = 1.4f; // Required for deep space
+                  if (type == CountermeasureType.Garden)
+                      missionModifier = 1.4f; // Critical psychological benefit
+                  break;
+          }
+          
+          // Adjust for mission duration (some countermeasures lose effectiveness over time)
+          float durationModifier = 1.0f;
+          if (type == CountermeasureType.VirtualReality) {
+              // VR effectiveness diminishes without content updates
+              durationModifier = Mathf.Max(0.5f, 1.0f - (mission.elapsedDays / 180f) * 0.05f);
+          }
+          
+          // Adjust for crew preferences and psychology
+          float personalityModifier = 1.0f;
+          if (type == CountermeasureType.SocialRobot && crew.HasTrait(TraitType.Introverted))
+              personalityModifier = 1.3f; // 30% more effective for introverts
+          
+          if (type == CountermeasureType.GroupActivity && crew.HasTrait(TraitType.Extroverted))
+              personalityModifier = 1.25f; // 25% more effective for extroverts
+          
+          return baseEffectiveness * missionModifier * durationModifier * personalityModifier;
+      }
+      ```
+    
+    * **Technology Progression:**
+      - Basic countermeasures (exercise, scheduled communications) available from game start
+      - Advanced systems unlock with research:
+        * Deep Immersion VR (requires Neural Interface research) - 98% Earth simulation fidelity
+        * Social Robotics (requires AI Advancement research) - 25% cortisol reduction
+        * Haptic Feedback Systems (requires Sensory Tech research) - 10% improved Earth connection
+        * Dream Engineering (requires Neurotech research) - 40% improved sleep quality
+  
+  - **Integration with Ship Systems:**
+    * Power allocation affects countermeasure availability (VR requires 5kW during operation)
+    * Module damage cascades to psychological systems (hull breach → emergency protocols → +25% stress)
+    * Crew psychological state affects system operation efficiency (−2% efficiency per 10% stress above threshold)
+    * Medical bay upgrades improve psychological treatment options (Advanced Medbay enables neurostimulation therapy)
+
+- **Technical Implementation:**
+  ```csharp
+  void UpdateCrewPsychologicalState(CrewMember crew, float deltaTime) {
+      // Base stress accumulation from environmental factors
+      float stressAccumulation = GetBaseStressRate(crew, shipSystems.environment);
+      
+      // Neurobiological impact based on mission duration
+      float adaptationFactor = CalculateSpaceAdaptation(crew.daysInSpace);
+      
+      // Macrostructural brain changes affecting performance
+      if (crew.daysInSpace > 180f) {
+          float brainChangeImpact = Mathf.Min(0.15f, crew.daysInSpace / 1200f);
+          crew.SetTemporarySkillModifier(SkillType.Spatial, -brainChangeImpact);
+      }
+      
+      // Memory formation impact
+      if (crew.daysInSpace > 240f) {
+          float memoryImpact = Mathf.Min(0.2f, crew.daysInSpace / 1000f);
+          crew.SetTemporarySkillModifier(SkillType.Technical, -memoryImpact * 0.5f);
+          crew.SetTemporarySkillModifier(SkillType.Scientific, -memoryImpact * 0.5f);
+      }
+      
+      // Active countermeasures reduce stress
+      float stressReduction = 0f;
+      foreach (ActiveCountermeasure cm in crew.activeCountermeasures) {
+          stressReduction += cm.effectiveness * COUNTERMEASURE_BASE_EFFECT * deltaTime;
+      }
+      
+      // Apply daily resilience recovery
+      float resilienceRecovery = crew.GetResilienceRecoveryRate() * deltaTime;
+      
+      // Update crew stress level
+      float netStressChange = stressAccumulation - stressReduction - resilienceRecovery;
+      crew.ModifyStress(netStressChange);
+      
+      // Check for condition triggers
+      if (crew.GetStress() > DEPRESSION_THRESHOLD && 
+          crew.GetCountermeasureCoverage() < MINIMUM_COVERAGE) {
+          // Random chance to develop condition based on vulnerability
+          if (UnityEngine.Random.value < CONDITION_CHANCE * deltaTime) {
+              CrewCondition depression = new CrewCondition(
+                  ConditionType.Clinical_Depression,
+                  crew.GetStress() / 100f, // Severity based on stress
+                  30f // Duration in days
+              );
+              crew.AddCondition(depression);
+              
+              // Trigger AI Director event
+              aiDirector.TriggerEvent(EventType.PsychologicalConditionOnset, crew);
+          }
+      }
+      
+      // Update neuroplasticity effects - long-term adaptation
+      if (crew.daysInSpace > 90f && crew.GetStress() < ADAPTATION_THRESHOLD) {
+          crew.IncreaseAdaptation(ADAPTATION_RATE * deltaTime);
+          
+          // Check for space adaptation trait development
+          if (crew.GetSpaceAdaptation() > TRAIT_THRESHOLD && 
+              !crew.HasTrait(TraitType.SpaceAdapted)) {
+              crew.AddTrait(new CrewTrait(TraitType.SpaceAdapted));
+              
+              // Trigger positive adaptation event
+              aiDirector.TriggerEvent(EventType.PositiveAdaptation, crew);
+          }
+      }
+  }
+  ```
+
+### 2.3.2 Resource Management

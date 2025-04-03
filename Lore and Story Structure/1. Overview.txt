@@ -1,0 +1,179 @@
+# TBD Space Game - Narrative Design Document (NDD)
+
+## Document Purpose
+This document serves as the comprehensive narrative "bible" for the TBD Space Game project, providing detailed specifications for all story elements, world-building, and character development. It ensures narrative consistency and guides the integration of story with gameplay mechanics.
+
+## Document Structure
+
+### 1. World Building
+1. **Setting**
+   - Historical background
+   - Political landscape
+   - Technological state
+   - Cultural elements
+   - Environmental conditions
+   - Faction dynamics
+
+2. **Timeline**
+   - Historical events
+   - Key developments
+   - Character backstories
+   - Mission chronology
+   - Future projections
+
+3. **Locations**
+   - Solar system layout
+   - Space stations
+   - Colonies
+   - Research facilities
+   - Military installations
+
+### 2. Story Architecture
+1. **Narrative Structure**
+   - Overall story arc
+   - Chapter breakdown
+   - Story progression
+   - Branching narratives
+   - Player choice impact
+
+2. **Story Elements**
+   - Main plot threads
+   - Subplots
+   - Character arcs
+   - Faction conflicts
+   - Mystery elements
+
+3. **Player Agency**
+   - Choice consequences
+   - Relationship impacts
+   - Faction influence
+   - Crew dynamics
+   - Mission outcomes
+
+### 3. Character Development
+1. **Main Characters**
+   - Protagonist
+   - Key crew members
+   - Faction leaders
+   - Antagonists
+   - Supporting cast
+
+2. **Character Relationships**
+   - Crew dynamics
+   - Faction alliances
+   - Personal conflicts
+   - Romantic relationships
+   - Professional rivalries
+
+3. **Character Growth**
+   - Skill development
+   - Relationship evolution
+   - Personal challenges
+   - Moral decisions
+   - Legacy impact
+
+### 4. Narrative Integration
+1. **Gameplay Integration**
+   - Mission design
+   - Event triggers
+   - Dialogue systems
+   - Choice mechanics
+   - Consequence implementation
+
+2. **Environmental Storytelling**
+   - Ship design
+   - Station layouts
+   - Cultural artifacts
+   - Environmental details
+   - Visual narratives
+
+3. **Dynamic Elements**
+   - AI Director system
+   - Emergent narratives
+   - Random events
+   - Crew interactions
+   - World state changes
+
+### 5. Content Guidelines
+1. **Writing Style**
+   - Tone and voice
+   - Dialogue patterns
+   - Description standards
+   - Technical accuracy
+   - Cultural sensitivity
+
+2. **Content Creation**
+   - Dialogue writing
+   - Event scripting
+   - Character creation
+   - World building
+   - Mission design
+
+3. **Quality Standards**
+   - Narrative coherence
+   - Character consistency
+   - World logic
+   - Technical accuracy
+   - Cultural authenticity
+
+## Documentation Requirements
+
+### 1. Completeness
+- Detailed character profiles
+- Comprehensive world history
+- Complete story arcs
+- Branching narrative paths
+- Environmental descriptions
+
+### 2. Consistency
+- Character voice consistency
+- World logic coherence
+- Timeline accuracy
+- Faction alignment
+- Technical accuracy
+
+### 3. Integration
+- Gameplay alignment
+- Mechanic support
+- Technical feasibility
+- Resource management
+- Performance considerations
+
+## Next Steps
+
+1. **Content Development**
+   - Expand character profiles
+   - Develop world history
+   - Create story arcs
+   - Design missions
+   - Write dialogue
+
+2. **Integration Planning**
+   - Gameplay alignment
+   - Technical implementation
+   - Resource allocation
+   - Timeline planning
+   - Quality assurance
+
+3. **Review Process**
+   - Narrative review
+   - Technical review
+   - Cultural review
+   - Consistency check
+   - Integration verification
+
+4. **Maintenance Plan**
+   - Regular updates
+   - Version control
+   - Change management
+   - Review schedule
+   - Update procedures
+
+## Version History
+- v0.1: Initial narrative structure
+- v0.2: Added character development
+- v0.3: Expanded world building
+- v0.4: Added integration guidelines
+
+## Contributing
+All narrative content must be reviewed by the lead writer and approved by the creative director before implementation. Changes should maintain consistency with both the gameplay systems and established lore.
