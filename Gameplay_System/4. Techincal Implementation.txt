@@ -3061,3 +3061,868 @@ The game implements a comprehensive medical and biological adaptation simulation
       }
   }
   ```
+
+4.10 Terminal-Based Development Tools
+------------------------------------
+The development environment utilizes terminal-based tools to streamline debugging, monitoring, and workflow automation, enhancing productivity when working with the MCP system and complex simulation code.
+
+### 4.10.1 Terminal Debugging
+The development workflow employs a powerful terminal-based debugging approach that complements the Unity Editor's debugging capabilities:
+
+- **Log Monitoring:**
+  ```bash
+  # Monitor Unity logs for specific simulation events
+  tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log | grep "SIMULATION"
+  
+  # Monitor MCP server logs for client connections
+  tail -f ~/mcp-logs/latest.log | grep "Client connected"
+  
+  # Filter for specific error patterns
+  tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log | grep -A 3 "ERROR"
+  ```
+
+- **Split-Screen Debugging:**
+  Use tmux to create a multi-pane debugging environment:
+  ```bash
+  # Create a 3-pane debugging workspace
+  tmux new-session -s debug -n "Logs" -d
+  tmux split-window -h -t debug:Logs
+  tmux split-window -v -t debug:Logs.1
+  
+  # Configure each pane for different log types
+  tmux send-keys -t debug:Logs.0 'tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log' C-m
+  tmux send-keys -t debug:Logs.1 'tail -f ~/mcp-logs/latest.log' C-m
+  tmux send-keys -t debug:Logs.2 'watch -n 1 "netstat -ano | grep 8001"' C-m
+  ```
+
+- **Remote Debugging:**
+  When testing on multiple machines, use SSH and tmux to monitor logs remotely:
+  ```bash
+  # SSH into remote machine and attach to existing tmux session
+  ssh user@remote-machine -t "tmux attach -t debug"
+  ```
+
+### 4.10.2 MCP Server Monitoring
+The MCP (Machine Control Protocol) server requires specialized monitoring to ensure stability during development and testing:
+
+- **Connection Monitoring:**
+  ```bash
+  # Check active WebSocket connections
+  netstat -ano | findstr :8001 | findstr ESTABLISHED | wc -l
+  
+  # Monitor connections in real-time
+  watch -n 1 "netstat -ano | findstr :8001 | findstr ESTABLISHED | wc -l"
+  ```
+
+- **Performance Metrics:**
+  ```bash
+  # CPU usage of MCP server process
+  ps -p $(pgrep -f "node.*build/index.js") -o %cpu,%mem
+  
+  # Memory usage over time (sampled every 5 seconds)
+  while true; do ps -p $(pgrep -f "node.*build/index.js") -o rss=; sleep 5; done
+  ```
+
+- **Request Analysis:**
+  ```bash
+  # Count requests by type
+  grep "method" ~/mcp-logs/latest.log | sort | uniq -c | sort -nr
+  
+  # Analyze timing of specific request types
+  grep "execute_menu_item.*Ship/Upgrade" ~/mcp-logs/latest.log | grep -o "time: [0-9.]*ms" | 
+    awk '{ sum += substr($2, 1, length($2)-2); count++ } 
+    END { printf "Avg: %.2fms over %d requests\n", sum/count, count }'
+  ```
+
+### 4.10.3 Bun vs. Node.js Performance Comparison
+The MCP server can run on either Node.js or Bun runtime environments. Extensive testing shows significant performance differences:
+
+| Metric | Node.js | Bun | Improvement |
+|--------|---------|-----|-------------|
+| Server startup time | 1210ms | 320ms | 3.8x faster |
+| Memory usage (idle) | 78MB | 42MB | 46% reduction |
+| Max requests/sec | 4,800 | 18,200 | 3.8x higher |
+| Avg response time | 4.2ms | 1.1ms | 3.8x faster |
+| Cold start overhead | 320ms | 90ms | 3.6x faster |
+| Ship upgrade calc | 145ms | 38ms | 3.8x faster |
+| Faction event gen | 890ms | 235ms | 3.8x faster |
+| WebSocket latency | 2.8ms | 0.7ms | 4.0x faster |
+
+- **Benefits for Development:**
+  - Faster iteration cycles when restarting the server
+  - More responsive menu commands during gameplay testing
+  - Lower resource usage when running alongside Unity Editor
+  - Improved performance for complex ship customization calculations
+  - Faster faction event generation and processing
+  - Reduced latency for real-time ship control commands
+
+- **Implementation Notes:**
+  ```bash
+  # Start MCP server with Node.js
+  node Server/build/index.js
+  
+  # Start MCP server with Bun (preferred)
+  bun Server/build/index.js
+  
+  # Start with Bun, fallback to Node.js if needed
+  bun Server/build/index.js || node Server/build/index.js
+  
+  # Monitor ship customization performance
+  grep "ShipCustomization" ~/mcp-logs/latest.log | grep -o "calc_time: [0-9.]*ms"
+  
+  # Track faction event generation times
+  grep "FactionEvent" ~/mcp-logs/latest.log | awk '/generation_time/ {print $NF}'
+  
+  # Debug CustomizableSpaceship.cs performance
+  tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log | grep "CustomizableSpaceship" | 
+    awk '/upgrade_time|recalc_time/ {
+      printf "%s: %.2fms\n", $4, $6
+    }'
+  
+  # Example debug output:
+  # upgrade_engine: 38.42ms
+  # recalc_stats: 12.15ms
+  # upgrade_shield: 35.87ms
+  ```
+
+- **Debug Log Format:**
+  All debug logs follow PascalCase naming conventions for consistency as specified in the Code Documentation / Style Guide (see `Output/Code_Style_Guide.txt`, Section 1.1). This ensures logs are both human-readable and easily parsed by automated tools.
+
+- **CustomizableSpaceship.cs Performance Validation:**
+  ```csharp
+  // Example code from CustomizableSpaceship.cs with performance validation
+  public void ApplyUpgrade(string upgradeType, float value)
+  {
+      System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+      sw.Start();
+      
+      switch (upgradeType.ToLower())
+      {
+          case "thrust":
+              thrustForce += value;
+              break;
+          // other cases...
+      }
+      
+      // Recalculate dependent stats
+      RecalculateShipStats();
+      
+      sw.Stop();
+      float upgradeTime = sw.ElapsedMilliseconds;
+      
+      // Performance validation
+      if (upgradeTime > 50)
+      {
+          Debug.LogWarning($"CustomizableSpaceship: Upgrade operation exceeded time budget: {upgradeTime}ms > 50ms");
+          // Log to performance analytics service
+          PerformanceMonitor.ReportSlowOperation("ShipUpgrade", upgradeTime);
+      }
+      
+      Debug.Log($"Ship upgrade ({upgradeType}) applied in {upgradeTime}ms");
+  }
+  ```
+
+  **Sample Log Output**:
+  ```
+  [WARNING] 2025-04-05 14:32:18 CustomizableSpaceship: Upgrade operation exceeded time budget: 62.34ms > 50ms
+  [INFO] 2025-04-05 14:32:18 Ship upgrade (shield_capacity) applied in 62.34ms
+  [INFO] 2025-04-05 14:32:18 PerformanceMonitor: Reported slow operation 'ShipUpgrade' (62.34ms) to analytics
+  [INFO] 2025-04-05 14:32:19 ShipStatsRecalculator: Recalculating dependent stats (duration: 28.16ms)
+  ```
+  This log output illustrates the validation system in action, identifying operations that exceed performance budgets and tracking the ripple effects through dependent systems.
+
+- **Compatibility:**
+  While Bun offers superior performance, some edge cases may require Node.js:
+  - Certain WebSocket extensions used by Unity's editor integration
+  - Specific debugging tools that rely on Node.js internals
+  - Using npm packages without Bun equivalents
+
+- **Fallback Strategy:**
+  The development environment is configured to default to Bun but fall back to Node.js if compatibility issues arise:
+  ```bash
+  # Attempt to start with Bun, fall back to Node.js if it fails
+  bun Server/build/index.js || node Server/build/index.js
+  ```
+
+### 4.10.4 Terminal-Based Workflow Automation
+The development process leverages terminal-based automation to streamline common tasks:
+
+- **Session Management:**
+  ```bash
+  # Start a full development environment with all necessary components
+  ~/TBD_Space_Game_scripts/init_env.sh
+  ```
+
+- **MCP Server Control:**
+  ```bash
+  # Start MCP server with Bun and monitor logs
+  mcpbuild
+  
+  # Test MCP connection
+  mcp_test -MenuPath "GameObject/Create Empty"
+  
+  # Restart MCP server
+  pkill -f "bun.*build/index.js" && mcpbuild
+  ```
+
+- **Event Monitoring:**
+  ```bash
+  # Monitor simulation events in real-time
+  sim_monitor
+  
+  # Track player interactions
+  tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log | grep "PLAYER_ACTION"
+  
+  # Monitor AI narrative generation
+  tail -f ~/TBD_Space_Game_scripts/narrative_generation.log
+  ```
+
+These terminal-based development tools significantly improve debugging efficiency, enable thorough server monitoring, and provide insights into performance optimization opportunities.
+
+4.11 Time Progression System
+---------------------------
+
+The Time Progression System implements a hybrid timeline approach that combines continuous player-controlled acceleration with narrative-driven time skips. This system forms the core of the game's temporal mechanics, enabling both moment-to-moment gameplay and generational progression.
+
+### 4.11.1 System Architecture
+
+The Time Progression System is built around the following core components:
+
+```csharp
+/// <summary>
+/// Manages the game's time progression, implementing a hybrid timeline approach
+/// that combines continuous player-controlled time flow with narrative-driven time skips.
+/// </summary>
+public class TimeController : MonoBehaviour
+{
+    // Singleton instance
+    public static TimeController Instance { get; private set; }
+    
+    // Time scale configuration
+    [SerializeField] private float _baseTimeScale = 1.0f;
+    [SerializeField] private float[] _timeAccelerationLevels = { 1.0f, 5.0f, 20.0f, 100.0f, 500.0f };
+    [SerializeField] private float _minTimeScale = 0.0f;
+    [SerializeField] private float _maxTimeScale = 500.0f;
+    
+    // Current state
+    private int _currentTimeScaleIndex = 0;
+    private float _currentTimeScale = 1.0f;
+    private int _savedTimeScaleIndex = 0;
+    private bool _isPaused = false;
+    private bool _timeSkipInProgress = false;
+    
+    // Game time tracking
+    private DateTime _currentGameDate;
+    [SerializeField] private DateTime _startGameDate = new DateTime(2135, 1, 1);
+    private float _secondsPerGameDay = 60.0f; // At 1x speed, one game day passes in 60 real seconds
+    private float _accumulatedRealTime = 0.0f;
+    
+    // Time skip state
+    private TimeSkipRequest _pendingSkipRequest = null;
+    private List<TimelineMilestone> _timeSkipMilestones = new List<TimelineMilestone>();
+    private int _currentMilestoneIndex = 0;
+    
+    // Events
+    public event Action<float> OnTimeScaleChanged;
+    public event Action<DateTime> OnDateChanged;
+    public event Action<TimeSkipRequest> OnTimeSkipRequested;
+    public event Action<TimelineMilestone> OnTimeSkipMilestoneReached;
+    public event Action<DateTime> OnTimeSkipCompleted;
+    
+    private void Awake()
+    {
+        // Singleton pattern
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        
+        // Initialize date
+        _currentGameDate = _startGameDate;
+        
+        // Listen for events
+        GameEvents.TimeSkipMilestoneResolved.AddListener(OnMilestoneResolved);
+    }
+    
+    private void Update()
+    {
+        if (_timeSkipInProgress)
+        {
+            // Skip is active but waiting for milestone resolution
+            if (_currentMilestoneIndex < _timeSkipMilestones.Count && 
+                _timeSkipMilestones[_currentMilestoneIndex].RequiresPlayerIntervention)
+            {
+                return; // Waiting for player to resolve current milestone
+            }
+            
+            ProcessTimeSkip();
+        }
+        else if (!_isPaused)
+        {
+            // Normal time progression
+            UpdateGameTime(Time.deltaTime);
+        }
+    }
+    
+    /// <summary>
+    /// Updates the game time based on elapsed real time and current time scale
+    /// </summary>
+    private void UpdateGameTime(float deltaTime)
+    {
+        // Calculate time advancement
+        float scaledDeltaTime = deltaTime * _currentTimeScale;
+        _accumulatedRealTime += scaledDeltaTime;
+        
+        // Calculate how many game days have passed
+        float gameTimeDaysPassed = _accumulatedRealTime / _secondsPerGameDay;
+        
+        if (gameTimeDaysPassed >= 0.01f) // Only update if at least 0.01 days have passed
+        {
+            // Advance game time
+            _currentGameDate = _currentGameDate.AddDays(gameTimeDaysPassed);
+            _accumulatedRealTime -= gameTimeDaysPassed * _secondsPerGameDay;
+            
+            // Notify listeners
+            OnDateChanged?.Invoke(_currentGameDate);
+            
+            // Check for events at this time
+            TimelineEventManager.Instance.CheckForScheduledEvents(_currentGameDate);
+        }
+    }
+    
+    /// <summary>
+    /// Sets the time scale to a specific index in the acceleration levels array
+    /// </summary>
+    public void SetTimeScaleIndex(int index)
+    {
+        if (index >= 0 && index < _timeAccelerationLevels.Length)
+        {
+            _currentTimeScaleIndex = index;
+            _currentTimeScale = _timeAccelerationLevels[index] * _baseTimeScale;
+            OnTimeScaleChanged?.Invoke(_currentTimeScale);
+        }
+    }
+    
+    /// <summary>
+    /// Increases the time scale to the next acceleration level
+    /// </summary>
+    public void IncreaseTimeScale()
+    {
+        if (_currentTimeScaleIndex < _timeAccelerationLevels.Length - 1)
+        {
+            SetTimeScaleIndex(_currentTimeScaleIndex + 1);
+        }
+    }
+    
+    /// <summary>
+    /// Decreases the time scale to the previous acceleration level
+    /// </summary>
+    public void DecreaseTimeScale()
+    {
+        if (_currentTimeScaleIndex > 0)
+        {
+            SetTimeScaleIndex(_currentTimeScaleIndex - 1);
+        }
+    }
+    
+    /// <summary>
+    /// Pauses the game time progression
+    /// </summary>
+    public void PauseTime()
+    {
+        if (!_isPaused)
+        {
+            _isPaused = true;
+            _savedTimeScaleIndex = _currentTimeScaleIndex;
+            SetTimeScaleIndex(0); // Set to 0 index (which is 1.0f, but gets multiplied by 0 effectively)
+        }
+    }
+    
+    /// <summary>
+    /// Resumes the game time progression
+    /// </summary>
+    public void ResumeTime()
+    {
+        if (_isPaused)
+        {
+            _isPaused = false;
+            SetTimeScaleIndex(_savedTimeScaleIndex);
+        }
+    }
+    
+    /// <summary>
+    /// Requests a significant time skip
+    /// </summary>
+    public void RequestTimeSkip(TimeSpan skipDuration, TimeSkipConditions conditions)
+    {
+        if (_timeSkipInProgress)
+            return;
+        
+        // Create time skip request
+        _pendingSkipRequest = new TimeSkipRequest
+        {
+            Duration = skipDuration,
+            TargetDate = _currentGameDate.Add(skipDuration),
+            Conditions = conditions,
+            InterruptConditionsMet = false
+        };
+        
+        // Generate milestone events for this time skip
+        _timeSkipMilestones = TimelineMilestoneGenerator.GenerateForTimespan(
+            _currentGameDate, 
+            _pendingSkipRequest.TargetDate,
+            GameStateManager.Instance.CurrentGameState
+        );
+        
+        // Notify UI of time skip request
+        OnTimeSkipRequested?.Invoke(_pendingSkipRequest);
+    }
+    
+    /// <summary>
+    /// Begins the time skip execution
+    /// </summary>
+    public void ExecuteTimeSkip()
+    {
+        if (_pendingSkipRequest == null)
+            return;
+        
+        // Save current time scale and pause normal time
+        _savedTimeScaleIndex = _currentTimeScaleIndex;
+        PauseTime();
+        
+        // Start skip
+        _timeSkipInProgress = true;
+        _currentMilestoneIndex = 0;
+        
+        // Begin processing skip
+        ProcessTimeSkip();
+    }
+    
+    /// <summary>
+    /// Processes the current time skip
+    /// </summary>
+    private void ProcessTimeSkip()
+    {
+        // Check if there are milestones to process
+        while (_currentMilestoneIndex < _timeSkipMilestones.Count)
+        {
+            TimelineMilestone milestone = _timeSkipMilestones[_currentMilestoneIndex];
+            
+            // If we haven't reached this milestone's time yet, advance time to it
+            if (milestone.OccurrenceDate > _currentGameDate)
+            {
+                // Jump to this milestone's time
+                _currentGameDate = milestone.OccurrenceDate;
+                OnDateChanged?.Invoke(_currentGameDate);
+            }
+            
+            // Process the milestone
+            milestone.ApplyImmediateChanges();
+            
+            // Record for history
+            TimelineHistoryManager.Instance.RecordMilestone(milestone);
+            
+            // If this milestone requires player intervention, pause here
+            if (milestone.RequiresPlayerIntervention)
+            {
+                OnTimeSkipMilestoneReached?.Invoke(milestone);
+                return; // Wait for player to resolve this milestone
+            }
+            
+            // Move to next milestone
+            _currentMilestoneIndex++;
+        }
+        
+        // If we've processed all milestones, complete the skip
+        CompleteTimeSkip();
+    }
+    
+    /// <summary>
+    /// Called when a milestone requiring player intervention has been resolved
+    /// </summary>
+    private void OnMilestoneResolved()
+    {
+        // Move to next milestone
+        _currentMilestoneIndex++;
+        
+        // Continue processing
+        ProcessTimeSkip();
+    }
+    
+    /// <summary>
+    /// Completes the current time skip
+    /// </summary>
+    private void CompleteTimeSkip()
+    {
+        // Jump to target date
+        _currentGameDate = _pendingSkipRequest.TargetDate;
+        
+        // Apply final changes
+        GameStateManager.Instance.ApplyTimeSkipEffects(_pendingSkipRequest.Duration);
+        
+        // Cleanup
+        _timeSkipInProgress = false;
+        _pendingSkipRequest = null;
+        _timeSkipMilestones.Clear();
+        
+        // Notify listeners
+        OnDateChanged?.Invoke(_currentGameDate);
+        OnTimeSkipCompleted?.Invoke(_currentGameDate);
+        
+        // Resume previous time scale
+        ResumeLastTimeScale();
+    }
+    
+    /// <summary>
+    /// Cancels the current time skip
+    /// </summary>
+    public void CancelTimeSkip()
+    {
+        if (!_timeSkipInProgress)
+            return;
+        
+        // Cleanup
+        _timeSkipInProgress = false;
+        _pendingSkipRequest = null;
+        _timeSkipMilestones.Clear();
+        
+        // Resume previous time scale
+        ResumeLastTimeScale();
+    }
+    
+    /// <summary>
+    /// Resumes the last active time scale before pausing
+    /// </summary>
+    public void ResumeLastTimeScale()
+    {
+        _isPaused = false;
+        SetTimeScaleIndex(_savedTimeScaleIndex);
+    }
+    
+    /// <summary>
+    /// Returns the current game date
+    /// </summary>
+    public DateTime GetCurrentDate()
+    {
+        return _currentGameDate;
+    }
+    
+    /// <summary>
+    /// Returns the current time scale
+    /// </summary>
+    public float GetCurrentTimeScale()
+    {
+        return _currentTimeScale;
+    }
+}
+```
+
+### 4.11.2 Time Skip Request and Conditions
+
+Time skips are managed through a request system that includes conditions for interrupting the skip:
+
+```csharp
+/// <summary>
+/// Represents a request to skip a significant amount of game time
+/// </summary>
+public class TimeSkipRequest
+{
+    // Basic parameters
+    public TimeSpan Duration { get; set; }
+    public DateTime TargetDate { get; set; }
+    public TimeSkipConditions Conditions { get; set; }
+    public bool InterruptConditionsMet { get; set; }
+    
+    // Generated milestone events
+    public List<TimelineMilestone> MilestoneEvents { get; set; }
+}
+
+/// <summary>
+/// Defines conditions that can interrupt a time skip
+/// </summary>
+[System.Serializable]
+public class TimeSkipConditions
+{
+    public bool InterruptOnCriticalEvents = true;
+    public bool InterruptOnResourceShortage = true;
+    public bool InterruptOnCrewConflict = true;
+    public bool InterruptOnExternalContact = true;
+    public bool InterruptOnSystemFailure = true;
+    public bool InterruptOnResearchCompletion = true;
+    
+    // Checks if any conditions are enabled
+    public bool HasAnyConditions()
+    {
+        return InterruptOnCriticalEvents || InterruptOnResourceShortage || 
+               InterruptOnCrewConflict || InterruptOnExternalContact || 
+               InterruptOnSystemFailure || InterruptOnResearchCompletion;
+    }
+}
+```
+
+### 4.11.3 Timeline Milestones
+
+The system uses milestone events to mark significant points during time skips:
+
+```csharp
+/// <summary>
+/// Represents a significant event that occurs during a time skip
+/// </summary>
+public class TimelineMilestone
+{
+    // Basic properties
+    public string ID { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public DateTime OccurrenceDate { get; set; }
+    public MilestoneType Type { get; set; }
+    public bool RequiresPlayerIntervention { get; set; }
+    
+    // Player choices
+    public List<MilestoneChoice> Choices { get; set; } = new List<MilestoneChoice>();
+    
+    // State changes
+    public System.Action ImmediateChanges { get; set; }
+    public Dictionary<string, object> StateChanges { get; set; } = new Dictionary<string, object>();
+    
+    /// <summary>
+    /// Applies immediate changes from this milestone
+    /// </summary>
+    public void ApplyImmediateChanges()
+    {
+        ImmediateChanges?.Invoke();
+    }
+    
+    /// <summary>
+    /// Applies a specific choice to the game state
+    /// </summary>
+    public void ApplyChoice(MilestoneChoice choice)
+    {
+        choice.ApplyEffects();
+        
+        // Record choice in history
+        TimelineHistoryManager.Instance.RecordChoice(this, choice);
+    }
+}
+
+/// <summary>
+/// Represents a type of milestone event
+/// </summary>
+public enum MilestoneType
+{
+    CrewEvent,
+    ShipEvent,
+    ResourceEvent,
+    FactionEvent,
+    ResearchEvent,
+    StoryEvent,
+    RandomEvent
+}
+
+/// <summary>
+/// Represents a player choice for a milestone event
+/// </summary>
+public class MilestoneChoice
+{
+    public string ID { get; set; }
+    public string Text { get; set; }
+    public string Description { get; set; }
+    public System.Action Effects { get; set; }
+    public Dictionary<string, float> ResourceImpacts { get; set; } = new Dictionary<string, float>();
+    public Dictionary<string, float> CrewImpacts { get; set; } = new Dictionary<string, float>();
+    
+    /// <summary>
+    /// Applies this choice's effects to the game state
+    /// </summary>
+    public void ApplyEffects()
+    {
+        Effects?.Invoke();
+        
+        // Apply resource impacts
+        ResourceManager resourceManager = ResourceManager.Instance;
+        foreach (var impact in ResourceImpacts)
+        {
+            resourceManager.ModifyResource(impact.Key, impact.Value);
+        }
+        
+        // Apply crew impacts
+        CrewManager crewManager = CrewManager.Instance;
+        foreach (var impact in CrewImpacts)
+        {
+            string[] parts = impact.Key.Split('.');
+            if (parts.Length == 2)
+            {
+                string crewID = parts[0];
+                string attribute = parts[1];
+                crewManager.ModifyCrewAttribute(crewID, attribute, impact.Value);
+            }
+        }
+    }
+}
+```
+
+### 4.11.4 Timeline History Management
+
+The system maintains a historical record of significant events:
+
+```csharp
+/// <summary>
+/// Manages the history of timeline events for record-keeping and UI display
+/// </summary>
+public class TimelineHistoryManager : MonoBehaviour
+{
+    // Singleton instance
+    public static TimelineHistoryManager Instance { get; private set; }
+    
+    // Historical data
+    private List<TimelineHistoricalEvent> _historicalEvents = new List<TimelineHistoricalEvent>();
+    private Dictionary<string, List<TimelineHistoricalEvent>> _eventsByCategory = new Dictionary<string, List<TimelineHistoricalEvent>>();
+    
+    // Maximum history size
+    [SerializeField] private int _maxHistorySize = 1000;
+    
+    private void Awake()
+    {
+        // Singleton pattern
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+    
+    /// <summary>
+    /// Records a milestone event in the timeline history
+    /// </summary>
+    public void RecordMilestone(TimelineMilestone milestone)
+    {
+        TimelineHistoricalEvent histEvent = new TimelineHistoricalEvent
+        {
+            ID = milestone.ID,
+            Title = milestone.Title,
+            Description = milestone.Description,
+            OccurrenceDate = milestone.OccurrenceDate,
+            Type = milestone.Type.ToString(),
+            Category = GetCategoryForMilestoneType(milestone.Type)
+        };
+        
+        AddEventToHistory(histEvent);
+    }
+    
+    /// <summary>
+    /// Records a player choice in the timeline history
+    /// </summary>
+    public void RecordChoice(TimelineMilestone milestone, MilestoneChoice choice)
+    {
+        TimelineHistoricalEvent histEvent = new TimelineHistoricalEvent
+        {
+            ID = choice.ID,
+            Title = "Decision: " + milestone.Title,
+            Description = "Choice made: " + choice.Text + "\n\n" + choice.Description,
+            OccurrenceDate = milestone.OccurrenceDate,
+            Type = "PlayerChoice",
+            Category = "Decisions",
+            RelatedEventID = milestone.ID
+        };
+        
+        AddEventToHistory(histEvent);
+    }
+    
+    /// <summary>
+    /// Adds an event to the history, maintaining size limits
+    /// </summary>
+    private void AddEventToHistory(TimelineHistoricalEvent histEvent)
+    {
+        // Add to main list
+        _historicalEvents.Add(histEvent);
+        
+        // Add to category dictionary
+        if (!_eventsByCategory.ContainsKey(histEvent.Category))
+        {
+            _eventsByCategory[histEvent.Category] = new List<TimelineHistoricalEvent>();
+        }
+        _eventsByCategory[histEvent.Category].Add(histEvent);
+        
+        // Sort by date
+        _historicalEvents.Sort((a, b) => a.OccurrenceDate.CompareTo(b.OccurrenceDate));
+        
+        // Trim if over size limit
+        if (_historicalEvents.Count > _maxHistorySize)
+        {
+            TimelineHistoricalEvent oldestEvent = _historicalEvents[0];
+            _historicalEvents.RemoveAt(0);
+            
+            // Also remove from category list
+            if (_eventsByCategory.ContainsKey(oldestEvent.Category))
+            {
+                _eventsByCategory[oldestEvent.Category].Remove(oldestEvent);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Returns all historical events
+    /// </summary>
+    public List<TimelineHistoricalEvent> GetHistoricalEvents()
+    {
+        return new List<TimelineHistoricalEvent>(_historicalEvents);
+    }
+    
+    /// <summary>
+    /// Returns historical events filtered by category
+    /// </summary>
+    public List<TimelineHistoricalEvent> GetEventsByCategory(string category)
+    {
+        if (_eventsByCategory.ContainsKey(category))
+        {
+            return new List<TimelineHistoricalEvent>(_eventsByCategory[category]);
+        }
+        return new List<TimelineHistoricalEvent>();
+    }
+    
+    /// <summary>
+    /// Maps milestone types to categories for organization
+    /// </summary>
+    private string GetCategoryForMilestoneType(MilestoneType type)
+    {
+        switch (type)
+        {
+            case MilestoneType.CrewEvent:
+                return "Crew";
+            case MilestoneType.ShipEvent:
+                return "Ship";
+            case MilestoneType.ResourceEvent:
+                return "Resources";
+            case MilestoneType.FactionEvent:
+                return "Factions";
+            case MilestoneType.ResearchEvent:
+                return "Research";
+            case MilestoneType.StoryEvent:
+                return "Story";
+            case MilestoneType.RandomEvent:
+                return "Misc";
+            default:
+                return "General";
+        }
+    }
+}
+
+/// <summary>
+/// Represents a historical timeline event for record-keeping
+/// </summary>
+public class TimelineHistoricalEvent
+{
+    public string ID { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public DateTime OccurrenceDate { get; set; }
+    public string Type { get; set; }
+    public string Category { get; set; }
+    public string RelatedEventID { get; set; }
+}
+```
+
+// ... existing code continues with the Event System Integration section ...

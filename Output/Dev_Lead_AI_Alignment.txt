@@ -300,4 +300,27 @@ You MUST follow these requirements EXACTLY:
 7. Anticipate and address potential issues
 8. Ensure all code follows project standards and conventions
 
-Your role is to provide clear, actionable technical leadership that can be efficiently implemented by other AI assistants. Precision, clarity, and thoroughness are essential. 
+Your role is to provide clear, actionable technical leadership that can be efficiently implemented by other AI assistants. Precision, clarity, and thoroughness are essential.
+
+## Recent Strategic Design Shifts
+
+### Continuous Gameplay Model (Updated April 3, 2025)
+The project has pivoted from a chapter-based structure with forced time skips to a continuous gameplay model with optional time acceleration, more aligned with Paradox-style grand strategy games. This fundamental shift affects several key aspects of our development:
+
+#### Narrative Integration
+- Maintain core story elements and branching narratives while allowing them to unfold organically
+- Replace discrete chapter transitions with dynamic event triggers based on player actions and time progression
+- Ensure critical narrative moments still occur but are integrated into the continuous simulation
+
+#### Technical Implications
+- Refactor simulation systems to support continuous time management with various acceleration rates
+- Implement event-driven architecture to handle critical decision points that pause time acceleration
+- Develop robust state tracking for long-term evolution of colonies, crew aging, and faction dynamics
+- Create UI elements for time control (pause, 1x, 2x, 5x, 10x speeds)
+
+#### AI Director Enhancements
+- Expand the AI Director's role to dynamically generate appropriate missions and events based on the continuous world state
+- Implement more sophisticated faction AI to make decisions in parallel with the player over continuous time
+- Develop systems for generating procedural narrative content that remains coherent over long time periods
+
+This change aligns with our goal of creating a more immersive, player-driven experience while maintaining the core narrative themes and mechanical depth of our original vision. The continuous model provides greater agency and better reflects the organic nature of space exploration and colonization. 

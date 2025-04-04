@@ -87,6 +87,182 @@ void ProcessCrewAging(int yearsSkipped, string playerFocus) {
 }
 ```
 
+## Narrative Generation System
+
+### Architecture Overview
+
+The narrative generation system is designed to produce game content both online (during development) and offline (during gameplay), ensuring compatibility with Steam's offline requirements while maintaining narrative coherence.
+
+```
+┌─────────────────────┐       ┌─────────────────────┐
+│                     │       │                     │
+│ Hugging Face Models │──────►│  Content Generator  │
+│                     │       │                     │
+└─────────────────────┘       └─────────┬───────────┘
+                                       │
+                                       ▼
+┌─────────────────────┐       ┌─────────────────────┐
+│                     │       │                     │
+│  Content Cache      │◄─────►│  Content Manager    │
+│                     │       │                     │
+└─────────────────────┘       └─────────┬───────────┘
+                                       │
+                                       ▼
+┌─────────────────────┐       ┌─────────────────────┐
+│                     │       │                     │
+│  Unity Integration  │◄─────►│  Verification Layer │
+│                     │       │                     │
+└─────────────────────┘       └─────────────────────┘
+```
+
+### Workflow Guidelines
+
+#### 1. Content Request Format
+
+When providing narrative generation prompts, follow these patterns:
+
+```python
+# Crew Dialogue Generation
+generate_dialogue(
+    character_id="engineer_sofia",
+    context="reacting_to_critical_system_failure",
+    emotional_state="stressed",
+    relationship_context={"captain": "respectful", "pilot": "conflicted"},
+    tone="technical_but_urgent"
+)
+
+# Event Description Generation
+generate_event_description(
+    event_type="asteroid_field_encounter",
+    severity="moderate",
+    crew_involved=["pilot", "scientist"],
+    ship_systems_affected=["sensors", "navigation"],
+    tone="tense_scientific"
+)
+
+# Character Background Generation
+generate_character_background(
+    role="medical_officer",
+    origin="martian_colony",
+    personality_traits=["compassionate", "perfectionist", "haunted"],
+    generation=2,  # 0=Earth-born, 1=first-gen colonist, 2+=colony-born
+    narrative_hooks=["lost_family_in_colony_disaster", "pioneered_genetic_therapy"]
+)
+```
+
+#### 2. FactionInfluence System
+
+The FactionInfluence system dynamically models political tensions between major factions and generates appropriate events and dialogue. Usage examples:
+
+```python
+# Initialize faction relationship matrix
+faction_system = FactionInfluenceSystem()
+faction_system.set_relationship("united_states", "china", -65)  # -100 to 100 scale
+faction_system.set_relationship("united_states", "europe", 40)
+faction_system.set_relationship("china", "india", -30)
+
+# Generate faction-specific event
+event = faction_system.generate_event(
+    primary_faction="united_states",
+    secondary_faction="china",
+    event_category="diplomatic",
+    player_alignment=0.7,  # 0-1 scale, 1=fully aligned with primary faction
+    tension_threshold=0.6  # 0-1 scale, events only trigger above threshold
+)
+
+# Generate faction-influenced dialogue
+dialogue = faction_system.generate_dialogue(
+    speaker_faction="united_states",
+    subject_faction="china",
+    context="resource_dispute",
+    speaker_role="diplomat",
+    player_reputation_with_speaker=0.8  # 0-1 scale
+)
+```
+
+**Performance Tip:** Target inference time of <2s on i5-12400 systems when generating faction events. For more detailed specifications on event integration and faction relationships, see Narrative Design Document (NDD Section 1.3, "Event Integration").
+
+#### 3. Content Caching System
+
+The caching system ensures content availability during offline play and optimizes performance:
+
+```python
+# Cache initialization
+content_cache = ContentCache(cache_path="~/TBD_Space_Game_scripts/content_cache")
+
+# Cache narrative content
+cache_key = content_cache.store(
+    content_type="dialogue",
+    content=dialogue_text,
+    metadata={
+        "character": "engineer_sofia",
+        "context": "system_failure",
+        "generated_at": datetime.now().isoformat(),
+        "model_version": "gpt-neo-1.3B"
+    }
+)
+
+# Retrieve cached content
+cached_dialogue = content_cache.retrieve(
+    content_type="dialogue",
+    filter_criteria={
+        "character": "engineer_sofia",
+        "context": "system_failure"
+    },
+    fallback_generator=generate_dialogue,  # Function to call if cache miss
+    allow_online_fallback=True  # Whether online generation is allowed
+)
+
+# Cache maintenance
+content_cache.prune(
+    older_than_days=30,
+    except_types=["character_backgrounds", "critical_events"],
+    min_entries_to_keep=5
+)
+```
+
+#### 4. Human-in-the-Loop Review Process
+
+Critical narrative content undergoes human review before integration:
+
+```python
+# Submit content for review
+review_id = review_system.submit(
+    content=generated_text,
+    content_type="major_plot_event",
+    priority="high",
+    suggested_edits="Consider toning down political implications"
+)
+
+# Check review status
+status = review_system.check_status(review_id)
+# Returns: {"status": "pending|approved|rejected|modified", "reviewer": "username", "notes": "..."}
+
+# Apply reviewed content
+if status["status"] == "approved" or status["status"] == "modified":
+    final_content = review_system.get_final_content(review_id)
+    content_manager.integrate(final_content, destination="plot_events_db")
+```
+
+### Offline Generation Guidelines
+
+When developing content generators for offline use:
+
+1. **Model Size Constraints:**
+   - Keep models under 500MB total size
+   - Prefer quantized models (16-bit or 8-bit precision)
+   - Target inference time < 2 seconds on mid-range hardware
+
+2. **Content Diversity:**
+   - Create generator-specific seed management to avoid repetition
+   - Implement template-guided generation for consistent formatting
+   - Use mixtures-of-experts approach for varied but coherent output
+
+3. **Integration with Game Systems:**
+   - Content generators should accept game state parameters
+   - Output should include metadata for game system integration
+   - Support for regeneration with same inputs if result is unsuitable
+
 ## AI Assistance Guidelines
 
 ### Best Response Formats
@@ -223,4 +399,165 @@ netstat -ano | findstr :8001
 - v0.1: Initial guide creation
 - v0.2: Added system diagrams and dependencies
 - v0.3: Expanded troubleshooting section
-- v0.4: Added best response formats 
+- v0.4: Added best response formats
+- v0.5: Added narrative generation system documentation and workflow guidelines 
+
+## Research Log
+
+### Sample Log Entry - April 5, 2025
+
+#### 1. Dialogue Generation Performance Analysis
+- **Model:** distilgpt2 (quantized 8-bit)
+- **Hardware:** i5-12400 CPU
+- **Batch Size:** 32 dialogues
+- **Results:**
+  ```python
+  # Performance Metrics
+  Average inference time: 1.85s
+  Memory usage: 420MB
+  Cache hit rate: 78%
+  
+  # Sample Output (Cached)
+  Input: generate_dialogue(
+      character_id="engineer_sofia",
+      context="reactor_critical",
+      emotional_state="stressed"
+  )
+  
+  Output: {
+      "dialogue": "The reactor's approaching critical! I need authorization to initiate emergency shutdown procedures. If we don't act now, we're looking at core containment failure in less than three minutes.",
+      "metadata": {
+          "tone_score": 0.92,
+          "technical_accuracy": 0.88,
+          "character_consistency": 0.95
+      },
+      "generation_time": "1.72s",
+      "cache_key": "d8e2f4a1b9c6"
+  }
+  ```
+
+#### 2. Faction Event Generation
+- **Model:** gpt-neo-1.3B (quantized 8-bit)
+- **Hardware:** i5-12400 CPU
+- **Results:**
+  ```python
+  # Performance Metrics
+  Average inference time: 2.15s
+  Memory usage: 680MB
+  Cache hit rate: 65%
+  
+  # Sample Output (Cached)
+  Input: generate_faction_event(
+      us_influence=75,
+      china_influence=-30,
+      event_type="diplomatic"
+  )
+  
+  Output: {
+      "event": {
+          "title": "Lunar Resource Dispute",
+          "description": "US mining corporation claims China violated Treaty Zone 7 extraction rights. Chinese officials demand international arbitration.",
+          "impact": {
+              "us_reputation": +5,
+              "china_reputation": -3,
+              "global_tension": +2
+          }
+      },
+      "generation_time": "1.98s",
+      "cache_key": "a7c9e2b5d8f1"
+  }
+  ```
+
+### Performance Optimization Guidelines
+
+#### 1. Model Quantization
+- Use 8-bit quantized models for 40-50% memory reduction
+- Target models under 2GB total memory usage
+- Pre-load frequently used model components
+
+#### 2. Batch Processing
+- Batch similar requests (e.g., multiple dialogues)
+- Optimal batch size: 16-32 items
+- Process batches during loading screens
+
+#### 3. Cache Management
+```python
+# Implement tiered caching
+class ContentCache:
+    def __init__(self):
+        self.memory_cache = {}  # Fast, limited size
+        self.disk_cache = {}    # Slower, persistent
+        self.memory_limit = 100MB
+    
+    def get(self, key):
+        # Check memory cache first
+        if key in self.memory_cache:
+            return self.memory_cache[key]
+        
+        # Check disk cache
+        if key in self.disk_cache:
+            result = self.disk_cache[key]
+            self._promote_to_memory(key, result)
+            return result
+        
+        return None
+    
+    def _promote_to_memory(self, key, value):
+        if self._get_memory_usage() > self.memory_limit:
+            self._evict_oldest()
+        self.memory_cache[key] = value
+```
+
+#### 4. Performance Targets
+| Operation | Target Time | Memory Limit |
+|-----------|-------------|--------------|
+| Dialogue gen | <2s | 500MB |
+| Event gen | <2.5s | 750MB |
+| Batch process | <5s | 1GB |
+| Cache lookup | <50ms | N/A |
+
+#### 5. Optimization Tips
+- Use `torch.inference_mode()` for 20-30% speedup
+- Implement progressive loading for large models
+- Cache common prompt templates
+- Use async processing for non-blocking generation
+- Monitor VRAM usage on systems with GPUs
+
+### Troubleshooting Common Issues
+
+#### 1. Memory Management
+```python
+# Monitor memory usage
+def log_memory_usage():
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    
+    logging.info(f"Memory usage: {memory_info.rss / 1024 / 1024:.2f}MB")
+    logging.info(f"VRAM usage: {torch.cuda.memory_allocated() / 1024 / 1024:.2f}MB")
+```
+
+#### 2. Performance Logging
+```python
+# Track generation times
+@contextmanager
+def timing_context(operation_name):
+    start_time = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start_time
+        logging.info(f"{operation_name} took {duration:.2f}s")
+```
+
+#### 3. Error Recovery
+```python
+# Implement fallback generation
+def generate_with_fallback(prompt, primary_model, fallback_model):
+    try:
+        with timing_context("primary_generation"):
+            return primary_model.generate(prompt)
+    except (RuntimeError, OutOfMemoryError):
+        logging.warning("Primary model failed, falling back to smaller model")
+        with timing_context("fallback_generation"):
+            return fallback_model.generate(prompt)
+``` 

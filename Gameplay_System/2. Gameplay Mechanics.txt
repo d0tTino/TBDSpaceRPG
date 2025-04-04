@@ -3,11 +3,12 @@
 
 2.1 Core Loop
 -------------
-The core gameplay loop is structured around four phases for each mission (chapter):
-- Preparation: Players select crew (if applicable), review mission objectives, and plan the spacecraft's trajectory using the 3D solar system view.
-- Transit: Players manage the spacecraft's journey, monitoring systems and adjusting course as needed. Simultaneously, they oversee the crew in the 2D interior view, assigning tasks and handling interpersonal dynamics.
-- Destination: Upon arrival, players complete mission-specific objectives, such as landing on a planet or conducting research. This may involve additional navigation or crew tasks.
-- Conclusion: The mission ends with an evaluation of outcomes, which affect resources, crew status, and the geopolitical landscape for the next chapter.
+The core gameplay loop follows a continuous, real-time simulation model with adjustable time scales:
+- **Mission Selection:** Players choose from available missions based on their faction standing, resources, and technological capabilities. Mission availability evolves dynamically as the solar system develops.
+- **Real-time Management:** Players continuously manage spacecraft operations and crew dynamics, monitoring systems, adjusting course, and handling interpersonal relationships in both the 3D navigation view and 2D interior view.
+- **Time Control:** Players can pause, play at normal speed, or accelerate time (1x, 2x, 5x, 10x) during routine operations, with critical events automatically pausing the simulation to ensure important decisions aren't missed.
+- **Mission Completion:** Upon completing mission objectives, players receive immediate rewards and can observe long-term consequences unfold organically in the simulation rather than through forced time skips.
+- **Continuous Progression:** Rather than discrete chapters, the game flows continuously, with crew aging, technology advancing, and colonies developing based on player decisions and the passing of time.
 
 2.2 3D Orbital Navigation
 -------------------------

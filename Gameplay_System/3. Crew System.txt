@@ -3123,3 +3123,322 @@ public class CulturalPolicy
         return impact;
     }
 }
+
+3.7.5 Relationship Evolution Algorithms
+--------------------------------------
+The crew relationship system uses advanced algorithms to simulate realistic relationship development over time, incorporating shared experiences, personality compatibility, and environmental factors. These algorithms ensure relationships evolve organically through gameplay rather than through fixed narrative paths.
+
+- **Core Relationship Model:**
+  - Each crew dyad (pair of crew members) maintains a comprehensive relationship model:
+    ```csharp
+    public class CrewRelationship
+    {
+        public string CrewIdA { get; private set; }
+        public string CrewIdB { get; private set; }
+        
+        // Primary relationship values
+        public float Affinity { get; private set; }         // -100 to 100: Overall relationship quality
+        public float Trust { get; private set; }            // 0 to 100: Reliability perception
+        public float Respect { get; private set; }          // 0 to 100: Skill/character admiration
+        public float Familiarity { get; private set; }      // 0 to 100: Knowledge of the other person
+        
+        // Relationship dimensions
+        public float PersonalFamiliarity { get; private set; }    // Knowledge of personal life
+        public float ProfessionalFamiliarity { get; private set; } // Knowledge of work habits/skills
+        public Dictionary<string, float> SharedExperiences { get; private set; } // Categorized shared history
+        
+        // Relationship flags
+        public bool IsFamilial { get; set; }                // Family relationship
+        public bool IsRomantic { get; set; }                // Romantic involvement
+        public List<RelationshipIncident> CriticalIncidents { get; private set; } // Major events
+        
+        // Tension metrics
+        public float CurrentTension { get; private set; }    // Temporary strain (decays over time)
+        public float ChronicTension { get; private set; }    // Long-term unresolved issues
+        
+        // Update methods are called by relationship evolution algorithms
+        public void UpdateFromInteraction(InteractionData interaction) { /* ... */ }
+        public void ApplyEnvironmentalModifiers(EnvironmentalFactors factors) { /* ... */ }
+        public void ApplyTensionDecay(float timeElapsed) { /* ... */ }
+        public RelationshipSnapshot GetSnapshot() { /* ... */ }
+    }
+    ```
+
+- **Relationship Evolution Algorithm:**
+  ```csharp
+  public void UpdateRelationships(float deltaTime)
+  {
+      // Get current environmental factors that affect all relationships
+      EnvironmentalFactors currentFactors = environmentSystem.GetCurrentFactors();
+      
+      // Process all active relationships
+      foreach (CrewRelationship relationship in activeRelationships)
+      {
+          // Apply time-based tension decay (relationships naturally cool down after conflicts)
+          relationship.ApplyTensionDecay(deltaTime);
+          
+          // Apply environmental impacts (high stress, close quarters, etc.)
+          relationship.ApplyEnvironmentalModifiers(currentFactors);
+          
+          // Process pending interactions for this relationship pair
+          List<InteractionData> pendingInteractions = interactionQueue.GetPendingInteractions(
+              relationship.CrewIdA, 
+              relationship.CrewIdB
+          );
+          
+          foreach (InteractionData interaction in pendingInteractions)
+          {
+              // Apply interaction effects to relationship
+              relationship.UpdateFromInteraction(interaction);
+              
+              // Mark interaction as processed
+              interactionQueue.MarkProcessed(interaction.Id);
+              
+              // Log significant relationship changes
+              if (interaction.Significance > SIGNIFICANT_INTERACTION_THRESHOLD)
+              {
+                  relationshipHistory.LogSignificantInteraction(
+                      relationship, 
+                      interaction,
+                      relationship.GetSnapshot()
+                  );
+              }
+          }
+          
+          // Check for relationship state transitions
+          CheckForRelationshipStateTransitions(relationship);
+      }
+      
+      // Update relationship network visualization
+      relationshipVisualizer.UpdateNetwork(activeRelationships);
+  }
+  ```
+
+- **Interaction Processing Algorithm:**
+  ```csharp
+  public void UpdateFromInteraction(InteractionData interaction)
+  {
+      // Calculate base impact factors from interaction type
+      RelationshipImpactFactors baseImpact = relationshipImpactTable.GetBaseImpact(
+          interaction.Type
+      );
+      
+      // Get personality compatibility between the crew members
+      float personalityCompatibility = personalityCompatibilityMatrix.GetCompatibility(
+          crewManager.GetCrewMember(CrewIdA).PersonalityTraits,
+          crewManager.GetCrewMember(CrewIdB).PersonalityTraits
+      );
+      
+      // Calculate affinity change
+      float affinityChange = baseImpact.AffinityImpact * 
+                             personalityCompatibility *
+                             interaction.Intensity;
+      
+      // Calculate trust impact - more significant from critical events
+      float trustImpact = baseImpact.TrustImpact * 
+                          interaction.Intensity *
+                          (interaction.IsCritical ? CRITICAL_EVENT_MULTIPLIER : 1.0f);
+      
+      // Calculate respect impact - heavily influenced by skill demonstration
+      float respectImpact = baseImpact.RespectImpact * 
+                            interaction.SkillRelevance * 
+                            interaction.Intensity;
+      
+      // Calculate familiarity impact - grows from any interaction but at different rates
+      float familiarityImpact = baseImpact.FamiliarityImpact * 
+                                (1.0f - (Familiarity / 100.0f)) * // Diminishing returns
+                                interaction.Duration;
+      
+      // Apply changes with stability constraints to prevent wild swings
+      Affinity = Mathf.Clamp(Affinity + affinityChange, -100.0f, 100.0f);
+      Trust = Mathf.Clamp(Trust + trustImpact, 0.0f, 100.0f);
+      Respect = Mathf.Clamp(Respect + respectImpact, 0.0f, 100.0f);
+      Familiarity = Mathf.Clamp(Familiarity + familiarityImpact, 0.0f, 100.0f);
+      
+      // Add to shared experiences in appropriate category
+      if (SharedExperiences.ContainsKey(interaction.Category))
+      {
+          SharedExperiences[interaction.Category] += interaction.Intensity;
+      }
+      else
+      {
+          SharedExperiences.Add(interaction.Category, interaction.Intensity);
+      }
+      
+      // Update tension metrics
+      if (interaction.IsTensionProducing)
+      {
+          CurrentTension += interaction.Intensity * TENSION_SCALING_FACTOR;
+          
+          // Some tension becomes chronic if not resolved
+          if (interaction.LeavesUnresolvedIssues)
+          {
+              ChronicTension += interaction.Intensity * CHRONIC_TENSION_FACTOR;
+          }
+      }
+      
+      // Record critical incidents for narrative callbacks
+      if (interaction.IsCritical)
+      {
+          CriticalIncidents.Add(new RelationshipIncident
+          {
+              Type = interaction.Type,
+              Timestamp = interaction.Timestamp,
+              Intensity = interaction.Intensity,
+              Context = interaction.Context,
+              Resolution = interaction.Resolution
+          });
+      }
+  }
+  ```
+
+- **Personality Compatibility Matrix:**
+  ```csharp
+  public class PersonalityCompatibilityMatrix
+  {
+      // Core personality trait compatibility matrix
+      private float[,] traitCompatibilityMatrix;
+      
+      public PersonalityCompatibilityMatrix()
+      {
+          // Initialize matrix with base compatibility values
+          // Example: How well "Logical" trait pairs with each other trait
+          InitializeCompatibilityMatrix();
+      }
+      
+      // Calculate overall compatibility between two sets of personality traits
+      public float GetCompatibility(Dictionary<PersonalityTrait, float> traitsA, 
+                                  Dictionary<PersonalityTrait, float> traitsB)
+      {
+          float compatibilitySum = 0.0f;
+          float weightSum = 0.0f;
+          
+          // Compare each trait from A with each trait from B
+          foreach (var traitA in traitsA)
+          {
+              foreach (var traitB in traitsB)
+              {
+                  // Get base compatibility between these traits
+                  float baseCompatibility = GetTraitCompatibility(traitA.Key, traitB.Key);
+                  
+                  // Weight by trait strength
+                  float weightedCompatibility = baseCompatibility * traitA.Value * traitB.Value;
+                  
+                  compatibilitySum += weightedCompatibility;
+                  weightSum += traitA.Value * traitB.Value;
+              }
+          }
+          
+          // Normalize result (0.0 to 2.0 range, where 1.0 is neutral)
+          return weightSum > 0 ? compatibilitySum / weightSum : 1.0f;
+      }
+      
+      // Get compatibility value between two specific traits
+      private float GetTraitCompatibility(PersonalityTrait traitA, PersonalityTrait traitB)
+      {
+          return traitCompatibilityMatrix[(int)traitA, (int)traitB];
+      }
+      
+      // Initialize the compatibility matrix with researched values
+      private void InitializeCompatibilityMatrix()
+      {
+          int traitCount = Enum.GetValues(typeof(PersonalityTrait)).Length;
+          traitCompatibilityMatrix = new float[traitCount, traitCount];
+          
+          // Complementary traits (high compatibility: 1.5-2.0)
+          SetCompatibility(PersonalityTrait.Logical, PersonalityTrait.Intuitive, 1.7f);
+          SetCompatibility(PersonalityTrait.Organized, PersonalityTrait.Creative, 1.5f);
+          SetCompatibility(PersonalityTrait.Leader, PersonalityTrait.Supportive, 1.8f);
+          
+          // Challenging traits (low compatibility: 0.0-0.8)
+          SetCompatibility(PersonalityTrait.Perfectionist, PersonalityTrait.Relaxed, 0.6f);
+          SetCompatibility(PersonalityTrait.Impulsive, PersonalityTrait.Cautious, 0.4f);
+          SetCompatibility(PersonalityTrait.Independent, PersonalityTrait.Dependent, 0.5f);
+          
+          // Same traits (depends on trait, some enhance each other, others clash)
+          SetCompatibility(PersonalityTrait.Leader, PersonalityTrait.Leader, 0.7f); // Two leaders often clash
+          SetCompatibility(PersonalityTrait.Supportive, PersonalityTrait.Supportive, 1.8f); // Supportive enhances each other
+          
+          // Fill in neutral values for unspecified combinations
+          FillNeutralValues();
+      }
+  }
+  ```
+
+- **Relationship State Transitions:**
+  ```csharp
+  public void CheckForRelationshipStateTransitions(CrewRelationship relationship)
+  {
+      // Get current state
+      RelationshipState currentState = relationshipStateManager.GetState(relationship);
+      
+      // Check for romantic potential if not already romantic or familial
+      if (!relationship.IsRomantic && 
+          !relationship.IsFamilial && 
+          relationship.Affinity > ROMANTIC_THRESHOLD &&
+          relationship.Familiarity > ROMANTIC_FAMILIARITY_THRESHOLD)
+      {
+          // Check personality compatibility for romantic potential
+          float romanticCompatibility = romanticCompatibilityCalculator.Calculate(
+              crewManager.GetCrewMember(relationship.CrewIdA),
+              crewManager.GetCrewMember(relationship.CrewIdB)
+          );
+          
+          if (romanticCompatibility > ROMANTIC_COMPATIBILITY_THRESHOLD)
+          {
+              // Trigger romance opportunity
+              narrativeManager.CreateRomanticOpportunity(relationship, romanticCompatibility);
+          }
+      }
+      
+      // Check for friendship formation
+      if (currentState == RelationshipState.Neutral && 
+          relationship.Affinity > FRIENDSHIP_THRESHOLD &&
+          relationship.Familiarity > FRIENDSHIP_FAMILIARITY_THRESHOLD)
+      {
+          relationshipStateManager.TransitionTo(relationship, RelationshipState.Friends);
+          
+          // Trigger friendship formation notification
+          narrativeManager.NotifyRelationshipChange(
+              relationship, 
+              RelationshipState.Neutral, 
+              RelationshipState.Friends
+          );
+      }
+      
+      // Check for rivalry development
+      if (currentState == RelationshipState.Neutral && 
+          relationship.Respect > RIVALRY_RESPECT_THRESHOLD &&
+          relationship.Affinity < RIVALRY_AFFINITY_THRESHOLD)
+      {
+          relationshipStateManager.TransitionTo(relationship, RelationshipState.Rivals);
+          
+          // Create rivalry narrative opportunities
+          narrativeManager.CreateRivalryOpportunity(relationship);
+      }
+      
+      // Check for conflict escalation
+      if (relationship.CurrentTension > CONFLICT_TENSION_THRESHOLD)
+      {
+          // Generate conflict event
+          ConflictData conflict = conflictGenerator.GenerateConflict(
+              relationship,
+              crewManager.GetCrewMember(relationship.CrewIdA),
+              crewManager.GetCrewMember(relationship.CrewIdB)
+          );
+          
+          // Queue conflict for resolution (player or automatic)
+          conflictManager.QueueConflict(conflict);
+      }
+  }
+  ```
+
+- **Environmental Impact Algorithm:**
+  ```csharp
+  public void ApplyEnvironmentalModifiers(EnvironmentalFactors factors)
+  {
+      // Close quarters pressure increases familiarity but can also increase tension
+      float quartersTightness = factors.LivingSpacePerCrew / OPTIMAL_SPACE_PER_CREW;
+      if (quartersTightness < 1.0f)
+      {
+          // Close quarters increases familiarity

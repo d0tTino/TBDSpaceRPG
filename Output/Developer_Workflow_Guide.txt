@@ -1,0 +1,840 @@
+# TBD SPACE GAME - DEVELOPER WORKFLOW GUIDE
+Version: 1.1
+Date: April 5, 2025
+
+## OVERVIEW
+This document provides comprehensive setup and workflow instructions for the TBD Space Game development environment. It is designed to optimize the development experience on Windows systems by integrating Windows Terminal, tmux (via Git Bash), Bun, path_scripts, and Hugging Face into a cohesive workflow.
+
+## TABLE OF CONTENTS
+1. Installation Prerequisites
+2. Environment Setup
+   - Windows Terminal
+   - Git Bash and tmux
+   - Bun JavaScript Runtime
+   - Configuration and Automation
+3. Development Workflow
+   - Workspace Organization
+   - Coding Environment
+   - MCP Integration
+   - Narrative Generation Pipeline
+4. Quick-Start Scripts
+   - Launch_Game_Dev.bat
+   - tmux Session Management
+   - Custom Aliases Reference
+5. Troubleshooting
+6. Resources and References
+7. Team Tools and Processes
+   - Terminal Productivity Tools
+     - Tmux for Session Management
+     - Useful Aliases and Shell Functions
+   - MCP (Machine Control Protocol) Usage
+     - MCP Integration Guidelines
+     - MCP Testing
+   - Documentation Practices
+     - Research and Development Documentation
+     - Documentation Review Process
+     - Code Review and Collaboration
+
+## 1. INSTALLATION PREREQUISITES
+
+### Hardware Requirements
+- Windows 10/11 64-bit system
+- 8GB+ RAM recommended
+- 10GB+ free disk space
+
+### Software Requirements
+- Git for Windows
+- Python 3.8+
+- Unity 2022.3 LTS or newer
+- Internet connection for initial setup
+
+## 2. ENVIRONMENT SETUP
+
+### Windows Terminal
+Windows Terminal serves as the central hub for all development activities.
+
+#### Installation
+1. Download Windows Terminal from Microsoft Store or GitHub releases
+2. Install via standard Windows installer
+3. Launch from Start menu
+
+#### Configuration as Default (Optional)
+1. Open Windows Terminal > Settings
+2. Under Startup, set Default terminal application to Windows Terminal
+3. Save configuration
+
+### Git Bash and tmux
+The combination of Git Bash with MSYS2-based tmux provides Unix-like terminal multiplexing capabilities.
+
+#### Install Git Bash
+1. Download Git from git-scm.com
+2. Run installer (path: C:\Program Files\Git)
+3. Launch Git Bash from Start menu
+
+#### Install MSYS2 and tmux
+1. Download MSYS2 from msys2.org
+2. Run installer (path: C:\msys64)
+3. Open MSYS2 terminal and update:
+   ```
+   pacman -Syu
+   ```
+4. Close and reopen if prompted, then install tmux:
+   ```
+   pacman -S tmux
+   ```
+
+#### Copy tmux to Git Bash
+1. Navigate to C:\msys64\usr\bin
+2. Copy:
+   - tmux.exe
+   - msys-event-2.1-7.dll
+   - msys-event_core-2.1-7.dll (and other msys-event*.dll files)
+3. Paste into C:\Program Files\Git\usr\bin
+4. Verify in Git Bash:
+   ```
+   tmux -V
+   ```
+
+#### Configure Git Line Endings
+```
+git config --global core.autocrlf input
+```
+
+### Bun JavaScript Runtime
+Bun accelerates JavaScript tasks including builds and server operations.
+
+#### Installation
+1. Open PowerShell as Administrator
+2. Run:
+   ```
+   irm bun.sh/install.ps1 | iex
+   ```
+3. Follow prompts to install and add to PATH
+4. Verify:
+   ```
+   bun --version
+   ```
+
+### Configuration and Automation
+
+#### Create tmux Session Script
+1. In Git Bash:
+   ```
+   nano ~/tmux-session.sh
+   ```
+2. Add:
+   ```bash
+   #!/bin/bash
+   export TERM=xterm-256color        # Compatibility with Windows Terminal
+   export MSYS=winsymlinks:nativestrict  # Path translation fix
+   SESSION_NAME="main"
+   if tmux has-session -t $SESSION_NAME 2>/dev/null; then
+     tmux attach-session -t $SESSION_NAME
+   else
+     tmux new-session -s $SESSION_NAME
+   fi
+   ```
+3. Make executable:
+   ```
+   chmod +x ~/tmux-session.sh
+   ```
+
+#### Configure tmux
+1. Create/edit ~/.tmux.conf:
+   ```
+   nano ~/.tmux.conf
+   ```
+2. Add:
+   ```
+   # Change prefix to Ctrl+a
+   set -g prefix C-a
+   unbind C-b
+   bind C-a send-prefix
+
+   # Enable mouse support
+   set -g mouse on
+
+   # Start window numbering at 1
+   set -g base-index 1
+
+   # Split panes
+   bind v split-window -h
+   bind h split-window -v
+
+   # Performance optimizations
+   set -g history-limit 50000       # Larger scrollback
+   set -s escape-time 0             # No key delay
+   set -g focus-events on           # Editor integration
+
+   # Color support
+   set -g default-terminal "xterm-256color"
+   set -ga terminal-overrides ",*256col*:Tc"
+
+   # Clipboard integration
+   bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "clip.exe"
+   bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "clip.exe"
+   ```
+3. Reload configuration:
+   ```
+   tmux source-file ~/.tmux.conf
+   ```
+
+#### Auto-Launch tmux in Windows Terminal
+1. Open Windows Terminal Settings > Profiles > Add new profile
+2. Add:
+   ```json
+   {
+       "name": "Git Bash + tmux",
+       "commandline": "\"C:\\Program Files\\Git\\bin\\bash.exe\" --login -i ~/tmux-session.sh",
+       "icon": "C:\\Program Files\\Git\\mingw64\\share\\git\\git-for-windows.ico"
+   }
+   ```
+
+#### Install and Configure path_scripts
+1. Clone repository:
+   ```
+   git clone https://github.com/tom-doerr/path_scripts ~/.path_scripts
+   ```
+2. Edit ~/.bashrc:
+   ```
+   nano ~/.bashrc
+   ```
+3. Append:
+   ```bash
+   source ~/.path_scripts/path_scripts.sh
+   alias docs='cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game'
+   alias crew='cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/Gameplay_System && nvim "3. Crew System.txt"'
+   alias mcpbuild='cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && bun Server/build/index.js'
+   alias sim_monitor='cd /c/Users/w1n51/mcp-logs && tail -f latest.log | grep "SIMULATION"'
+   alias npm="winpty npm.cmd"              # Progress bar fix
+   alias bun_watch="winpty bun.cmd run --watch"  # Progress bar fix
+   ```
+4. Reload configuration:
+   ```
+   source ~/.bashrc
+   ```
+
+#### Install Aider AI Coding Assistant
+1. Install Python 3.8+ if not already installed
+2. In Git Bash:
+   ```
+   pip install aider-chat
+   ```
+3. Configure API key:
+   ```bash
+   export OPENAI_API_KEY=your_key_here
+   echo 'export OPENAI_API_KEY=your_key_here' >> ~/.bashrc
+   ```
+4. Verify:
+   ```
+   aider --version
+   ```
+
+#### Set Up Hugging Face for Narrative Generation
+1. Install dependencies:
+   ```
+   pip install transformers torch
+   ```
+2. Create narrative generation script:
+   ```
+   mkdir -p ~/TBD_Space_Game_scripts
+   nano ~/TBD_Space_Game_scripts/generate_narrative.py
+   ```
+3. Add script content (see section on Narrative Generation Pipeline)
+4. Run proof-of-concept:
+   ```
+   cd ~/TBD_Space_Game_scripts
+   python generate_narrative.py
+   ```
+
+#### Create Environment Initialization Script
+1. Create script:
+   ```
+   nano ~/TBD_Space_Game_scripts/init_env.sh
+   ```
+2. Add:
+   ```bash
+   #!/bin/bash
+   tmux new-session -s dev -n "Code" -d
+   tmux send-keys -t dev:Code 'cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game' C-m
+   tmux split-window -h -t dev:Code
+   tmux send-keys -t dev:Code.1 'sim_monitor' C-m
+   tmux new-window -n "AI" -t dev
+   tmux send-keys -t dev:AI 'cd ~/TBD_Space_Game_scripts && python generate_narrative.py' C-m
+   tmux select-window -t dev:Code
+   tmux attach -t dev
+   ```
+3. Make executable:
+   ```
+   chmod +x ~/TBD_Space_Game_scripts/init_env.sh
+   ```
+
+## 3. DEVELOPMENT WORKFLOW
+
+### Workspace Organization
+
+#### Directory Structure
+- `/c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD Space Game/`
+  - `Gameplay_System/` - Gameplay documentation
+  - `Lore and Story Structure/` - Narrative documentation
+  - `Output/` - Generated documentation and reports
+  - `TBD SpaceGame/` - Unity project files
+    - `Assets/` - Game assets
+    - `Server/` - MCP server implementation
+
+#### One-Click Environment Initialization
+Launch the complete development environment:
+```
+~/TBD_Space_Game_scripts/init_env.sh
+```
+
+This creates:
+- Window "Code" - Main development window with two panes:
+  - Left: Code editing
+  - Right: Simulation monitoring
+- Window "AI" - AI-assisted narrative generation
+
+### Coding Environment
+
+#### tmux Commands
+- `Ctrl+a c` - Create new window
+- `Ctrl+a ,` - Rename current window
+- `Ctrl+a v` - Split window vertically
+- `Ctrl+a h` - Split window horizontally
+- `Ctrl+a arrow` - Navigate between panes
+- `Ctrl+a d` - Detach from tmux session
+- `tmux attach` - Reattach to session
+
+#### Using Aider
+From any pane:
+```
+aider --file "C:/Users/w1n51/OneDrive/Desktop/Gamedev/TBD Space Game/TBD SpaceGame/Assets/Scripts/CrewManager.cs"
+```
+
+#### Working with Unity and MCP
+1. Navigate to project directory:
+   ```
+   cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame
+   ```
+2. Start MCP server using Bun:
+   ```
+   mcpbuild
+   ```
+   or
+   ```
+   bun Server/build/index.js
+   ```
+3. Monitor MCP logs in dedicated pane:
+   ```
+   sim_monitor
+   ```
+
+### Narrative Generation Pipeline
+
+#### Script Structure
+The `generate_narrative.py` script uses Hugging Face Transformers with caching:
+
+```python
+from transformers import pipeline
+import hashlib
+import json
+import os
+
+class FactionInfluence:
+    def __init__(self, us, china, independent):
+        self.us_influence = us
+        self.china_influence = china
+        self.independent_coalition = independent
+
+def get_cached_or_generate(prompt, max_length=100):
+    key = hashlib.md5(prompt.encode()).hexdigest()
+    cache_file = f"cache/{key}.json"
+    
+    if os.path.exists(cache_file):
+        with open(cache_file, 'r') as f:
+            return json.load(f)
+    
+    generator = pipeline('text-generation', model='distilgpt2')
+    result = generator(prompt, max_length=max_length, num_return_sequences=1)
+    output = result[0]['generated_text']
+    
+    os.makedirs("cache", exist_ok=True)
+    with open(cache_file, 'w') as f:
+        json.dump(output, f)
+        
+    return output
+
+def generate_event_chain(faction_influence, year, previous_choices):
+    """Generate an event chain based on faction influence and game state"""
+    prompt = f"""
+    In TBD Space Game year {year}, with US influence at {faction_influence.us_influence}, 
+    China influence at {faction_influence.china_influence}, and Independent Coalition 
+    at {faction_influence.independent_coalition}, generate a diplomatic event 
+    where the player's previous choices of {previous_choices} have consequences.
+    """
+    return get_cached_or_generate(prompt)
+```
+
+#### Workflow Integration
+1. Run script in dedicated tmux pane:
+   ```
+   cd ~/TBD_Space_Game_scripts
+   python generate_narrative.py
+   ```
+2. Curate generated content
+3. Integrate into game assets:
+   - Dialogue trees
+   - Event chains
+   - Mission descriptions
+
+## 4. QUICK-START SCRIPTS
+
+### Launch_Game_Dev.bat
+
+The `Launch_Game_Dev.bat` script provides a one-click solution to start your development environment with all necessary components.
+
+#### Location
+The script is located in `%USERPROFILE%\TBD_Space_Game_scripts\Launch_Game_Dev.bat`
+
+#### Usage
+1. Double-click the `Launch TBD Space Game Dev` shortcut on your desktop, or
+2. Run `%USERPROFILE%\TBD_Space_Game_scripts\Launch_Game_Dev.bat` from command prompt
+
+#### What It Does
+The script:
+1. Navigates to the TBD Space Game project directory
+2. Launches Git Bash with login shell
+3. Automatically executes the tmux initialization script
+4. Sets up the development workspace with configured panes
+
+#### Customization
+To customize the startup behavior:
+1. Edit `%USERPROFILE%\TBD_Space_Game_scripts\init_env.sh`
+2. Modify the tmux windows and commands as needed
+3. Save changes
+
+### tmux Session Management
+
+The development environment uses tmux for terminal multiplexing. Here's a reference for common commands:
+
+#### Session Management
+| Command | Description |
+|---------|-------------|
+| `tmux new-session -s NAME` | Create new session named NAME |
+| `tmux attach -t NAME` | Attach to existing session NAME |
+| `tmux ls` | List all sessions |
+| `tmux kill-session -t NAME` | Kill session NAME |
+| `Ctrl+a d` | Detach from current session |
+
+#### Window Management
+| Command | Description |
+|---------|-------------|
+| `Ctrl+a c` | Create new window |
+| `Ctrl+a ,` | Rename current window |
+| `Ctrl+a n` | Next window |
+| `Ctrl+a p` | Previous window |
+| `Ctrl+a w` | List all windows |
+| `Ctrl+a &` | Kill current window |
+| `Ctrl+a 0-9` | Switch to window 0-9 |
+
+#### Pane Management
+| Command | Description |
+|---------|-------------|
+| `Ctrl+a v` | Split pane vertically |
+| `Ctrl+a h` | Split pane horizontally |
+| `Ctrl+a o` | Go to next pane |
+| `Ctrl+a q` | Show pane numbers |
+| `Ctrl+a z` | Toggle pane zoom |
+| `Ctrl+a !` | Convert pane to window |
+| `Ctrl+a x` | Kill current pane |
+| `Ctrl+a arrow` | Move to pane in direction |
+
+### Custom Aliases Reference
+
+The following custom aliases are configured to accelerate common tasks:
+
+#### Navigation Aliases
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `docs` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game` | Navigate to project root |
+| `crew` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/Gameplay_System && nvim "3. Crew System.txt"` | Edit crew system document |
+| `lore` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/Lore\ and\ Story\ Structure` | Navigate to lore documents |
+| `scripts` | `cd /c/Users/w1n51/TBD_Space_Game_scripts` | Navigate to scripts directory |
+
+#### Development Aliases
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `mcpbuild` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && bun Server/build/index.js` | Start MCP server with Bun |
+| `mcp_test` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && ./test-mcp-menu.ps1 -MenuPath "Basic/Test"` | Run test MCP command |
+| `mcpship` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && ./test-mcp-menu.ps1 -MenuPath "MCP/Ship/V2/Upgrade Thrust"` | Test ship upgrade via MCP |
+| `mcpmon` | `watch -n 1 "netstat -ano | grep 8001"` | Monitor MCP server port activity |
+| `sim_monitor` | `cd /c/Users/w1n51/mcp-logs && tail -f latest.log \| grep "SIMULATION"` | Monitor simulation logs |
+| `bun_watch` | `winpty bun.cmd run --watch` | Run Bun with watch mode |
+
+#### AI Generation Aliases
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `gen_narrative` | `cd ~/TBD_Space_Game_scripts && python generate_narrative.py` | Generate narrative content |
+| `gen_faction` | `cd ~/TBD_Space_Game_scripts && python generate_faction.py` | Generate faction relationships |
+| `gen_character` | `cd ~/TBD_Space_Game_scripts && python generate_character.py` | Generate character content |
+
+To add new aliases, edit your `~/.bashrc` file and add new alias lines following the pattern above.
+
+## 5. TROUBLESHOOTING
+
+### Common Issues and Solutions
+
+#### tmux Not Found
+1. Verify msys2 installation
+2. Check if tmux.exe and required DLLs are copied to Git Bash bin directory
+3. Restart Git Bash
+
+#### Path Translation Issues
+1. Ensure the environment variable is set: `export MSYS=winsymlinks:nativestrict`
+2. Use forward slashes in paths
+3. Escape spaces with backslashes
+
+#### MCP Server Connection Failed
+1. Verify server is running: `ps -ef | grep node`
+2. Check port availability: `netstat -ano | findstr :8001`
+3. Restart server with `mcpbuild` alias
+
+#### Windows Terminal Profile Missing
+1. Open Windows Terminal settings
+2. Check JSON configuration
+3. Verify paths are correct
+4. Restart Windows Terminal
+
+#### Bun Commands Not Working
+1. Verify Bun installation: `bun --version`
+2. Check PATH environment variable
+3. Try using full path to Bun executable
+
+## 6. RESOURCES AND REFERENCES
+
+### Documentation
+- [tmux Manual](https://man.openbsd.org/tmux)
+- [Git Bash Documentation](https://git-scm.com/docs)
+- [Bun Documentation](https://bun.sh/docs)
+- [Windows Terminal Documentation](https://docs.microsoft.com/en-us/windows/terminal/)
+
+### Project-Specific Resources
+- TBD Space Game Documentation: `/c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD Space Game/Output`
+- MCP Integration Guide: `/c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD Space Game/TBD SpaceGame/Documentation/MCP_Integration_Guide.md`
+- Script Repository: `~/TBD_Space_Game_scripts`
+
+### Support
+For assistance with the development environment, contact the DevOps team.
+
+## VERSION HISTORY
+- v1.0 (April 4, 2025): Initial release
+- v1.1 (April 5, 2025): Added Quick-Start Scripts section with Launch_Game_Dev.bat usage, tmux command reference, and custom aliases documentation 
+
+### Example: Customizing for MCP Tasks
+```bash
+#!/bin/bash
+# Custom MCP-focused tmux configuration for init_env.sh
+
+# Create main session
+tmux new-session -s mcp -n "Server" -d
+
+# Window 1: MCP Server and logs
+tmux send-keys -t mcp:Server 'cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame' C-m
+tmux send-keys -t mcp:Server 'mcpbuild' C-m
+tmux split-window -h -t mcp:Server
+tmux send-keys -t mcp:Server.1 'sim_monitor' C-m
+
+# Window 2: MCP Command Testing
+tmux new-window -n "Commands" -t mcp
+tmux send-keys -t mcp:Commands 'cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame' C-m
+tmux send-keys -t mcp:Commands 'echo "Ready for MCP commands. Try: ./test-mcp-menu.ps1 -MenuPath \"GameObject/Create Empty\""' C-m
+
+# Window 3: Ship Customization
+tmux new-window -n "Ship" -t mcp
+tmux send-keys -t mcp:Ship 'cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame' C-m
+tmux send-keys -t mcp:Ship 'echo "Ship customization ready. Use mcpship to test ship upgrade menu."' C-m
+
+# Attach to session
+tmux select-window -t mcp:Server
+tmux attach -t mcp
+```
+
+Save this as `%USERPROFILE%\TBD_Space_Game_scripts\mcp_env.sh` and make it executable with `chmod +x ~/TBD_Space_Game_scripts/mcp_env.sh`.
+
+### Reverting to Standard Layout
+If you need to switch back to the standard development environment after using a specialized configuration:
+
+```bash
+# Return to standard development layout
+./init_env.sh
+```
+
+This ensures consistent workspace setup across the team and provides flexibility to alternate between specialized configurations and the standard layout based on your current task focus.
+
+### MCP Alias Usage Examples
+```bash
+# Start the MCP server with Bun (3x faster than Node.js)
+mcpbuild
+
+# In another terminal, test a simple MCP command
+mcp_test
+
+# Test ship upgrade functionality
+mcpship
+
+# Monitor active connections to the MCP server
+mcpmon
+
+# Run a custom MCP command
+cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame
+./test-mcp-menu.ps1 -MenuPath "MCP/Ship/V2/Create Test Ship" -Port 8001 
+```
+
+## 7. Team Tools and Processes
+
+### 7.1 Terminal Productivity Tools
+
+#### 7.1.1 Tmux for Session Management
+
+Tmux is a terminal multiplexer that allows you to maintain multiple terminal sessions within a single window, detach them, and reattach them later. This is particularly useful for:
+- Maintaining persistent development sessions across connections
+- Running multiple processes in organized panes
+- Sharing terminal sessions with team members for collaborative debugging
+
+**Basic Tmux Commands:**
+```
+# Starting a new session
+tmux new -s session_name
+
+# Detaching from a session (without killing it)
+Ctrl+b d
+
+# Listing active sessions
+tmux ls
+
+# Reattaching to a session
+tmux attach -t session_name
+
+# Creating a new window
+Ctrl+b c
+
+# Switching between windows
+Ctrl+b [window number]
+
+# Splitting panes horizontally
+Ctrl+b "
+
+# Splitting panes vertically
+Ctrl+b %
+
+# Moving between panes
+Ctrl+b [arrow key]
+```
+
+**Project-Specific Tmux Configuration:**
+We've created a project-specific tmux configuration file (.tmux.conf) in the project root that includes:
+- Custom key bindings optimized for our workflow
+- Status bar with project-relevant information
+- Automatic session setup script for development sessions
+
+To use the project tmux configuration:
+```
+# From project root
+./scripts/start_dev_session.sh
+```
+
+#### 7.1.2 Useful Aliases and Shell Functions
+
+We've established several project-specific aliases to streamline common tasks. Add these to your shell configuration file (.bashrc, .zshrc, etc.):
+
+```bash
+# MCP Build System
+alias mcpbuild="./scripts/mcp_build.sh"
+alias mcptest="./scripts/mcp_test.sh"
+alias mcpdeploy="./scripts/mcp_deploy.sh"
+
+# Documentation Management
+alias doclog="./scripts/append_research_log.sh"  # Opens template for Research_Log.txt entries
+alias docupdate="./scripts/update_docs.sh"       # Runs documentation validation
+
+# Development Environment
+alias devenv="./scripts/setup_dev_environment.sh"
+alias cleanenv="./scripts/clean_environment.sh"
+alias startgame="./scripts/run_development_build.sh"
+
+# Utility Functions
+function mcpstatus() {
+    # Check status of MCP integration
+    ./scripts/mcp_status.sh "$@"
+}
+
+function docfind() {
+    # Search documentation for specific terms
+    grep -r "$1" ./Output/ --include="*.txt"
+}
+```
+
+### 7.2 MCP (Machine Control Protocol) Usage
+
+The Machine Control Protocol is a core system for integrating hardware simulation with gameplay systems. Proper MCP integration is critical for maintaining simulation accuracy.
+
+#### 7.2.1 MCP Integration Guidelines
+
+When working with MCP components:
+
+1. **Access Patterns**
+   - Always use the MCPManager singleton to access MCP functionality
+   - Never directly manipulate hardware simulation state
+   - Use provided interfaces in MCPIntegration namespace
+   
+   ```csharp
+   // CORRECT:
+   MCPManager.Instance.UpdateSystemStatus(SystemType.LifeSupport, status);
+   
+   // INCORRECT:
+   hardwareSimulation.systems["LifeSupport"].status = status;
+   ```
+
+2. **Error Handling**
+   - MCP calls must include error handling
+   - Use MCPResult return values to check operation success
+   - Log MCP failures to the appropriate level (warning or error)
+   
+   ```csharp
+   MCPResult result = MCPManager.Instance.UpdateSystemStatus(SystemType.LifeSupport, status);
+   if (!result.Success)
+   {
+       Debug.LogWarning($"MCP update failed: {result.ErrorMessage}");
+       // Handle failure appropriately
+   }
+   ```
+
+3. **Performance Considerations**
+   - Batch MCP updates when possible using UpdateBatch()
+   - Avoid polling MCP status in Update() methods
+   - Subscribe to MCP events instead of continuous checking
+   
+   ```csharp
+   // Subscribe to MCP events
+   void OnEnable()
+   {
+       MCPManager.Instance.OnSystemStatusChanged += HandleSystemStatusChanged;
+   }
+   
+   void OnDisable()
+   {
+       MCPManager.Instance.OnSystemStatusChanged -= HandleSystemStatusChanged;
+   }
+   ```
+
+#### 7.2.2 MCP Testing
+
+MCP integration should be thoroughly tested:
+
+1. Use the MCP Mock system during development:
+   ```
+   mcptest --mock-environment
+   ```
+
+2. Run MCP validation tests before committing changes:
+   ```
+   mcptest --validate-integration
+   ```
+
+3. Document all MCP integration points in component documentation
+
+### 7.3 Documentation Practices
+
+Proper documentation is critical for maintaining project coherence across the team.
+
+#### 7.3.1 Research and Development Documentation
+
+All research findings and development progress should be documented according to these guidelines:
+
+1. **Research Log Entries**
+   - Document all research outcomes in Output/Research_Log.txt
+   - Follow the established format:
+     ```
+     Date: [YYYY-MM-DD]
+     Research Topic: [Concise topic name]
+     
+     Test Configuration:
+     ------------------
+     [List of research parameters]
+     
+     Results:
+     -------
+     [Detailed findings, data, code examples]
+     
+     Implementation Framework:
+     -----------------------
+     [How this will be implemented]
+     
+     Next Steps:
+     ----------
+     [Clear action items]
+     ```
+   - Use the `doclog` alias to create a template for new entries
+
+2. **Development Journal**
+   - Record significant implementation decisions in Output/Development_Journal.txt
+   - Document the rationale behind major architectural decisions
+   - Note any deviations from original design documents
+   - Link entries to relevant research log entries when applicable
+
+3. **Technical Documentation Updates**
+   - Update technical documentation as you implement features
+   - Use the validation script to check documentation consistency:
+     ```
+     docupdate --validate
+     ```
+   - Document system integration points thoroughly
+
+#### 7.3.2 Documentation Review Process
+
+All significant documentation changes should follow this process:
+
+1. Create documentation draft in the appropriate file
+2. Run documentation validation: `docupdate --validate`
+3. Request documentation review from at least one team member
+4. Make requested revisions
+5. Finalize documentation with approval notation
+6. Update the Documentation_Status_Report.txt if necessary
+
+### 7.4 Code Review and Collaboration
+
+#### 7.4.1 Pull Request Process
+
+When submitting code for review:
+
+1. Ensure all documentation is updated to reflect changes
+2. Run the full test suite: `mcptest --full`
+3. Update the Development_Journal.txt with key implementation details
+4. Create a pull request with a clear description that references:
+   - The original task/issue
+   - Related research log entries
+   - Documentation updates made
+   - Any known limitations or future work
+
+#### 7.4.2 Collaboration Sessions
+
+For complex features, consider scheduling pair programming or collaboration sessions:
+
+1. Use the shared tmux session feature for real-time collaboration:
+   ```
+   ./scripts/start_collab_session.sh [feature_name]
+   ```
+
+2. Document session outcomes in the Development_Journal.txt
+3. Capture any design decisions or insights in appropriate documentation
+
+#### 7.4.3 Knowledge Sharing
+
+Regular knowledge sharing is essential for team growth:
+
+1. Technical deep-dive sessions are scheduled bi-weekly
+2. Each team member should prepare a knowledge-sharing document before presenting
+3. Record key insights in the appropriate documentation files
+4. Update the AI_Collaboration_Guide.txt with new patterns or approaches discovered
+
+This comprehensive approach to tooling, MCP integration, documentation practices, and collaboration ensures consistent high-quality development across the team while maintaining the project's complex knowledge base.
