@@ -1,0 +1,928 @@
+# TBD_Space_Game_Development_Workflow.txt
+Version: April 2025
+
+Table of Contents:
+1.0 Development Environment Setup
+2.0 Version Control Guidelines
+3.0 Coding Standards
+4.0 Build and Deployment Process
+5.0 Testing Procedures
+6.0 MCP Integration Workflow
+7.0 Documentation Standards
+8.0 Issue Tracking and Resolution
+
+1.0 Development Environment Setup
+================================
+This section details the setup process for the development environment, including required software, tools, and configuration steps.
+
+1.1 Required Software and Tools
+-----------------------------
+- Unity 2025.1 LTS or newer (project is built on 2025.1.5f1 specifically)
+- Visual Studio 2025 or JetBrains Rider 2025.1+
+- Git 2.40.0+ for version control
+- Git LFS 3.4.0+ for large file storage
+- PowerShell 7.5 or newer for automation scripts
+- tmux 3.4+ for terminal session management
+- Python 3.11+ for auxiliary tools and AI integration scripts
+- Bun 1.1.0+ for JavaScript runtime and package management
+- Unity Test Framework 2.0+ for unit testing
+- DOTween Pro 2.0+ for animation
+- Cinemachine 3.0+ for camera systems
+- TextMeshPro 4.0+ for UI text rendering
+- Rust 1.72+ for performance-critical components
+- Docker 25.0+ for containerized build environments
+
+1.2 Hardware Requirements
+-----------------------
+Development hardware should meet or exceed:
+- CPU: 8+ cores, 3.5GHz+
+- RAM: 32GB minimum, 64GB recommended
+- GPU: NVIDIA RTX 4070 / AMD RX 7700 or better 
+- Storage: 500GB+ NVMe SSD for project files
+- Display: 1440p or higher resolution, dual monitor setup recommended
+- Network: 200Mbps+ connection for asset syncing
+
+1.3 Unity Setup and Configuration
+------------------------------
+1. Install Unity Hub from Unity's official website
+2. Install Unity 2025.1.5f1 LTS via Hub with these components:
+   - Windows Build Support
+   - Documentation
+   - Visual Studio integration
+   - Android Build Support (optional)
+   - iOS Build Support (optional)
+
+3. Configure Unity Preferences:
+   - Enable Auto Refresh
+   - Set External Script Editor to your IDE
+   - Configure Version Control to use Git
+   - Enable GPU Lightmapper
+   - Set memory limit to appropriate value for your system
+
+4. Unity Package Requirements:
+   - All packages are tracked in the Package Manifest file
+   - Required custom packages are stored in the `/Packages` directory
+   - Third-party packages versions are locked in the manifest
+
+1.4 Version Control Setup
+-----------------------
+1. Install Git and Git LFS
+2. Configure Git with your identity:
+   ```
+   git config --global user.name "Your Name"
+   git config --global user.email "your.email@example.com"
+   ```
+
+3. Configure Git LFS:
+   ```
+   git lfs install
+   ```
+
+4. Repository Access:
+   - Request access to the repository from the project lead
+   - Clone the repository:
+     ```
+     git clone https://github.com/tbd-space-game/main.git
+     ```
+
+5. Configure IDE Git Integration:
+   - Visual Studio: Enable Git source control provider
+   - Rider: Configure version control integration
+
+1.5 IDE Configuration
+------------------
+Visual Studio Setup:
+1. Install recommended extensions:
+   - Resharper or Visual Studio Productivity Tools
+   - Unity Debug extension
+   - Markdown Editor
+   - StyleCop for code style enforcement
+   
+2. Configure Unity external tools integration
+3. Set up code style settings from repository file
+
+JetBrains Rider Setup:
+1. Import project code style settings
+2. Configure Unity integration plugin
+3. Set up Unity Debugger connection
+
+1.6 Terminal Environment Setup
+---------------------------
+1. Install and configure tmux:
+   ```
+   # Create standard config file
+   cp ./Scripts/Tools/dotfiles/tmux.conf ~/.tmux.conf
+   ```
+
+2. Configure shell-specific settings:
+   - PowerShell: Add project-specific profile in `~/Documents/WindowsPowerShell/profile.ps1`
+   - Bash/ZSH: Add project-specific settings to `.bashrc` or `.zshrc`
+
+3. Set up standard tmux sessions:
+   ```
+   # Initialize standard development session
+   ./Scripts/Tools/initialize-dev-session.sh
+   ```
+
+1.7 JavaScript Development Setup
+-----------------------------
+1. Install Bun:
+   ```
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. Project initialization:
+   ```
+   cd ./Assets/WebComponents
+   bun install
+   ```
+
+3. Configure Bun for project:
+   ```
+   # Run setup script to configure Bun for the project
+   ./Scripts/Tools/setup-bun-environment.sh
+   ```
+
+4. Verify installation:
+   ```
+   bun --version
+   ```
+
+1.8 Build Pipeline Tools
+---------------------
+1. Install TeamCity agent for CI/CD integration
+2. Set up Unity Cloud Build access if applicable
+3. Configure local build scripts
+4. Set up Docker for containerized builds:
+   ```
+   # Pull project build container
+   docker pull tbdspacegame/builder:latest
+   ```
+
+1.9 Environment Verification
+-------------------------
+Run the verification script to ensure your environment is properly configured:
+```
+./Scripts/Tools/verify-dev-environment.sh
+```
+
+The script checks:
+- All required software versions
+- Unity configuration
+- Required packages
+- Build tool configuration
+- Test framework setup
+- Terminal environment
+- JavaScript environment
+
+2.0 Version Control Guidelines
+=============================
+The TBD Space Game project uses Git for version control with a standardized workflow to ensure code quality and team coordination.
+
+2.1 Repository Structure
+-----------------------
+The main repository is organized as follows:
+- `/Assets` - Unity project assets
+- `/Documentation` - Project documentation
+- `/Tools` - Development and build tools
+- `/Tests` - Automated tests
+
+2.2 Branching Strategy
+--------------------
+The project follows a modified GitFlow branching strategy:
+
+- `main` - Stable production-ready code
+- `develop` - Integration branch for features
+- `feature/<feature-name>` - Feature development branches
+- `bugfix/<bug-id>` - Bug fix branches
+- `release/<version>` - Release preparation branches
+- `hotfix/<hotfix-id>` - Critical production fixes
+
+2.3 Commit Message Standards
+--------------------------
+All commit messages must follow this format:
+```
+[Area]: Brief description of change (50 chars max)
+
+Detailed explanation of what this change does and why.
+Include any relevant background information or context.
+Wrap lines at 72 characters.
+```
+
+Areas include:
+- `[Core]` - Core game systems
+- `[UI]` - User interface changes
+- `[Crew]` - Crew system modifications
+- `[Ship]` - Ship/habitat systems
+- `[Tech]` - Technical implementation
+- `[Docs]` - Documentation updates
+- `[Build]` - Build system changes
+- `[Test]` - Test-related changes
+
+2.4 Pull Request Process
+----------------------
+1. Create a pull request from your feature branch to develop
+2. Ensure all tests pass and CI checks succeed
+3. Obtain code review from at least one team member
+4. Address all review comments
+5. Squash commits if necessary for clarity
+6. Maintainer merges after approval
+
+2.5 Versioning
+------------
+The project follows Semantic Versioning (SemVer):
+- MAJOR.MINOR.PATCH (e.g., 1.2.3)
+- Increment MAJOR for incompatible API changes
+- Increment MINOR for backward-compatible functionality
+- Increment PATCH for backward-compatible bug fixes
+
+2.6 Documentation Versioning
+--------------------------
+Documentation files should:
+- Include version date at the top (e.g., "Version: April 2025")
+- Be updated whenever related code changes
+- Maintain a changelog section for major updates
+- Follow the same branch strategy as code
+
+2.7 Large File Storage
+-------------------
+Use Git LFS for:
+- Texture files (.psd, .tga, .png, .jpg) over 5MB
+- 3D models (.fbx, .obj)
+- Audio files (.wav, .mp3)
+- Video files (.mp4, .mov)
+- Unity asset bundles
+
+3.0 Coding Standards
+===================
+C# Coding Standards:
+- Use PascalCase for public members, camelCase for private members, and _camelCase for private fields
+- Include XML documentation for all public methods and classes
+- Follow MonoBehaviour lifecycle patterns and prefer composition over inheritance
+- Consider performance implications, especially for methods called frequently
+
+Code Structure and Organization:
+- All gameplay logic belongs in Scripts/ directory
+- Manager classes should be in Scripts/Managers/
+- Data models should be in Scripts/Models/
+- UI components should be in Scripts/UI/
+- Implement event-based communication between systems
+- Each class should have a single responsibility
+- Prefer composition over inheritance
+- Keep methods short and focused on a single task
+
+Naming Conventions:
+- Class names should be nouns and use PascalCase
+- Method names should be verbs and use PascalCase
+- Interface names should start with 'I' and use PascalCase
+- Private fields should be prefixed with underscore and use camelCase
+- Constants should use ALL_CAPS with underscores
+- Boolean variables should start with 'is', 'has', 'can', etc.
+
+3.5 AI-Assisted Development Guidelines
+------------------------------------
+The project utilizes AI tools to assist with content creation and code development. These guidelines ensure effective and consistent use of AI assistance while maintaining quality standards.
+
+3.5.1 Approved AI Tools and Use Cases
+-----------------------------------
+The following AI tools are approved for specific purposes:
+
+| Tool | Approved Use Cases | Not Approved For |
+|------|-------------------|------------------|
+| Claude 3.7 | Documentation drafting, Code comments, UI text suggestions, Simple algorithms | Critical gameplay systems, Final narrative content, System architecture |
+| GitHub Copilot | Code completion, Boilerplate generation, Test creation, Simple methods | Core game mechanics, Security-sensitive code, Performance-critical systems |
+| Grok | Research summarization, Reference validation, Documentation indexing | Direct code generation, Narrative development, Design decisions |
+| Stable Diffusion | Concept visualization, Placeholder assets, UI mockups | Final art assets, Marketing materials, Character designs |
+
+3.5.2 Workflow for AI-Assisted Content Creation
+--------------------------------------------
+When using AI tools for development assistance:
+
+1. Definition Phase:
+   - Clearly define the scope and requirements before using AI assistance
+   - Document your intent and expected outcome
+   - Identify which specific components are suitable for AI assistance
+   
+2. Generation Phase:
+   - Provide detailed context including existing code, requirements, and style guidelines
+   - Generate multiple variations for comparison
+   - Evaluate immediate results for obvious issues
+   
+3. Review Phase (mandatory):
+   - All AI-generated content must undergo human review
+   - Technical reviewers must verify functionality, performance, and security
+   - Style reviewers must ensure consistency with project standards
+   - Cross-reference with existing systems to avoid inconsistency
+   
+4. Integration Phase:
+   - Add appropriate attribution in comments: `// AI-assisted implementation, reviewed by [Developer]`
+   - Document any modifications made during review
+   - Run full test suite to validate changes
+
+3.5.3 Quality Control for AI-Generated Content
+-------------------------------------------
+All AI-generated content must pass these quality thresholds:
+
+- **Technical Implementation**: 
+  - Must match or exceed manually written code quality
+  - Pass all automated tests
+  - Meet performance requirements
+  - Follow project architecture patterns
+
+- **Documentation Quality**:
+  - Consistent writing style
+  - Accurate technical information
+  - Clear and concise explanations
+  - Proper cross-referencing
+
+- **Narrative Content**:
+  - Consistent with established lore and timeline
+  - Character voice matches defined personality
+  - Avoids contradictions with existing narrative
+  - Writer review and editing required
+
+3.5.4 Efficiency Tracking and Improvement
+---------------------------------------
+To measure the effectiveness of AI assistance:
+
+1. Time Tracking:
+   - Record time spent with AI assistance vs. traditional development
+   - Track review and correction time separately
+   
+2. Quality Metrics:
+   - Bug rate comparison between AI-assisted and traditional implementation
+   - Maintainability index of resulting code
+   - Code review feedback statistics
+   
+3. Continuous Improvement:
+   - Monthly review of AI-assisted workflow efficiency
+   - Document effective prompt strategies
+   - Update guidelines based on findings
+
+3.5.5 Ethical and Copyright Considerations
+---------------------------------------
+- All AI use must comply with tool licensing terms
+- AI tools should not be used to replicate protected works
+- Attribution must be maintained for all AI-generated content
+- Human creativity and authorship remains paramount
+
+4.0 Build and Deployment Process
+===============================
+This section outlines the procedures for building, testing, and deploying the TBD Space Game project.
+
+4.1 Build Configuration Types
+---------------------------
+The project uses the following build configurations:
+
+| Configuration | Purpose | Optimization | Debug Tools |
+|--------------|---------|--------------|-------------|
+| Development | Daily development builds | Disabled | Enabled |
+| Testing | QA and testing builds | Medium | Enabled |
+| Staging | Pre-release candidate builds | High | Limited |
+| Release | Production builds | Maximum | Disabled |
+
+4.2 Unity Build Process
+--------------------
+The standard build process uses Unity's build pipeline with custom pre/post-build steps:
+
+1. Pre-Build Steps:
+   - Version number update in ProjectSettings.asset
+   - Manifest.json generation with build metadata
+   - Resource validation and optimization
+   - Bun-based web component compilation
+
+2. Unity Build Commands:
+   ```bash
+   # Development build
+   ./Scripts/build.sh --env=development
+   
+   # Release build
+   ./Scripts/build.sh --env=production
+   ```
+
+3. Post-Build Steps:
+   - Build verification tests
+   - Documentation generation
+   - Build archiving and distribution
+
+4.3 Continuous Integration Pipeline
+---------------------------------
+The project uses TeamCity for CI/CD with the following pipeline:
+
+1. Trigger Conditions:
+   - Pull requests to develop branch
+   - Commits to develop, release, and main branches
+   - Daily scheduled builds
+
+2. Pipeline Stages:
+   - Code compilation check
+   - Unity test runner (Play mode and Edit mode tests)
+   - Development build creation
+   - Automated test suite execution
+   - Build artifacts uploading
+   - Notification to project team
+
+3. Pipeline Configuration:
+   - Configuration files stored in `/BuildTools/CI`
+   - Environment variables defined in TeamCity
+   - Build agents requirements documented in `/BuildTools/CI/agent-requirements.md`
+   - Docker containers for isolated build environments
+
+4.4 Release Process
+-----------------
+When preparing a release:
+
+1. Create a release branch from develop:
+   ```
+   git checkout -b release/v1.x.x develop
+   ```
+
+2. Update version numbers:
+   - ProjectSettings.asset
+   - Documentation version dates
+   - README.md
+
+3. Generate release notes:
+   ```
+   ./Scripts/Tools/generate-release-notes.sh --version v1.x.x
+   ```
+
+4. Execute release build:
+   ```
+   ./Scripts/build.sh --env=production --version v1.x.x
+   ```
+
+5. Manual QA verification of release build
+
+6. Merge release branch to main and develop:
+   ```
+   git checkout main
+   git merge --no-ff release/v1.x.x
+   git tag -a v1.x.x -m "Version 1.x.x"
+   git checkout develop
+   git merge --no-ff release/v1.x.x
+   ```
+
+4.5 Deployment Targets
+-------------------
+The project can be deployed to the following platforms:
+
+| Platform | Build Script | Special Requirements |
+|----------|-------------|---------------------|
+| Windows | build-windows.ps1 | .NET 8.0 Runtime |
+| macOS | build-macos.sh | N/A |
+| Linux | build-linux.sh | N/A |
+| Android | build-android.ps1 | Android SDK/NDK |
+| iOS | build-ios.sh | macOS build agent, certificates |
+
+4.6 Build Verification
+-------------------
+Each build undergoes verification:
+
+1. Automated tests via Unity Test Runner
+2. Build validation suite checking for:
+   - Missing assets
+   - Broken prefabs
+   - Scene references
+   - Performance benchmarks
+
+3. Manual verification checklist for release builds in `/BuildTools/verification-checklist.md`
+
+5.0 Testing Procedures
+=====================
+This section outlines the testing methodologies and procedures for ensuring the quality and stability of the TBD Space Game project.
+
+5.1 Testing Types and Coverage
+----------------------------
+The project implements multiple testing strategies:
+
+| Test Type | Tool/Framework | Purpose | Coverage Target |
+|-----------|---------------|---------|----------------|
+| Unit Tests | Unity Test Framework | Test individual components in isolation | 80% of core systems |
+| Integration Tests | Unity Test Framework (Play Mode) | Test system interactions | All major systems |
+| Performance Tests | Unity Profiler & Custom Tools | Verify performance targets | Critical paths |
+| Load Tests | Custom Load Simulator | Verify behavior under heavy load | All mission types |
+| UI Tests | Unity UI Testing | Verify UI functionality | All interactive elements |
+| Playtest Sessions | Manual Testing | Verify gameplay experience | Weekly for active features |
+
+5.2 Unit Testing Guidelines
+------------------------
+Unit tests should:
+- Be located in Scripts/Tests/EditMode/
+- Follow AAA pattern (Arrange-Act-Assert)
+- Mock dependencies using NSubstitute
+- Focus on single unit of functionality
+- Run quickly (<100ms per test)
+- Have clear naming: `[Method]_[Scenario]_[ExpectedResult]`
+
+Example unit test:
+```csharp
+[Test]
+public void CalculateOrbit_WithValidParameters_ReturnsExpectedPath()
+{
+    // Arrange
+    var calculator = new OrbitCalculator();
+    var parameters = new OrbitParameters(mass: 1000, velocity: new Vector3(0, 0, 10));
+    
+    // Act
+    OrbitPath result = calculator.CalculateOrbit(parameters);
+    
+    // Assert
+    Assert.IsNotNull(result);
+    Assert.AreEqual(expectedCount, result.points.Count);
+    Assert.IsTrue(MathUtils.IsWithinTolerance(expectedPeriod, result.period, 0.001f));
+}
+```
+
+5.3 Integration Testing
+---------------------
+Integration tests should:
+- Be located in Scripts/Tests/PlayMode/
+- Test interactions between systems
+- Use minimal mocking
+- Cover critical gameplay paths
+- Include cross-system dependencies
+- Verify state changes across systems
+
+Core integration test areas:
+- Crew system interactions with ship systems
+- Time progression and event generation
+- Mission completion and resource impacts
+- Combat system integration with physics
+- Save/load system with game state
+
+5.4 Performance Testing
+---------------------
+Performance testing focuses on:
+- Frame rate monitoring in heavy scenes
+- Memory allocation during critical operations
+- Loading times for large saves
+- Physics calculations during complex simulations
+- Rendering performance with maximum entities
+
+Performance tests should:
+- Establish clear baseline metrics
+- Run on reference hardware configurations
+- Log detailed profiling information
+- Compare against defined performance targets
+- Test best-case, average-case, and worst-case scenarios
+
+5.4.1 JavaScript Performance Testing
+--------------------------------
+For Bun-based web components:
+
+1. Use Bun's built-in test runner:
+   ```bash
+   cd ./Assets/WebComponents
+   bun test
+   ```
+
+2. Performance benchmarks:
+   ```bash
+   bun run benchmark
+   ```
+
+3. Memory profiling:
+   ```bash
+   bun --inspect ./performance-tests.js
+   ```
+
+5.5 Regression Testing
+-------------------
+Regression testing procedures:
+1. Maintain a suite of regression tests in Scripts/Tests/Regression/
+2. Run regression tests before merging feature branches
+3. Automatically run tests on CI for all PRs
+4. Document fixed bugs with corresponding tests
+5. Track regression test results over time
+
+5.6 Bug Reporting and Testing Process
+----------------------------------
+When bugs are identified:
+1. Document with detailed reproduction steps
+2. Assign severity and priority
+3. Include save file or scene if applicable
+4. Capture logs and screenshots
+5. Create a regression test for the issue
+6. Verify fix resolves the issue
+
+5.7 System Interdependency Testing
+-------------------------------
+To test complex system interconnections:
+1. Create simulation scenarios that engage multiple systems
+2. Document expected system interactions and outputs
+3. Run scenarios with various inputs and environmental conditions
+4. Verify data flow between systems matches expectations
+5. Check for emergent behaviors and unintended consequences
+
+5.8 AI-Generated Content Validation
+--------------------------------
+For testing AI-assisted implementations:
+1. Compare functionality with manual implementations
+2. Stress test with edge case inputs
+3. Check for logical flows unique to AI implementation
+4. Validate adherence to system architecture patterns
+5. Run performance comparisons with baseline implementations
+
+5.9 Test Automation
+----------------
+The project employs test automation:
+- Tests run automatically on pull requests
+- Nightly full test suite execution
+- Weekly performance benchmark runs
+- Automated report generation
+- Test coverage monitoring 
+
+6.0 MCP Integration Workflow
+===========================
+This section documents the workflow for integrating with the Machine Control Protocol (MCP) system, which manages hardware control interfaces for the game.
+
+6.1 MCP Overview
+--------------
+The Machine Control Protocol allows the game to interface with:
+- Custom hardware controllers
+- Multi-display setups
+- IoT devices for immersive feedback
+- Custom input peripherals
+- Simulator hardware platforms
+
+This integration requires special care due to hardware dependencies and safety considerations.
+
+6.2 MCP Architecture
+-----------------
+The MCP system consists of:
+- Core MCP library (`/Assets/Scripts/MCP/Core/`)
+- Device adapters (`/Assets/Scripts/MCP/Adapters/`)
+- Abstraction layer (`/Assets/Scripts/MCP/Abstraction/`)
+- Hardware simulators for development (`/Assets/Scripts/MCP/Simulators/`)
+- Safety monitoring services (`/Assets/Scripts/MCP/Safety/`)
+
+6.3 Development Environment Setup for MCP
+--------------------------------------
+To develop with MCP features:
+
+1. Install required hardware drivers:
+   - XInput controllers driver
+   - Custom hardware interface drivers (if available)
+   - MCP device simulator package
+
+2. Configure hardware access permissions:
+   - Configure device permissions on development machine
+   - Set up MCP simulation mode for non-hardware testing
+
+3. Enable MCP features in Unity:
+   ```csharp
+   // In a startup script or manager
+   MCPSystem.Initialize(new MCPConfiguration 
+   { 
+       EnableHardwareAccess = true,
+       SimulateUnavailableDevices = true,
+       LogLevel = MCPLogLevel.Verbose
+   });
+   ```
+
+6.4 MCP Development Workflow
+-------------------------
+1. Develop against the abstraction layer:
+   ```csharp
+   // Instead of direct hardware access:
+   // DON'T: serialPort.Write(command);
+   
+   // DO: Use the abstraction layer
+   IMCPDevice device = MCPSystem.GetDevice("MainControlPanel");
+   device.SendCommand(new ControlCommand("SetLED", 2, true));
+   ```
+
+2. Test using hardware simulators:
+   ```csharp
+   // Enable simulator mode
+   MCPSystem.SetSimulationMode(true);
+   
+   // Run standard hardware interactions
+   // Check simulator visual feedback
+   ```
+
+3. Create device adapter tests:
+   ```csharp
+   [Test]
+   public void DeviceAdapter_SendingValidCommand_ReturnsSuccess()
+   {
+       var adapter = new MockControlPanelAdapter();
+       MCPResponse response = adapter.ProcessCommand(new ControlCommand("SetLED", 1, true));
+       Assert.AreEqual(MCPResponseStatus.Success, response.Status);
+   }
+   ```
+
+4. Hardware integration testing:
+   - Run regular integration tests with simulator  
+   - Document which tests require physical hardware
+   - Mark hardware-dependent tests with category attribute
+   - Use tmux to manage multiple terminal sessions for hardware testing
+
+6.5 MCP Safety Guidelines
+----------------------
+When working with physical hardware:
+
+1. All direct hardware commands must use safety checking:
+   ```csharp
+   // Add safety boundaries
+   if (!SafetyChecker.IsCommandSafe(command, device))
+   {
+       Debug.LogError("Unsafe command detected!");
+       return MCPResponse.Unsafe;
+   }
+   ```
+
+2. Include hardware failure handling:
+   ```csharp
+   try 
+   {
+       device.SendCommand(command);
+   }
+   catch (MCPHardwareException ex)
+   {
+       // Log failure
+       MCPSystem.LogFailure(device.DeviceId, ex);
+       
+       // Fallback to safe state
+       device.ResetToSafeState();
+       
+       // Notify game systems
+       EventBus.Publish(new HardwareFailureEvent(device.DeviceId, ex.FailureType));
+   }
+   ```
+
+3. All hardware-interacting code undergoes special review
+
+6.6 MCP Version Compatibility
+--------------------------
+MCP integration requires version compatibility management:
+
+1. MCP library versioning follows SemVer
+2. Hardware firmware versions must be compatible
+3. Version compatibility matrix in `/Assets/Scripts/MCP/VersionCompatibility.json`
+4. Version checking at runtime:
+   ```csharp
+   if (!MCPSystem.IsCompatibleWithHardware(hardwareVersion))
+   {
+       Debug.LogError($"Incompatible hardware version: {hardwareVersion}");
+       // Handle incompatibility
+   }
+   ```
+
+6.7 MCP Documentation Requirements
+-------------------------------
+For MCP-related features:
+
+1. Document all hardware dependencies
+2. Include circuit diagrams where applicable
+3. Specify required firmware versions
+4. Document safety considerations and limits
+5. Include simulation mode instructions
+6. Add hardware troubleshooting guide
+
+8.0 Issue Tracking and Resolution
+================================
+This section details the procedures for tracking, prioritizing, and resolving issues throughout the development lifecycle.
+
+8.1 Issue Tracking System
+----------------------
+The project uses GitLab Issues for issue tracking with the following structure:
+
+- Projects organized by system area
+- Issues categorized by type, severity, and priority
+- Automated linking between issues and commits
+- Milestone-based planning and tracking
+- Time estimation and tracking
+- Custom workflow with project-specific states
+
+8.2 Issue Types and Categories
+---------------------------
+Issues are categorized as:
+
+| Type | Description | Label | Resolution Time Target |
+|------|------------|-------|------------------------|
+| Bug | Functionality not working as expected | `bug` | Based on severity |
+| Feature | New functionality to be added | `feature` | Based on planning |
+| Task | Development work item | `task` | Based on estimate |
+| Improvement | Enhancement to existing functionality | `improvement` | Based on priority |
+| Documentation | Documentation updates | `documentation` | 1-2 days |
+| Technical Debt | Code cleanup or refactoring | `tech-debt` | By sprint allocation |
+
+Bug severity levels:
+- **Critical**: Game-breaking, blocks progress (24-hour response)
+- **Major**: Significant feature broken (3-day response)
+- **Normal**: Feature works incorrectly (next sprint)
+- **Minor**: Cosmetic or edge case (backlog)
+
+8.3 Issue Reporting Process
+------------------------
+When reporting an issue:
+
+1. Check if the issue already exists
+2. Create a new issue with:
+   - Clear descriptive title
+   - Detailed reproduction steps
+   - Expected vs. actual behavior
+   - Screenshots or videos if applicable
+   - System information if relevant
+   - Version information
+
+3. Apply appropriate labels:
+   - Type label (`bug`, `feature`, etc.)
+   - Area label (`ui`, `combat`, `crew`, etc.)
+   - Priority label if known
+
+4. For bugs, include:
+   - Saved game file if applicable
+   - Log files
+   - Steps to reproduce consistently
+   - Impact/severity assessment
+
+8.4 Triage and Prioritization
+--------------------------
+Issues are triaged:
+
+1. Daily triage meeting for new issues
+2. Severity assessment by lead developer
+3. Priority assignment based on:
+   - Severity (for bugs)
+   - Strategic importance (for features)
+   - Dependencies with other work
+   - Resource availability
+
+4. Assignment to milestone or sprint
+5. Developer assignment or self-selection from pool
+
+8.5 Issue Resolution Workflow
+--------------------------
+When resolving an issue:
+
+1. Assign issue to yourself
+2. Create branch from develop:
+   ```
+   git checkout -b bugfix/issue-123 develop
+   ```
+   or
+   ```
+   git checkout -b feature/issue-456 develop
+   ```
+
+3. Implement fix or feature
+4. Add tests to verify the fix
+5. Ensure all tests pass
+6. Submit pull request referencing the issue:
+   - Include "Fixes #123" in PR description
+   - Attach screenshots of fixed behavior if applicable
+   - Complete the PR template with all required information
+
+7. Address review feedback
+8. After approval and merge:
+   - Verify fix in develop branch
+   - Update issue with any additional information
+   - Close issue if completely resolved
+
+8.6 Regression Testing
+-------------------
+For bug fixes:
+
+1. Create a specific test to verify the fix
+2. Add to regression test suite
+3. Document the root cause in the issue
+4. Add prevention notes for similar issues
+
+8.7 Bug Metrics and Analysis
+-------------------------
+The team tracks:
+
+1. Bug discovery rate per sprint
+2. Average time to resolution
+3. Regression rate (fixed bugs that reappear)
+4. Bug distribution by system area
+5. Trends in bug categories
+
+Monthly bug review meetings analyze:
+- Common root causes
+- Areas with high bug density
+- Developer education needs
+- Process improvement opportunities
+
+8.8 Feature Requests and Enhancements
+----------------------------------
+For new features and enhancements:
+
+1. Submit detailed proposal with rationale
+2. Include mockups or prototypes if applicable
+3. Product owner reviews and prioritizes
+4. Approved features are scheduled into roadmap
+5. Large features broken into smaller implementable tasks
+6. Implementation follows standard development workflow
+
+8.9 Knowledge Base Integration
+---------------------------
+Issues feed into the knowledge base:
+
+1. Common issues documented in Wiki
+2. Patterns of bugs inform best practices
+3. Complex resolution steps added to troubleshooting guides
+4. Issue trends drive process improvements

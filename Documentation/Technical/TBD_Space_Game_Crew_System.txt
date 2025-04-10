@@ -1,0 +1,1407 @@
+1.# TBD_Space_Game_Crew_System.txt
+Version: April 2025
+
+Table of Contents:
+1.0 Crew System Overview
+2.0 Character Generation
+3.0 Skills and Attributes
+4.0 Cultural Identity System
+5.0 Generational Mechanics
+6.0 Relationships and Social Networks
+7.0 Crew Management Interface
+8.0 Technical Implementation
+
+1.0 Crew System Overview
+========================
+This document details the comprehensive Crew System for TBD Space Game. The Crew System is the backbone of the gameplay experience, simulating the lives, relationships, and evolution of space colonists across multiple generations.
+
+Core features of the Crew System:
+- Dynamic character generation with genetic inheritance
+- Complex skill and attribute development
+- Cultural identity evolution across generations
+- Relationship networks and social dynamics
+- Crew management mechanics and interfaces
+- Integration with other game systems
+
+2.0 Character Generation
+========================
+The Crew System incorporates a sophisticated character generation system that creates diverse crew members with unique traits, skills, and backgrounds.
+
+2.1 Crew Design
+-------------
+Each crew member is defined by three core components: roles, traits, and attributes. These elements determine how crew members perform tasks, interact with each other, and evolve over time.
+
+### Roles
+Crew members are assigned specific roles that tie directly to ship systems and tasks:
+- Pilot: Responsible for navigation and maneuvering the spacecraft
+- Engineer: Manages repairs, maintenance, and system upgrades
+- Scientist: Conducts research and handles scientific equipment
+- Medic: Maintains crew health and manages medical emergencies
+- Communications Officer: Handles external communications and diplomacy
+
+### Traits
+Each crew member has one or more personality traits that influence their behavior and task performance. Traits are static and do not change:
+- Hot-headed: Increases the likelihood of conflicts but boosts performance under pressure
+- Genius: Enhances problem-solving, increasing the success rate of complex tasks
+- Calm: Reduces stress during crises, improving decision-making
+- Empathetic: Boosts morale of nearby crew members but may reduce efficiency in high-stress situations
+
+### Background Influence
+A crew member's background influences their traits and initial attributes:
+
+```csharp
+// Sample code for generating crew traits based on background
+public void AssignTraits(CrewMember crew)
+{
+    List<Trait> availableTraits = traitDatabase.GetAllTraits();
+    List<Trait> assignedTraits = new List<Trait>();
+    
+    // Base number of traits
+    int traitCount = Random.Range(MIN_TRAITS_PER_CREW, MAX_TRAITS_PER_CREW + 1);
+    
+    // Apply background modifiers to trait probabilities
+    Dictionary<string, float> traitProbabilities = new Dictionary<string, float>();
+    foreach (Trait trait in availableTraits)
+    {
+        // Start with base probability
+        traitProbabilities[trait.id] = trait.baseProbability;
+    }
+    
+    // Modify based on background
+    if (crew.Background == CrewBackground.EarthBorn)
+    {
+        // Faction-specific modifications
+        if (crew.Faction == Faction.US)
+        {
+            traitProbabilities["Individualist"] *= 1.15f;
+            traitProbabilities["Innovative"] *= 1.10f;
+        }
+        else if (crew.Faction == Faction.China)
+        {
+            traitProbabilities["Collectivist"] *= 1.15f;
+            traitProbabilities["Disciplined"] *= 1.10f;
+        }
+        else
+        {
+            traitProbabilities["Adaptable"] *= 1.15f;
+            traitProbabilities["SelfReliant"] *= 1.10f;
+        }
+    }
+    else if (crew.GenerationNumber == 1)
+    {
+        // First generation space-born
+        traitProbabilities["LowGAdapted"] *= 1.25f;
+        traitProbabilities["ConfinedSpaceComfort"] *= 1.15f;
+        traitProbabilities["EarthNostalgia"] *= 0.85f;
+        traitProbabilities["ResourceConscious"] *= 1.10f;
+    }
+    else
+    {
+        // Second+ generation space-born
+        traitProbabilities["MissionSkeptic"] *= 1.30f;
+        traitProbabilities["HeritagePreserver"] *= 1.20f;
+        
+        // Chance for new emergent traits
+        if (Random.value < 0.25f)
+        {
+            Trait newTrait = GenerateEmergentTrait(crew.Environment);
+            assignedTraits.Add(newTrait);
+            traitCount--;
+        }
+    }
+    
+    // Assign traits based on modified probabilities
+    for (int i = 0; i < traitCount; i++)
+    {
+        Trait selectedTrait = SelectTraitBasedOnProbability(availableTraits, traitProbabilities);
+        assignedTraits.Add(selectedTrait);
+        
+        // Reduce probability to avoid duplicates of similar traits
+        foreach (string conflictingTraitId in selectedTrait.conflictingTraits)
+        {
+            traitProbabilities[conflictingTraitId] *= 0.5f;
+        }
+    }
+    
+    // Apply traits to crew member
+    foreach (Trait trait in assignedTraits)
+    {
+        crew.AddTrait(trait);
+    }
+    
+    // Set crisis response patterns based on background
+    if (crew.Background == CrewBackground.EarthBorn)
+    {
+        crew.efficiencyModifier = 0.15f;
+        crew.stressResistanceModifier = -0.05f;
+    }
+    else if (crew.GenerationNumber == 1)
+    {
+        crew.efficiencyModifier = 0.05f;
+        crew.stressResistanceModifier = 0.10f;
+    }
+    else
+    {
+        crew.efficiencyModifier = -0.05f;
+        crew.stressResistanceModifier = 0.20f;
+    }
+}
+```
+
+2.2 Colonial Recruitment
+----------------------
+Colonies serve as sources for new crew members, with traits influenced by the colony's environment and history:
+
+```csharp
+CrewMember GenerateColonialRecruit(Colony sourceColony) {
+    CrewMember recruit = new CrewMember();
+    
+    // Base attributes reflect colony environment
+    recruit.physicalAttributes.SetGravityAdaptation(sourceColony.localGravity);
+    recruit.socialAttributes.SetCulturalIdentity(
+        sourceColony.GetCulturalBlend(worldState.currentYear - sourceColony.foundingYear)
+    );
+    
+    // Colonial generation affects trait distribution
+    int colonialGeneration = CalculateGeneration(sourceColony);
+    
+    switch (colonialGeneration) {
+        case 1: // First generation
+            recruit.AddProbableTrait("Pioneering", 0.7f);
+            recruit.AddProbableTrait("Homesick", 0.5f);
+            recruit.SetFactionLoyalty(sourceColony.foundingFaction, 0.9f);
+            break;
+            
+        case 2: // Second generation
+            recruit.AddProbableTrait("Resourceful", 0.6f);
+            recruit.AddProbableTrait("Xenophilic", 0.4f); // Interest in other colonies/cultures
+            recruit.SetFactionLoyalty(sourceColony.foundingFaction, 0.6f);
+            recruit.SetColonyIdentity(sourceColony.name, 0.4f);
+            break;
+            
+        case 3: // Third+ generation
+            recruit.AddProbableTrait("Colonial Pride", 0.8f);
+            recruit.AddProbableTrait("Environmental Adaptation", 0.7f);
+            recruit.SetFactionLoyalty(sourceColony.foundingFaction, 0.3f);
+            recruit.SetColonyIdentity(sourceColony.name, 0.7f);
+            break;
+    }
+    
+    return recruit;
+}
+```
+
+3.0 Skills and Attributes
+=========================
+Crew members have a variety of skills and attributes that affect their performance, wellbeing, and relationships with others.
+
+3.1 Attribute Categories
+----------------------
+Crew members have several categories of dynamic attributes that change based on gameplay:
+
+- **Skills**: Proficiency in role-specific tasks, improving with experience
+- **Health**: Physical condition, affected by injuries or illnesses, impacting task performance
+- **Morale**: Emotional state, influenced by relationships, workload, and mission outcomes
+- **Relationships**: Bonds with other crew members, ranging from friendships to rivalries
+
+3.2 Skill Development
+-------------------
+Skills improve through direct experience and observation of others:
+
+```csharp
+void UpdateExperienceAndLearning(CrewMember crew, float deltaTime) {
+    // Check if crew is performing a skill-based action
+    if (crew.currentAction != null && crew.currentAction.providesExperience) {
+        // Accumulate experience in the relevant skill
+        SkillType relevantSkill = crew.currentAction.relatedSkill;
+        crew.AddExperience(relevantSkill, EXPERIENCE_GAIN_RATE * deltaTime);
+        
+        // Chance to improve at task when meaningful experience threshold is reached
+        if (crew.GetExperience(relevantSkill) >= SKILL_IMPROVEMENT_THRESHOLD) {
+            // Improve skill and reset experience counter
+            crew.ImproveSkill(relevantSkill, SKILL_IMPROVEMENT_AMOUNT);
+            crew.ResetExperience(relevantSkill);
+            
+            // Notify player of skill improvement
+            notificationSystem.CreateSkillImprovedNotification(crew, relevantSkill);
+        }
+    }
+    
+    // Learning from observation (watching others perform tasks)
+    if (crew.GetState() == CrewState.Observing && crew.observingAction != null) {
+        CrewMember observedCrew = crew.observingCrewMember;
+        SkillType observedSkill = crew.observingAction.relatedSkill;
+        
+        // Gain experience at a reduced rate when observing
+        float observationExperienceRate = OBSERVATION_EXPERIENCE_FACTOR * 
+                                       EXPERIENCE_GAIN_RATE * 
+                                       deltaTime;
+        
+        crew.AddExperience(observedSkill, observationExperienceRate);
+    }
+}
+```
+
+3.3 Physiological Attributes
+--------------------------
+Crew members have physiological attributes affected by space environments:
+
+```csharp
+public void UpdateCrewPhysiology(float deltaTime)
+{
+    // Update all crew members' physiological stats
+    foreach (CrewMember crew in crewManager.GetAllCrewMembers())
+    {
+        // Get environmental factors
+        float gravityLevel = environmentManager.GetCurrentGravity();
+        float radiationLevel = environmentManager.GetCurrentRadiationLevel();
+        
+        // Calculate physiological change rates based on gravity level
+        float boneLossRate = BASE_BONE_LOSS_RATE * (1f - gravityLevel);
+        float muscleAtrophyRate = BASE_MUSCLE_ATROPHY_RATE * (1f - gravityLevel);
+        float cardioDeclineRate = BASE_CARDIO_DECLINE_RATE * (1f - gravityLevel);
+        
+        // Apply medical countermeasures if active
+        if (crew.HasActiveTreatment(TreatmentType.BoneDensityTherapy))
+        {
+            boneLossRate *= (1f - crew.GetTreatmentEfficacy(TreatmentType.BoneDensityTherapy));
+        }
+        
+        if (crew.HasActiveTreatment(TreatmentType.MuscleStimulation))
+        {
+            muscleAtrophyRate *= (1f - crew.GetTreatmentEfficacy(TreatmentType.MuscleStimulation));
+        }
+        
+        // Apply exercise regimen benefits if compliance is high
+        if (crew.exerciseCompliance > EXERCISE_COMPLIANCE_THRESHOLD)
+        {
+            boneLossRate *= (1f - EXERCISE_BONE_PROTECTION);
+            muscleAtrophyRate *= (1f - EXERCISE_MUSCLE_PROTECTION);
+            cardioDeclineRate *= (1f - EXERCISE_CARDIO_PROTECTION);
+        }
+        
+        // Apply changes to crew member
+        crew.boneDensity -= boneLossRate * deltaTime;
+        crew.muscleMass -= muscleAtrophyRate * deltaTime;
+        crew.cardiovascularHealth -= cardioDeclineRate * deltaTime;
+        
+        // Apply radiation exposure
+        float radiationProtection = CalculateRadiationProtection(crew);
+        float radiationExposure = radiationLevel * (1f - radiationProtection) * deltaTime;
+        crew.cumulativeRadiationDose += radiationExposure;
+        
+        // Check for radiation effects threshold crossings
+        CheckRadiationEffects(crew);
+        
+        // Update performance modifiers based on physiological health
+        UpdatePerformanceModifiers(crew);
+        
+        // For long time skips, calculate adaptation effects for generational crew
+        if (crew.isSpaceBorn && timeManager.IsTimeSkip)
+        {
+            // Apply generational adaptation effects
+        }
+    }
+}
+```
+
+3.4 Psychological Attributes
+--------------------------
+Psychological health is affected by mission duration, isolation, and environmental factors:
+
+```csharp
+void UpdateCrewPsychologicalState(CrewMember crew, float deltaTime) {
+    // Base stress accumulation from environmental factors
+    float stressAccumulation = GetBaseStressRate(crew, shipSystems.environment);
+    
+    // Neurobiological impact based on mission duration
+    float adaptationFactor = CalculateSpaceAdaptation(crew.daysInSpace);
+    
+    // Macrostructural brain changes affecting performance
+    if (crew.daysInSpace > 180f) {
+        float brainChangeImpact = Mathf.Min(0.15f, crew.daysInSpace / 1200f);
+        crew.SetTemporarySkillModifier(SkillType.Spatial, -brainChangeImpact);
+    }
+    
+    // Memory formation impact
+    if (crew.daysInSpace > 240f) {
+        float memoryImpact = Mathf.Min(0.2f, crew.daysInSpace / 1000f);
+        crew.SetTemporarySkillModifier(SkillType.Technical, -memoryImpact * 0.5f);
+        crew.SetTemporarySkillModifier(SkillType.Scientific, -memoryImpact * 0.5f);
+    }
+    
+    // Active countermeasures reduce stress
+    float stressReduction = 0f;
+    foreach (ActiveCountermeasure cm in crew.activeCountermeasures) {
+        stressReduction += cm.effectiveness * COUNTERMEASURE_BASE_EFFECT * deltaTime;
+    }
+    
+    // Apply daily resilience recovery
+    float resilienceRecovery = crew.GetResilienceRecoveryRate() * deltaTime;
+    
+    // Update crew stress level
+    float netStressChange = stressAccumulation - stressReduction - resilienceRecovery;
+    crew.ModifyStress(netStressChange);
+    
+    // Check for condition triggers
+}
+```
+
+4.0 Cultural Identity System
+============================
+The Cultural Identity System models how crew members' cultural backgrounds, belief systems, and values influence their behavior, relationships, and well-being throughout the mission.
+
+4.1 Cultural Identity Components
+------------------------------
+Each crew member's cultural identity consists of several interconnected components:
+
+- **Origin Culture:** The dominant Earth-based culture that shapes a crew member's initial values (e.g., American, Chinese, European, Indian)
+- **Value System:** A set of weighted values (e.g., Individualism vs. Collectivism, Tradition vs. Innovation)
+- **Social Norms:** Expected behaviors in specific contexts (e.g., leadership hierarchy, conflict resolution approaches)
+- **Religious/Belief Framework:** The dominant belief system and its associated practices
+- **Ritual Practices:** Regular observances that maintain connection to belief systems
+- **Moral Framework:** Ethical rules derived from beliefs that influence decision-making
+
+```csharp
+/// <summary>
+/// Represents a crew member's cultural and religious identity.
+/// </summary>
+public class CulturalIdentity
+{
+    /// <summary>
+    /// The crew member's origin culture.
+    /// </summary>
+    public CultureType OriginCulture { get; private set; }
+    
+    /// <summary>
+    /// The crew member's value system, represented as weighted priorities.
+    /// </summary>
+    public Dictionary<ValueAxis, float> ValueSystem { get; private set; }
+    
+    /// <summary>
+    /// The crew member's primary religious or philosophical framework.
+    /// </summary>
+    public BeliefSystem PrimaryBelief { get; private set; }
+    
+    /// <summary>
+    /// The strength of adherence to the primary belief system (0.0-1.0).
+    /// </summary>
+    public float BeliefCommitment { get; private set; }
+    
+    /// <summary>
+    /// Important ritual practices observed by the crew member.
+    /// </summary>
+    public List<RitualPractice> Rituals { get; private set; }
+    
+    /// <summary>
+    /// Calculates cultural compatibility between two crew members.
+    /// </summary>
+    /// <param name="other">The other crew member to compare with.</param>
+    /// <returns>Compatibility score from -1.0 (incompatible) to 1.0 (highly compatible)</returns>
+    public float CalculateCompatibility(CulturalIdentity other)
+    {
+        // Implementation details
+    }
+}
+```
+
+4.2 Cultural Evolution
+-------------------
+Cultural identity evolves over time, particularly in generation ships and permanent settlements:
+
+### Cultural Divergence Mechanics
+Cultural evolution follows a timeline based on years since departure from Earth:
+- Language: New terminology (5-10 years), distinct slang (15-25 years), full dialect (50-100 years)
+- Customs: Adapted routines (3-5 years), new celebrations (10-15 years), distinct rituals (30-40 years)
+- Values: Priority shifts (10-20 years), philosophical divergence (40-60 years), new ethical frameworks (80-100 years)
+
+```csharp
+CulturalDivergence CalculateCulturalDivergence(Colony colony) {
+    int yearsSinceFoundation = worldState.GetCurrentYear() - colony.foundingYear;
+    
+    // Calculate base divergence in various categories
+    float languageDivergence = CalculateLogisticDivergence(yearsSinceFoundation, 75f, 0.07f);
+    float customDivergence = CalculateLogisticDivergence(yearsSinceFoundation, 40f, 0.09f);
+    float valueDivergence = CalculateLogisticDivergence(yearsSinceFoundation, 90f, 0.05f);
+    
+    // Adjust based on Earth communication frequency
+    float earthCommsFrequency = colony.GetEarthCommunicationFrequency();
+    float communicationModifier = Mathf.Lerp(1.5f, 0.5f, Mathf.Clamp01(earthCommsFrequency));
+    
+    languageDivergence *= communicationModifier;
+    customDivergence *= communicationModifier;
+    valueDivergence *= communicationModifier;
+    
+    // Adjust based on cultural preservation efforts
+    float preservationFactor = colony.GetCulturalPreservationFactor();
+    float preservationModifier = Mathf.Lerp(1.2f, 0.6f, Mathf.Clamp01(preservationFactor));
+    
+    languageDivergence *= preservationModifier;
+    customDivergence *= preservationModifier;
+    valueDivergence *= preservationModifier;
+    
+    // Return combined divergence metrics
+    return new CulturalDivergence {
+        language = languageDivergence,
+        customs = customDivergence,
+        values = valueDivergence
+    };
+}
+```
+
+### Generational Evolution Mechanics
+Cultural identity evolves across generations through a sophisticated inheritance and adaptation system:
+
+```csharp
+/// <summary>
+/// Evolves cultural identity across generations based on environmental factors.
+/// </summary>
+/// <param name="parentIdentities">The cultural identities of the parents.</param>
+/// <param name="generationNumber">Which generation from Earth (1-based).</param>
+/// <param name="environmentFactors">Environmental influences shaping development.</param>
+/// <returns>A new cultural identity for the offspring.</returns>
+public CulturalIdentity EvolveIdentityForOffspring(
+    List<CulturalIdentity> parentIdentities,
+    int generationNumber,
+    EnvironmentFactors environmentFactors)
+{
+    CulturalIdentity newIdentity = new CulturalIdentity();
+    
+    // Base inheritance from parents
+    foreach (ValueAxis axis in ValueAxis.All)
+    {
+        float averageValue = parentIdentities.Average(p => p.ValueSystem[axis]);
+        
+        // Apply generational drift
+        float generationalDrift = CalculateGenerationalDrift(
+            axis, 
+            generationNumber, 
+            environmentFactors
+        );
+        
+        newIdentity.ValueSystem[axis] = Mathf.Clamp(
+            averageValue + generationalDrift,
+            -1f,
+            1f
+        );
+    }
+    
+    // Belief system evolution
+    if (generationNumber == 1)
+    {
+        // First generation mostly inherits directly
+        newIdentity.PrimaryBelief = SelectDominantBeliefSystem(parentIdentities);
+        newIdentity.BeliefCommitment = CalculateFirstGenBeliefCommitment(parentIdentities);
+    }
+    else if (generationNumber == 2)
+    {
+        // Second generation shows more pragmatic adaptation
+        newIdentity.PrimaryBelief = ApplyEnvironmentalInfluence(
+            parentIdentities,
+            environmentFactors
+        );
+        newIdentity.BeliefCommitment = CalculateSecondGenBeliefCommitment(
+            parentIdentities,
+            environmentFactors
+        );
+    }
+    else
+    {
+        // Third+ generation develops genuinely new belief systems
+        newIdentity.PrimaryBelief = GenerateSpaceBornBelief(
+            parentIdentities,
+            generationNumber,
+            environmentFactors
+        );
+        newIdentity.BeliefCommitment = CalculateLateCulturalBeliefCommitment(
+            generationNumber,
+            environmentFactors
+        );
+    }
+    
+    // Generate appropriate rituals
+    newIdentity.Rituals = GenerateEvolvingRituals(
+        parentIdentities,
+        newIdentity.PrimaryBelief,
+        generationNumber,
+        environmentFactors
+    );
+    
+    return newIdentity;
+}
+```
+
+4.3 Cultural Events and Activities
+-------------------------------
+The system includes a variety of cultural events and activities that impact crew morale and relationships:
+
+```csharp
+// Cultural event system
+public class CulturalEvent
+{
+    public string Name { get; private set; }
+    public string Description { get; private set; }
+    public float ResourceCost { get; private set; }
+    public float SpaceRequirement { get; private set; }
+    public float BaseParticipationRate { get; private set; }
+    public float CohesionImpact { get; private set; }
+    public List<string> RelatedCultures { get; private set; }
+    public bool IsReligious { get; private set; }
+    public string RelatedReligion { get; private set; }
+    
+    // Calculate actual participation based on crew composition
+    public float CalculateExpectedParticipation(List<CrewMember> crew)
+    {
+        float totalParticipation = 0f;
+        
+        foreach (var member in crew)
+        {
+            float individualLikelihood = BaseParticipationRate;
+            
+            // Cultural alignment boost
+            if (RelatedCultures.Contains(member.CulturalBackground))
+            {
+                individualLikelihood += 0.3f;
+            }
+            
+            // Religious alignment
+            if (IsReligious && member.ReligiousBackground == RelatedReligion)
+            {
+                individualLikelihood += 0.4f * member.ReligiousDevoutness;
+            }
+            
+            // Space-born adjustment
+            if (member.IsBornInSpace && !IsReligious)
+            {
+                // Space-born crew prefer space-developed events
+                individualLikelihood += Name.Contains("Space") ? 0.2f : -0.1f;
+            }
+            
+            totalParticipation += Mathf.Clamp01(individualLikelihood);
+        }
+        
+        return totalParticipation / crew.Count;
+    }
+}
+```
+
+4.4 Religious Practices and Accommodations
+---------------------------------------
+The game models various religious practices among crew members with specific gameplay impacts:
+
+- Scheduled religious observances (prayer times, sabbaths, holidays)
+- Dietary restrictions and preferences
+- Space-adapted rituals that replace Earth-bound traditions
+- Religious leadership roles within the crew
+- Space required for religious practices within habitat design
+
+Religious accommodations affect both individual crew members and the broader community:
+- Individual morale boosts for allowing religious expression (+5-15% to morale)
+- Community cohesion benefits from shared practices
+- Potential conflicts when resources are limited
+- Adaptation rate of religious practices to space environments (50-100 years for substantial changes)
+
+```csharp
+// Effect of cultural/religious fulfillment on morale
+public float CalculateCulturalMoraleModifier()
+{
+    float baseModifier = 0f;
+    
+    // Religious fulfillment impact
+    if (ReligiousDevoutness > 0.7f)
+    {
+        // Highly religious crew need more accommodation
+        float accommodationLevel = GetReligiousAccommodationLevel();
+        baseModifier += (accommodationLevel - 0.5f) * ReligiousDevoutness * 20f;
+    }
+    
+    // Cultural expression impact
+    float culturalExpression = GetCulturalExpressionLevel();
+    baseModifier += (culturalExpression - 0.5f) * 10f;
+    
+    // Generation-based modifiers
+    if (IsBornInSpace)
+    {
+        // Space-born crew react differently to cultural policies
+        float earthCultureEmphasis = Habitat.Current.CulturalPolicy.EarthEmphasisLevel;
+        
+        // Later generations prefer less Earth emphasis
+        float preferredEmphasis = Mathf.Max(0.8f - (GenerationFromEarth * 0.2f), 0.2f);
+        float alignmentFactor = 1f - Mathf.Abs(earthCultureEmphasis - preferredEmphasis);
+        
+        baseModifier += (alignmentFactor - 0.5f) * 15f;
+    }
+    
+    return Mathf.Clamp(baseModifier, -20f, 20f);
+}
+```
+
+4.5 Cultural Conflict and Resolution
+---------------------------------
+The system models cultural conflicts and resolutions, creating gameplay moments where players must navigate complex cultural dynamics:
+
+### Conflict Triggers
+- Value clashes on key decisions (e.g., resource allocation, diplomatic approaches)
+- Religious observance disputes (e.g., use of shared spaces, time allocation)
+- Generational divides between Earth-born and space-born crew members
+
+### Resolution Mechanics
+- Dialogue-based mediation with options shaped by crew member traits
+- Policy establishment (e.g., religious observance guidelines, cultural sensitivity training)
+- Cultural exchange events that build understanding
+
+### Impact on Gameplay
+- Ship morale affected by unresolved cultural conflicts (-10% efficiency per major conflict)
+- Decision-making influenced by dominant cultural frameworks
+- Diplomatic options shaped by cultural composition of crew
+
+Each governance model brings unique conflict resolution mechanisms:
+- Hierarchical: Command decisions (fast, +15% speed, -10% satisfaction)
+- Representative: Mediation panels (balanced, neutral satisfaction impact)
+- Constitutional: Legal procedures (slow, -15% speed, +10% satisfaction)
+- Cultural: Community consensus (variable speed, high satisfaction when successful)
+
+4.6 Space-Born Religions and Philosophies
+--------------------------------------
+The game features emergent belief systems that develop in deep space over generations:
+
+### The Void Observers
+A contemplative tradition focused on the vastness of space as a spiritual teacher.
+- Core Beliefs: The universe has consciousness; silence reveals truth; human scale is humbling
+- Practices: "Void meditation" sessions; documentation of cosmic phenomena as spiritual texts
+- Gameplay Impact: +15% science skill development; -10% social conflict chance; occasional "insight" events providing solution options
+
+### Terrestrial Revivalism
+A movement dedicated to preserving Earth culture with religious devotion.
+- Core Beliefs: Earth as a sacred homeland; duty to preserve human heritage; eventual return
+- Practices: Earth memorial days; archiving Earth data; maintaining "soil sanctuaries"
+- Gameplay Impact: +20% hydroponics efficiency; resistance to certain adaptation technologies; strong social cohesion (+10% relationship building)
+
+### Cosmic Pragmatism
+A secular philosophy prioritizing survival through rational adaptation.
+- Core Beliefs: Adaptation as highest virtue; elimination of non-functional traditions; evidence-based decision making
+- Practices: Regular efficiency reviews; ceremonial adoption of innovations; "wasteful thinking" purging
+- Gameplay Impact: +15% engineering efficiency; -5% morale during crises; accelerated technology development
+
+4.7 Player Decision System for Cultural Direction
+---------------------------------------------
+Players influence cultural evolution through key decisions and policies:
+
+- **Cultural Preservation vs. Innovation:**
+  Choice between funding cultural preservation efforts (maintaining Earth traditions) or innovation initiatives (developing space-native cultures).
+  Impact: Determines dominant value systems in later generations and relationship dynamics between generations.
+
+- **Religious Policy Framework:**
+  Establish ship-wide policies on religious observances, from secular (religion as private matter) to integrated (official recognition and accommodation).
+  Impact: Affects morale, crew cohesion, and the emergence of new belief systems.
+
+- **Educational Curriculum:**
+  Shape what the next generation learns about Earth, cultural heritage, and identity.
+  Impact: Directly influences the values and beliefs of future generations of crew members.
+
+These cultural and religious systems create unique socio-cultural dynamics in each playthrough, adding depth to crew interactions and society building across generations.
+
+5.0 Generational Mechanics
+==========================
+The Crew System models the evolution of crew members across multiple generations, accounting for genetic inheritance, environmental adaptation, and cultural drift.
+
+5.1 Multi-Generational Crew Evolution
+----------------------------------
+The time-skip system models generational changes in crew values, culture, and governance based on multi-generational space society research:
+
+### Cultural Divergence Mechanics
+- Each 20-year time skip applies cultural drift effects
+- Language: 5-7% vocabulary drift per 20 years, affecting cross-generational communication
+- Values: Original mission objectives erode by 15-20% per generation
+- Memory: Historical events lose significance at 30% per generation
+
+### Generation Ship Governance
+- Crew sizes <150: Direct democracy with all-crew voting (-5% efficiency, +20% morale)
+- Crew sizes 150-1000: Council system with representative leaders (-10% efficiency, +10% morale)
+- Crew sizes 1000+: Formalized governance with laws and elected officials (+10% efficiency, -5% morale)
+
+```csharp
+// Sample code for applying generational changes during time skip
+public void ApplyGenerationalChanges(GameState state, int yearsSkipped)
+{
+    float culturalDriftFactor = (yearsSkipped / 20f) * CULTURAL_DRIFT_RATE;
+    
+    // Apply to all crew members
+    foreach (CrewMember crew in state.GetAllCrewMembers())
+    {
+        // Apply drift only to those born on the mission
+        if (crew.GenerationNumber > 0)
+        {
+            // Cultural values drift from original mission
+            foreach (MissionValue value in crew.Values)
+            {
+                value.DriftFromOriginal(culturalDriftFactor * crew.GenerationNumber);
+            }
+            
+            // Language drift affects communication
+            if (crew.GenerationNumber >= 2)
+            {
+                // Apply language barriers with first-generation crew
+                foreach (CrewMember otherCrew in state.GetCrewMembersByGeneration(0))
+                {
+                    float communicationPenalty = LANGUAGE_DRIFT_PENALTY * (crew.GenerationNumber - 1);
+                    relationshipManager.ApplyCommunicationBarrier(crew, otherCrew, communicationPenalty);
+                }
+            }
+            
+            // Historical knowledge erosion
+            foreach (HistoricalEvent historicalEvent in state.GetHistoricalEvents())
+            {
+                float significanceReduction = HISTORICAL_MEMORY_DECAY * crew.GenerationNumber;
+                crew.ReduceHistoricalEventSignificance(historicalEvent, significanceReduction);
+            }
+        }
+    }
+    
+    // Apply governance changes based on population
+    int populationSize = state.GetTotalPopulation();
+    if (populationSize < 150)
+    {
+        state.SetGovernanceType(GovernanceType.DirectDemocracy);
+        state.ApplyGovernanceEffects(-0.05f, 0.2f); // -5% efficiency, +20% morale
+    }
+    else if (populationSize < 1000)
+    {
+        state.SetGovernanceType(GovernanceType.CouncilSystem);
+        state.ApplyGovernanceEffects(-0.1f, 0.1f); // -10% efficiency, +10% morale
+    }
+    else
+    {
+        state.SetGovernanceType(GovernanceType.RepresentativeSystem);
+        state.ApplyGovernanceEffects(0.1f, -0.05f); // +10% efficiency, -5% morale
+    }
+}
+```
+
+5.2 Generational Adaptation System
+-------------------------------
+The system tracks biological adaptation across generations based on space-born advantages:
+
+```csharp
+/// <summary>
+/// Manages long-term biological adaptation across generations
+/// </summary>
+public class GenerationalAdaptationSystem
+{
+    // Tracks population-level adaptation metrics
+    private Dictionary<AdaptationType, float> populationAdaptationLevels;
+    
+    // Calculate adaptation inheritance for a new crew member
+    public void CalculateOffspringAdaptations(CrewMember offspring, CrewMember parentA, 
+                                           CrewMember parentB)
+    {
+        foreach (AdaptationType adaptationType in System.Enum.GetValues(typeof(AdaptationType)))
+        {
+            float parentAValue = parentA.GetAdaptation(adaptationType);
+            float parentBValue = parentB.GetAdaptation(adaptationType);
+            
+            // Base inheritance is average of parents plus genetic variation
+            float baseInheritance = (parentAValue + parentBValue) / 2f;
+            float variation = Random.Range(-GENETIC_VARIATION, GENETIC_VARIATION);
+            
+            // Apply environmental boost for space-born children
+            float environmentalBoost = 0f;
+            if (offspring.IsBornInSpace)
+            {
+                environmentalBoost = SPACE_BORN_ADAPTATION_BOOST;
+            }
+            
+            // Calculate final adaptation value
+            float adaptationValue = baseInheritance + variation + environmentalBoost;
+            offspring.SetAdaptation(adaptationType, Mathf.Clamp01(adaptationValue));
+        }
+    }
+}
+```
+
+5.3 Identity Evolution
+-------------------
+Colonial identity strengthens with each generation while Earth identity weakens:
+
+```csharp
+void UpdateColonistIdentities(Colony colony) {
+    CulturalDivergence divergence = CalculateCulturalDivergence(colony);
+    
+    // Process each colonist 
+    foreach (Colonist colonist in colony.GetAllColonists()) {
+        // Determine generation (0 = first generation from Earth)
+        int generation = colonist.GetGeneration();
+        
+        // Calculate base identity distribution
+        float earthIdentity = 0f;
+        float colonialIdentity = 0f;
+        
+        switch (generation) {
+            case 0: // First generation
+                earthIdentity = Mathf.Lerp(0.9f, 0.7f, divergence.values);
+                colonialIdentity = 1f - earthIdentity;
+                break;
+                
+            case 1: // Second generation
+                earthIdentity = Mathf.Lerp(0.5f, 0.3f, divergence.values);
+                colonialIdentity = 1f - earthIdentity;
+                break;
+                
+            default: // Third+ generation
+                earthIdentity = Mathf.Lerp(0.2f, 0.1f, divergence.values);
+                colonialIdentity = 1f - earthIdentity;
+                break;
+        }
+        
+        // Adjust based on personal factors
+        if (colonist.HasTrait(TraitType.EarthNostalgia)) {
+            earthIdentity += 0.15f;
+            colonialIdentity -= 0.15f;
+        }
+        
+        if (colonist.HasTrait(TraitType.Pioneer)) {
+            earthIdentity -= 0.1f;
+            colonialIdentity += 0.1f;
+        }
+        
+        // Apply identity values
+        colonist.SetIdentityValues(earthIdentity, colonialIdentity);
+    }
+}
+```
+
+6.0 Relationships and Social Networks
+====================================
+The Relationships and Social Networks system models the complex web of interpersonal connections between crew members, simulating realistic social dynamics that evolve over time through interactions, shared experiences, and environmental conditions.
+
+6.1 Relationship Types and Dynamics
+---------------------------------
+The system models several relationship types that impact crew performance and morale:
+
+### Core Relationship Types
+- **Friendships**: Positive connections that boost morale and increase efficiency when crew members work together (+10% task speed, +5% success rate)
+- **Rivalries**: Negative relationships that decrease morale and reduce efficiency when rival crew members share tasks (-15% task success rate)
+- **Romances**: Intimate relationships that significantly boost morale but may cause complications (jealousy, conflicts) if not managed properly
+- **Familial**: Family bonds (parent-child, siblings) that form after generational progression, providing strong support networks
+
+### Relationship Values
+Each relationship is represented by a comprehensive set of metrics:
+
+```csharp
+/// <summary>
+/// Represents the dynamic relationship between two crew members.
+/// </summary>
+public class CrewRelationship
+{
+    public string CrewIdA { get; private set; }
+    public string CrewIdB { get; private set; }
+    
+    // Primary relationship values
+    public float Affinity { get; private set; }         // -100 to 100: Overall relationship quality
+    public float Trust { get; private set; }            // 0 to 100: Reliability perception
+    public float Respect { get; private set; }          // 0 to 100: Skill/character admiration
+    public float Familiarity { get; private set; }      // 0 to 100: Knowledge of the other person
+    
+    // Relationship dimensions
+    public float PersonalFamiliarity { get; private set; }    // Knowledge of personal life
+    public float ProfessionalFamiliarity { get; private set; } // Knowledge of work habits/skills
+    public Dictionary<string, float> SharedExperiences { get; private set; } // Categorized shared history
+    
+    // Relationship flags
+    public bool IsFamilial { get; set; }                // Family relationship
+    public bool IsRomantic { get; set; }                // Romantic involvement
+    public List<RelationshipIncident> CriticalIncidents { get; private set; } // Major events
+    
+    // Tension metrics
+    public float CurrentTension { get; private set; }    // Temporary strain (decays over time)
+    public float ChronicTension { get; private set; }    // Long-term unresolved issues
+    
+    // Update methods
+    public void UpdateFromInteraction(InteractionData interaction) { /* ... */ }
+    public void ApplyEnvironmentalModifiers(EnvironmentalFactors factors) { /* ... */ }
+    public void ApplyTensionDecay(float timeElapsed) { /* ... */ }
+    public RelationshipSnapshot GetSnapshot() { /* ... */ }
+}
+```
+
+6.2 Relationship Evolution Algorithm
+----------------------------------
+Relationships evolve organically through a sophisticated algorithm that processes interactions, environmental factors, and personality compatibility:
+
+```csharp
+/// <summary>
+/// Updates all active relationships based on interactions and environmental factors.
+/// </summary>
+/// <param name="deltaTime">Time elapsed since last update.</param>
+public void UpdateRelationships(float deltaTime)
+{
+    // Get current environmental factors that affect all relationships
+    EnvironmentalFactors currentFactors = environmentSystem.GetCurrentFactors();
+    
+    // Process all active relationships
+    foreach (CrewRelationship relationship in activeRelationships)
+    {
+        // Apply time-based tension decay (relationships naturally cool down after conflicts)
+        relationship.ApplyTensionDecay(deltaTime);
+        
+        // Apply environmental impacts (high stress, close quarters, etc.)
+        relationship.ApplyEnvironmentalModifiers(currentFactors);
+        
+        // Process pending interactions for this relationship pair
+        List<InteractionData> pendingInteractions = interactionQueue.GetPendingInteractions(
+            relationship.CrewIdA, 
+            relationship.CrewIdB
+        );
+        
+        foreach (InteractionData interaction in pendingInteractions)
+        {
+            // Apply interaction effects to relationship
+            relationship.UpdateFromInteraction(interaction);
+            
+            // Mark interaction as processed
+            interactionQueue.MarkProcessed(interaction.Id);
+            
+            // Log significant relationship changes
+            if (interaction.Significance > SIGNIFICANT_INTERACTION_THRESHOLD)
+            {
+                relationshipHistory.LogSignificantInteraction(
+                    relationship, 
+                    interaction,
+                    relationship.GetSnapshot()
+                );
+            }
+        }
+        
+        // Check for relationship state transitions
+        CheckForRelationshipStateTransitions(relationship);
+    }
+    
+    // Update relationship network visualization
+    relationshipVisualizer.UpdateNetwork(activeRelationships);
+}
+```
+
+### Interaction Processing
+Each interaction between crew members affects their relationship based on multiple factors:
+
+```csharp
+/// <summary>
+/// Updates relationship values based on a specific interaction between crew members.
+/// </summary>
+/// <param name="interaction">Data about the interaction that occurred.</param>
+public void UpdateFromInteraction(InteractionData interaction)
+{
+    // Calculate base impact factors from interaction type
+    RelationshipImpactFactors baseImpact = relationshipImpactTable.GetBaseImpact(
+        interaction.Type
+    );
+    
+    // Get personality compatibility between the crew members
+    float personalityCompatibility = personalityCompatibilityMatrix.GetCompatibility(
+        crewManager.GetCrewMember(CrewIdA).PersonalityTraits,
+        crewManager.GetCrewMember(CrewIdB).PersonalityTraits
+    );
+    
+    // Calculate affinity change
+    float affinityChange = baseImpact.AffinityImpact * 
+                           personalityCompatibility *
+                           interaction.Intensity;
+    
+    // Calculate trust impact - more significant from critical events
+    float trustImpact = baseImpact.TrustImpact * 
+                        interaction.Intensity *
+                        (interaction.IsCritical ? CRITICAL_EVENT_MULTIPLIER : 1.0f);
+    
+    // Calculate respect impact - heavily influenced by skill demonstration
+    float respectImpact = baseImpact.RespectImpact * 
+                          interaction.SkillRelevance * 
+                          interaction.Intensity;
+    
+    // Calculate familiarity impact - grows from any interaction but at different rates
+    float familiarityImpact = baseImpact.FamiliarityImpact * 
+                              (1.0f - (Familiarity / 100.0f)) * // Diminishing returns
+                              interaction.Duration;
+    
+    // Apply changes with stability constraints to prevent wild swings
+    Affinity = Mathf.Clamp(Affinity + affinityChange, -100.0f, 100.0f);
+    Trust = Mathf.Clamp(Trust + trustImpact, 0.0f, 100.0f);
+    Respect = Mathf.Clamp(Respect + respectImpact, 0.0f, 100.0f);
+    Familiarity = Mathf.Clamp(Familiarity + familiarityImpact, 0.0f, 100.0f);
+    
+    // Add to shared experiences in appropriate category
+    if (SharedExperiences.ContainsKey(interaction.Category))
+    {
+        SharedExperiences[interaction.Category] += interaction.Intensity;
+    }
+    else
+    {
+        SharedExperiences.Add(interaction.Category, interaction.Intensity);
+    }
+}
+```
+
+6.3 Environmental Impacts on Relationships
+----------------------------------------
+Environmental conditions strongly influence relationship development, especially in the confined spaces of space habitats:
+
+```csharp
+/// <summary>
+/// Applies environmental modifiers to relationship values.
+/// </summary>
+/// <param name="factors">Current environmental conditions.</param>
+public void ApplyEnvironmentalModifiers(EnvironmentalFactors factors)
+{
+    // Close quarters pressure increases familiarity but can also increase tension
+    float quartersTightness = factors.LivingSpacePerCrew / OPTIMAL_SPACE_PER_CREW;
+    if (quartersTightness < 1.0f)
+    {
+        // Close quarters increases familiarity
+        float familiarityIncrease = (1.0f - quartersTightness) * 0.2f;
+        Familiarity = Mathf.Clamp(Familiarity + familiarityIncrease, 0f, 100f);
+        
+        // But may also increase tension if compatibility is low
+        if (Affinity < 0)
+        {
+            CurrentTension += (1.0f - quartersTightness) * 0.3f * (-Affinity/100f);
+        }
+    }
+    
+    // High stress situations can increase tension
+    float stressTensionIncrease = factors.StressLevel * 0.1f;
+    CurrentTension += stressTensionIncrease;
+    
+    // Social isolation can decrease familiarity and increase tension
+    float isolationDecrease = factors.Isolation * 0.1f;
+    CurrentTension += isolationDecrease;
+    
+    // Shared experiences can reduce tension
+    float sharedExperienceReduction = SharedExperiences.Values.Sum() * 0.05f;
+    CurrentTension = Mathf.Max(0, CurrentTension - sharedExperienceReduction);
+}
+```
+
+6.4 Relationship State Transitions
+--------------------------------
+Relationships can transition between different states based on threshold values and compatibility factors:
+
+```csharp
+/// <summary>
+/// Checks if relationship values have crossed thresholds that would change relationship status.
+/// </summary>
+/// <param name="relationship">The relationship to check for state transitions.</param>
+public void CheckForRelationshipStateTransitions(CrewRelationship relationship)
+{
+    // Get current state
+    RelationshipState currentState = relationshipStateManager.GetState(relationship);
+    
+    // Check for romantic potential if not already romantic or familial
+    if (!relationship.IsRomantic && 
+        !relationship.IsFamilial && 
+        relationship.Affinity > ROMANTIC_THRESHOLD &&
+        relationship.Familiarity > ROMANTIC_FAMILIARITY_THRESHOLD)
+    {
+        // Check personality compatibility for romantic potential
+        float romanticCompatibility = romanticCompatibilityCalculator.Calculate(
+            crewManager.GetCrewMember(relationship.CrewIdA),
+            crewManager.GetCrewMember(relationship.CrewIdB)
+        );
+        
+        if (romanticCompatibility > ROMANTIC_COMPATIBILITY_THRESHOLD)
+        {
+            // Trigger romance opportunity
+            narrativeManager.CreateRomanticOpportunity(relationship, romanticCompatibility);
+        }
+    }
+    
+    // Check for friendship formation
+    if (currentState == RelationshipState.Neutral && 
+        relationship.Affinity > FRIENDSHIP_THRESHOLD &&
+        relationship.Familiarity > FRIENDSHIP_FAMILIARITY_THRESHOLD)
+    {
+        relationshipStateManager.TransitionTo(relationship, RelationshipState.Friends);
+        
+        // Trigger friendship formation notification
+        narrativeManager.NotifyRelationshipChange(
+            relationship, 
+            RelationshipState.Neutral, 
+            RelationshipState.Friends
+        );
+    }
+    
+    // Check for rivalry development
+    if (currentState == RelationshipState.Neutral && 
+        relationship.Respect > RIVALRY_RESPECT_THRESHOLD &&
+        relationship.Affinity < RIVALRY_AFFINITY_THRESHOLD)
+    {
+        relationshipStateManager.TransitionTo(relationship, RelationshipState.Rivals);
+        
+        // Trigger rivalry formation notification
+        narrativeManager.NotifyRelationshipChange(
+            relationship, 
+            RelationshipState.Neutral, 
+            RelationshipState.Rivals
+        );
+    }
+}
+```
+
+6.5 Family Dynamics and Generational Relationships
+-----------------------------------------------
+The system models family relationships across generations, with unique dynamics between parents, children, and siblings:
+
+### Parent-Child Relationships
+- Inherit baseline affinity from parents' relationship quality
+- Initial high trust and respect for parents, which may evolve during adolescence 
+- Strong impact on child's personality and value development
+
+### Sibling Relationships
+- Influenced by birth order and age gap
+- More likely to develop rivalries than other relationship types
+- Shared childhood experiences create strong familial bonds even during conflicts
+
+### Genetic and Trait Inheritance
+Offspring inherit traits from parents with some variation:
+
+```csharp
+/// <summary>
+/// Determines offspring traits based on parents' traits with some random variation.
+/// </summary>
+/// <param name="parentA">First parent.</param>
+/// <param name="parentB">Second parent.</param>
+/// <returns>Set of traits for the offspring.</returns>
+public List<Trait> DetermineOffspringTraits(CrewMember parentA, CrewMember parentB)
+{
+    List<Trait> offspringTraits = new List<Trait>();
+    
+    // Get parent traits
+    List<Trait> parentATraits = parentA.GetTraits();
+    List<Trait> parentBTraits = parentB.GetTraits();
+    
+    // Traits that appear in both parents have high inheritance chance (80%)
+    foreach (Trait trait in parentATraits)
+    {
+        if (parentBTraits.Contains(trait) && Random.value < 0.8f)
+        {
+            offspringTraits.Add(trait);
+        }
+    }
+    
+    // Other traits have lower inheritance chance (40%)
+    foreach (Trait trait in parentATraits.Union(parentBTraits).Distinct())
+    {
+        if (!offspringTraits.Contains(trait) && Random.value < 0.4f)
+        {
+            offspringTraits.Add(trait);
+        }
+    }
+    
+    // Chance for a new emergent trait (30%)
+    if (Random.value < 0.3f)
+    {
+        Trait newTrait = traitGenerator.GenerateEmergentTrait(parentATraits, parentBTraits);
+        offspringTraits.Add(newTrait);
+    }
+    
+    return offspringTraits;
+}
+```
+
+6.6 Cultural Compatibility and Social Cohesion
+-------------------------------------------
+Cultural and religious identities strongly influence relationship development. The system calculates cultural compatibility between crew members:
+
+```csharp
+/// <summary>
+/// Calculates cultural compatibility between two crew members.
+/// </summary>
+/// <param name="other">The other crew member's cultural identity.</param>
+/// <returns>Compatibility score from -1.0 (incompatible) to 1.0 (highly compatible)</returns>
+public float CalculateCompatibility(CulturalIdentity other)
+{
+    float compatibility = 0f;
+    
+    // Compare value systems (highest weight in compatibility)
+    foreach (ValueAxis axis in ValueSystem.Keys)
+    {
+        if (other.ValueSystem.ContainsKey(axis))
+        {
+            float difference = Mathf.Abs(ValueSystem[axis] - other.ValueSystem[axis]);
+            compatibility -= difference * VALUE_COMPATIBILITY_WEIGHT;
+        }
+    }
+    
+    // Compare belief systems
+    if (PrimaryBelief == other.PrimaryBelief)
+    {
+        compatibility += SHARED_BELIEF_BONUS * 
+                        (BeliefCommitment + other.BeliefCommitment) / 2f;
+    }
+    else if (BeliefDatabase.AreCompatible(PrimaryBelief, other.PrimaryBelief))
+    {
+        compatibility += COMPATIBLE_BELIEF_BONUS;
+    }
+    else if (BeliefDatabase.AreConflicting(PrimaryBelief, other.PrimaryBelief))
+    {
+        compatibility -= CONFLICTING_BELIEF_PENALTY * 
+                       (BeliefCommitment + other.BeliefCommitment) / 2f;
+    }
+    
+    // Shared rituals build connection
+    foreach (RitualPractice ritual in Rituals)
+    {
+        if (other.Rituals.Contains(ritual))
+        {
+            compatibility += SHARED_RITUAL_BONUS;
+        }
+    }
+    
+    return Mathf.Clamp(compatibility, -1f, 1f);
+}
+```
+
+### Cultural Policy Impacts on Social Cohesion
+Ship-wide cultural policies affect overall social cohesion:
+
+```csharp
+/// <summary>
+/// Calculates the impact of cultural policies on overall social cohesion.
+/// </summary>
+/// <param name="habitat">The habitat with crew members and cultural policies.</param>
+/// <returns>Impact value affecting overall morale and community stability.</returns>
+public float CalculateCohesionImpact(Habitat habitat)
+{
+    float impact = 0f;
+    
+    // Earth emphasis impact depends on generations from Earth
+    float averageGeneration = habitat.Crew.Average(c => c.GenerationFromEarth);
+    float optimalEarthEmphasis = Mathf.Max(0.9f - (averageGeneration * 0.15f), 0.3f);
+    impact += 10f - (Math.Abs(EarthEmphasisLevel - optimalEarthEmphasis) * 20f);
+    
+    // Resource allocation directly impacts cohesion
+    impact += (ResourceAllocation - 0.5f) * 25f;
+    
+    // Religious accommodation impact depends on religious population
+    float religiousPercentage = habitat.Crew.Count(c => c.ReligiousDevoutness > 0.5f) / (float)habitat.Crew.Count;
+    float optimalAccommodation = 0.3f + (religiousPercentage * 0.6f);
+    impact += 10f - (Math.Abs(ReligiousAccommodation - optimalAccommodation) * 30f);
+    
+    // Expression freedom vs unity is complex
+    // Too much freedom can reduce cohesion, too little causes resentment
+    float expressionImpact = 0f;
+    if (ExpressionFreedom < 0.3f)
+        expressionImpact = (ExpressionFreedom - 0.3f) * 40f; // Severe impact if too restrictive
+    else if (ExpressionFreedom > 0.8f)
+        expressionImpact = (0.8f - ExpressionFreedom) * 25f; // Moderate impact if too free
+    else
+        expressionImpact = 5f; // Bonus if balanced
+        
+    impact += expressionImpact;
+    
+    return impact;
+}
+```
+
+6.7 Social Network Analysis
+-------------------------
+The system builds a complete social network graph of crew interactions, providing valuable insights for players:
+
+### Network Metrics
+- **Centrality**: Identifies social hubs and isolated crew members
+- **Clustering**: Reveals potential cliques and factions
+- **Path Length**: Shows degrees of separation between any two crew members
+- **Structural Holes**: Highlights opportunities for improving social integration
+
+### Network Visualization
+The social network is visualized through an interactive interface that allows players to:
+- See relationships between all crew members as a force-directed graph
+- Filter by relationship type (friendship, rivalry, romantic, familial)
+- Identify potential conflicts and social opportunities
+- Track changes in social dynamics over time
+
+### Social Health Indicators
+The system calculates overall social health metrics for the crew:
+- Crew Cohesion Index (75-100: Excellent, 50-74: Good, 25-49: Concerning, 0-24: Critical)
+- Faction Formation Risk (low, moderate, high)
+- Social Isolation Count (number of crew with few/no positive connections)
+- Conflict Potential Hotspots (relationship pairs with high tension)
+
+6.8 Player Intervention Systems
+----------------------------
+Players can actively influence relationship development through various intervention options:
+
+### Direct Interventions
+- **Conflict Mediation**: Resolve tensions between specific crew members
+- **Social Events**: Organize activities to strengthen bonds between selected crew
+- **Counseling Sessions**: Address specific relationship issues with professional help
+- **Crew Reassignment**: Separate conflicting crew members or pair compatible ones
+
+### Policy Decisions
+- **Work Rotation Policies**: Balanced vs. skill-optimized 
+- **Social Gathering Frequency**: Required, encouraged, or optional
+- **Privacy Regulations**: Strict or relaxed personal space rules
+- **Off-Duty Activity Support**: Resource allocation for recreational activities
+
+Each decision creates different social dynamics trade-offs that players must manage to maintain a healthy and productive crew environment through multiple generations of space exploration.
+
+7.0 Crew Management Interface
+============================
+[This section will be populated from Gameplay_System/3. Crew System.txt and UI/UX documentation]
+
+8.0 Technical Implementation
+===========================
+The Crew System is implemented using a modular, component-based approach following the project's architectural guidelines.
+
+8.1 Code Structure
+-----------------
+Crew System codebase organization:
+
+- Scripts/Models/Crew/
+  - CrewMember.cs - Base class for all crew members
+  - CrewAttribute.cs - Individual attributes for crew members
+  - CrewSkill.cs - Skills and proficiencies
+  - CulturalIdentity.cs - Cultural and religious identity components
+  - RelationshipData.cs - Relationship data structures
+
+- Scripts/Managers/
+  - CrewManager.cs - Central management of all crew members
+  - RelationshipManager.cs - Handles relationship calculations and events
+  - GenerationManager.cs - Manages time skip and generational progression
+
+- Scripts/UI/Crew/
+  - CrewInfoPanel.cs - Displays crew member information
+  - CrewListView.cs - Shows filtered lists of crew members
+  - RelationshipNetworkView.cs - Visualizes relationship networks
+
+8.2 Data Flow
+------------
+The Crew System follows event-based communication patterns:
+
+1. CrewManager maintains the master collection of CrewMember instances
+2. System events notify interested components of crew changes:
+   - OnCrewMemberAdded
+   - OnCrewMemberRemoved
+   - OnRelationshipChanged
+   - OnGenerationAdvanced
+   - OnAttributeChanged
+
+3. UI components subscribe to relevant events and update accordingly
+
+8.3 Integration Points
+--------------------
+The Crew System integrates with other game systems via these connection points:
+
+- Resource System: Crew consumption and production of resources
+- Mission System: Crew assignment and skill requirements
+- Event System: Crew participation in narrative events
+- Time Skip System: Progression of crew through generations
+
+8.4 Performance Considerations
+----------------------------
+The Crew System handles potentially hundreds of crew members and thousands of relationships:
+
+- Relationship calculations use sparse matrix representation
+- Crew data uses efficient data structures to minimize memory usage
+- Background processing for non-urgent calculations
+- Spatial partitioning for proximity-based relationship effects
+
+[Additional technical implementation details will be added from existing documentation] 

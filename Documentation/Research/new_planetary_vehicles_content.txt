@@ -1,0 +1,50 @@
+- **Planetary-Specific Landing Vehicles:**
+  - **Mars Landing Vehicles:**
+    - Lockheed Martin's Mars Ascent/Descent Vehicle (MADV): Reusable, single-stage lander using supersonic retropropulsion
+    - Historical designs like Von Braun's Landing Boat (1950s): Large glider concepts with 153m wingspan for horizontal landing
+    - NASA multi-stage landers: Utilizing aerobraking, parachutes, and powered descent stages
+    - Technological basis: Building on rover descent systems (sky crane) and reusable rocket landings
+    - Challenges: Thin atmosphere (0.6% of Earth's) allows minimal aerobraking; 38% Earth gravity requires careful landing control
+    
+  - **Phobos and Deimos Landing Vehicles:**
+    - Small, lightweight landers with precise thrusters for minimal-atmosphere, ultra-low gravity environments
+    - Extremely low gravity (Phobos: ~0.0057 m/s²; Deimos: ~0.003 m/s²) makes traditional techniques ineffective
+    - Based on NASA's JPL studies: Human mission to Phobos as Mars mission precursor with 300-day stay
+    - Technological basis: Adapting robotic lander proposals like Japan's MMX mission (launching 2026)
+    - Challenges: Risk of bouncing off surface or exceeding escape velocity; requiring anchor systems
+    
+  - **Venus Atmospheric Vehicles:**
+    - NASA's High Altitude Venus Operational Concept (HAVOC): Crewed habitats at 50-60 km altitude where conditions are hospitable
+    - Atmospheric "landing" preferred due to extreme surface conditions (~462°C, 92× Earth pressure)
+    - Technological basis: Soviet Vega missions (1985) that successfully deployed balloons in Venus' atmosphere
+    - Challenges: Sulfuric acid clouds, high winds, and heat management requiring advanced materials
+    - Surface landings limited to robotic missions with survival times of minutes to hours
+    
+  - **Titan Landing Vehicles:**
+    - Landers leveraging thick atmosphere (4× denser than Earth's) for aerobraking and parachute-based descent
+    - Based on Huygens probe (2005) but scaled for human occupancy with advanced life support
+    - Specialized designs for methane lake exploration including potential submersible vehicles
+    - Technological basis: NASA's Dragonfly mission (launching 2028) providing insights into landing dynamics
+    - Challenges: Extremely low temperatures (~-179°C) requiring advanced thermal management systems
+    
+  - **Outer Solar System Moon Landers:**
+    - Europa landers requiring advanced radiation shielding from Jupiter's intense belts
+    - Ice-penetrating landers for subsurface ocean access informed by Europa Clipper mission
+    - Ganymede and Callisto landers with similar radiation concerns but varying surface conditions
+    - Enceladus landers focusing on geyser access and sample collection
+    - Challenges: Low gravity, extreme temperatures, radiation exposure, and 6+ year transit times from Earth
+
+- **Comparative Landing Technology Analysis:**
+  - **Propulsion Requirements:**
+    - Mars: 0.5-1.5 km/s delta-v for final descent due to thin atmosphere
+    - Phobos/Deimos: Minimal delta-v (<10 m/s) but precise RCS thrusters for approach and anchoring
+    - Venus: Atmospheric buoyancy as primary suspension with minimal propulsion for station-keeping
+    - Titan: Moderate propulsion needs with significant aerobraking assistance from thick atmosphere
+    - Outer moons: Varied requirements based on specific gravity and lack of atmospheric assistance
+    
+  - **Technology Readiness Assessment:**
+    - Mars landers: TRL 5-6, building on extensive robotic mission experience and Earth return capability
+    - Phobos/Deimos landers: TRL 4-5, leveraging asteroid mission designs and low-gravity operations
+    - Venus atmospheric habitats: TRL 3-4, with proof-of-concept from Soviet missions and balloon technology
+    - Titan landers: TRL 3-4, with insights from Huygens probe and ongoing development of Dragonfly
+    - Outer moon landers: TRL 2-3, largely conceptual with significant technical challenges remaining 

@@ -1,0 +1,53 @@
+# TBD_Space_Game_Story_Bible.txt
+Version: April 2025
+
+Table of Contents:
+1.0 Setting Overview
+2.0 Timeline and History
+3.0 Factions and Organizations
+4.0 Key Characters
+5.0 Narrative Structure
+6.0 Themes and Motifs
+7.0 Player-Driven Narrative Systems
+8.0 Sample Chapters and Story Arcs
+
+1.0 Setting Overview
+===================
+The TBD Space Game takes place in a near-future setting where humanity has established its first interstellar colony missions. The narrative spans multiple generations aboard generation ships and early colony settlements, focusing on the evolution of culture, society, and human identity in isolated space environments.
+
+Key Setting Elements:
+- Generation ships traveling to nearby star systems (10-20 light years from Earth)
+- Limited communication with Earth that degrades over time
+- Resource scarcity and environmental challenges
+- Evolving cultural and religious frameworks
+- Emergence of space-born societal structures
+
+[This section will be populated from Lore and Story Structure/2. Setting.txt]
+
+2.0 Timeline and History
+=======================
+[This section will outline the historical timeline, from near-future Earth events to the launch of the generation ships and subsequent milestones]
+
+3.0 Factions and Organizations
+============================
+[This section will detail the major factions, their origins, motivations, and evolution over generations]
+
+4.0 Key Characters
+=================
+[This section will describe archetypical characters and notable individuals that may appear across generations]
+
+5.0 Narrative Structure
+=====================
+[This section will outline the overall narrative structure, including key decision points and narrative branches]
+
+6.0 Themes and Motifs
+===================
+[This section will explore the central themes and recurring motifs in the game's narrative]
+
+7.0 Player-Driven Narrative Systems
+=================================
+[This section will detail how player decisions influence the narrative across generations]
+
+8.0 Sample Chapters and Story Arcs
+================================
+[This section will provide example narrative scenarios and story arcs] 

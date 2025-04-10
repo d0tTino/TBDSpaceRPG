@@ -1,0 +1,261 @@
+# TBD_Space_Game_Game_Systems.txt
+Version: April 2025
+
+Table of Contents:
+1.0 Gameplay Overview
+2.0 Resource Management Systems
+3.0 Crew Management
+4.0 Ship and Habitat Systems
+5.0 Mission and Exploration
+6.0 Research and Development
+7.0 Time Skip and Generational Mechanics
+8.0 Player Decision Systems
+
+1.0 Gameplay Overview
+====================
+The TBD Space Game combines resource management, crew simulation, and narrative decision-making in a generational space colonization setting. This document details the core gameplay systems and mechanics that drive the player experience.
+
+Core Gameplay Loops:
+- Strategic resource allocation and habitat management
+- Tactical crew assignment and mission planning
+- Character-driven narrative decisions and relationship management
+- Long-term planning across generational time skips
+- Cultural and technological development over extended timelines
+
+[This section will be populated from Gameplay_System/1. Overview.txt and Gameplay_System/2. Gameplay Mechanics.txt]
+
+2.0 Resource Management Systems
+=============================
+[This section will detail resource types, acquisition methods, consumption patterns, and management interfaces]
+
+3.0 Crew Management
+=================
+[This section will outline crew assignments, skill development, and management interfaces]
+
+4.0 Ship and Habitat Systems
+==========================
+[This section will describe ship/habitat components, maintenance, expansion, and emergency scenarios]
+
+4.1 Space Physics Implementation
+==============================
+This section details the physics engine implementation for simulating space phenomena in the TBD Space Game, based on the research documented in I_Astrophysics_Orbital_Mechanics.txt Section 5.4.
+
+#### 4.1.1 N-Body Gravitational Interactions
+
+The game implements a hierarchical approach to gravitational simulations:
+
+- **Primary Implementation Strategy:**
+  - Patched conics approach for standard gameplay (70% player satisfaction)
+  - Optional enhanced physics mode with Barnes-Hut algorithm for enthusiast players
+  - Sphere of influence transitions for smooth gravitational changes
+
+- **Performance Optimization:**
+  - Full N-body calculations limited to player-controlled vessels and key objects
+  - Distance-based culling for gravitational influences
+  - Reduced update frequency for distant objects
+
+```csharp
+/// <summary>
+/// Calculates gravitational acceleration at a given position from multiple bodies
+/// </summary>
+public Vector3 CalculateGravitationalAcceleration(List<CelestialBody> bodies, Vector3 position)
+{
+    Vector3 totalAcceleration = Vector3.zero;
+    CelestialBody dominantBody = DetermineDominantBody(position, bodies);
+    
+    // Standard gameplay: use only dominant body for efficiency
+    if (!enhancedPhysicsEnabled) {
+        Vector3 directionToBody = dominantBody.position - position;
+        float distanceSquared = directionToBody.sqrMagnitude;
+        return directionToBody.normalized * (G * dominantBody.mass / distanceSquared);
+    }
+    
+    // Enhanced physics: use hierarchical approach
+    foreach (CelestialBody body in bodies) {
+        // Skip distant bodies with negligible effect using distance-based cutoff
+        if (body != dominantBody && !IsSignificantInfluence(body, position)) continue;
+        
+        Vector3 directionToBody = body.position - position;
+        float distanceSquared = directionToBody.sqrMagnitude;
+        totalAcceleration += directionToBody.normalized * (G * body.mass / distanceSquared);
+    }
+    
+    return totalAcceleration;
+}
+```
+
+#### 4.1.2 Non-Spherical Gravity Fields
+
+For realistic orbital motion around planets and irregular bodies:
+
+- **Approximation Methods:**
+  - Point-mass model for distant and background celestial bodies
+  - J2 term approximation for primary planets (accounts for equatorial bulge)
+  - Precomputed gravity maps for irregular bodies like asteroids and comets
+
+```csharp
+/// <summary>
+/// Calculates gravity including non-spherical effects where appropriate
+/// </summary>
+public Vector3 CalculateNonSphericalGravity(CelestialBody body, Vector3 position)
+{
+    // Base two-body gravity
+    Vector3 r = position - body.position;
+    float r2 = r.sqrMagnitude;
+    float r1 = Mathf.Sqrt(r2);
+    Vector3 baseAcceleration = -G * body.mass * r / (r2 * r1);
+    
+    // For irregular bodies or when precision is needed
+    if (body.useJ2Effect && highPrecisionMode) {
+        // J2 perturbation calculation
+        float r5 = r2 * r2 * r1;
+        float J2term = 1.5f * body.J2 * body.equatorialRadius * body.equatorialRadius;
+        
+        // Calculate perturbation components
+        float z2 = r.z * r.z;
+        Vector3 perturbation = new Vector3(
+            r.x * (5f * z2 / r2 - 1f),
+            r.y * (5f * z2 / r2 - 1f),
+            r.z * (5f * z2 / r2 - 3f)
+        );
+        
+        return baseAcceleration + J2term * perturbation / r5;
+    }
+    
+    return baseAcceleration;
+}
+```
+
+#### 4.1.3 Atmospheric Drag and Heating
+
+Realistic planetary atmosphere interactions:
+
+- **Simulation Features:**
+  - Simplified drag model using exponential atmosphere density profile
+  - Heat flux approximation for atmospheric entry effects
+  - Visual and audio feedback for player immersion
+
+```csharp
+/// <summary>
+/// Applies atmospheric drag and heating effects to spacecraft
+/// </summary>
+public void ApplyAtmosphericEffects(Spacecraft craft, Planet planet, float deltaTime)
+{
+    // Check if in atmosphere
+    float altitude = Vector3.Distance(craft.position, planet.position) - planet.radius;
+    if (altitude > planet.atmosphereHeight) return;
+    
+    // Calculate atmospheric density at altitude
+    float relativeAltitude = altitude / planet.atmosphereHeight;
+    float density = planet.seaLevelDensity * Mathf.Exp(-planet.atmosphereScaleHeight * relativeAltitude);
+    
+    // Calculate drag force
+    float velocityMagnitude = craft.velocity.magnitude;
+    Vector3 dragDirection = -craft.velocity.normalized;
+    float dragCoefficient = craft.GetDragCoefficient(craft.attitude, craft.velocity);
+    float referenceArea = craft.GetReferenceArea(craft.attitude);
+    
+    Vector3 dragForce = 0.5f * density * velocityMagnitude * velocityMagnitude * dragCoefficient * referenceArea * dragDirection;
+    
+    // Apply drag force
+    craft.AddForce(dragForce);
+    
+    // Calculate heating (simplified)
+    float heatFlux = HeatMultiplier * density * Mathf.Pow(velocityMagnitude, 3);
+    craft.ApplyHeating(heatFlux * deltaTime);
+    
+    // Visual effects intensity based on heating
+    if (craft.visualEffectsEnabled) {
+        UpdateAtmosphericEffects(craft, heatFlux);
+    }
+}
+```
+
+#### 4.1.4 Collision Physics
+
+Realistic collision handling for space objects:
+
+- **Implementation Approach:**
+  - Rigid body dynamics for standard collisions
+  - Pre-fractured models for predetermined break points
+  - Particle systems for debris visualization
+  - Impact energy calculations for damage modeling
+
+```csharp
+/// <summary>
+/// Handles collision between spacecraft with realistic physics
+/// </summary>
+public void HandleSpacecraftCollision(Spacecraft craftA, Spacecraft craftB, CollisionData collision)
+{
+    // Calculate impact energy
+    float relativeSpeed = Vector3.Dot(craftB.velocity - craftA.velocity, collision.normal);
+    float impactEnergy = 0.5f * (craftA.mass * craftB.mass / (craftA.mass + craftB.mass)) * relativeSpeed * relativeSpeed;
+    
+    // Determine damage based on impact energy
+    float damageToA = CalculateDamage(impactEnergy, craftA.impactResistance, collision.contactPointOnA);
+    float damageToB = CalculateDamage(impactEnergy, craftB.impactResistance, collision.contactPointOnB);
+    
+    // Apply damage to components
+    craftA.ApplyDamageAtLocation(damageToA, collision.contactPointOnA);
+    craftB.ApplyDamageAtLocation(damageToB, collision.contactPointOnB);
+    
+    // Generate debris if damage exceeds threshold
+    if (damageToA > craftA.fractureThreshold) {
+        GenerateDebris(craftA, collision.contactPointOnA, -collision.normal, impactEnergy);
+    }
+    
+    if (damageToB > craftB.fractureThreshold) {
+        GenerateDebris(craftB, collision.contactPointOnB, collision.normal, impactEnergy);
+    }
+    
+    // Apply impact forces (simplified impulse-based physics)
+    ApplyCollisionImpulse(craftA, craftB, collision, relativeSpeed);
+}
+```
+
+#### 4.1.5 Performance-Accuracy Balance
+
+The system employs a level-of-detail approach to balance performance and accuracy:
+
+- **Hierarchical Physics Implementation:**
+  | **Object Category** | **Physics Detail** | **Update Frequency** | **Max Count** |
+  |---------------------|-------------------|----------------------|---------------|
+  | Player Spacecraft   | Full simulation   | Every frame          | 1-5           |
+  | Nearby Objects      | High detail       | Every 1-2 frames     | 10-50         |
+  | Medium Distance     | Medium detail     | Every 3-5 frames     | 50-200        |
+  | Distant Objects     | Position only     | Every 10-30 frames   | 1000+         |
+
+- **Unity-Specific Optimizations:**
+  - C# Jobs and Burst compiler for parallel physics calculations
+  - ComputeShader implementation for massive N-body simulations
+  - GPU instancing for large numbers of similar objects
+  - Custom orbital propagation instead of Unity physics for space objects
+
+#### 4.1.6 Benchmark Data
+
+Performance metrics on mainstream gaming hardware (i7/Ryzen 7, RTX 4060/RX 6700):
+
+| **Phenomenon**            | **Approximation Method**        | **Performance (ms/frame)** | **Perceptual Acceptability** | **Max Objects at 60 FPS** |
+|---------------------------|--------------------------------|---------------------------|------------------------------|---------------------------|
+| N-body Gravity            | Patched conics                 | 0.1-0.5                   | 70% (casual play)            | 10,000+                   |
+| N-body Gravity            | Barnes-Hut algorithm           | 1-10                      | 85% (enthusiast players)     | 100-1,000                 |
+| Non-spherical Gravity     | Point-mass only                | 0.01-0.1                  | 75% (standard gameplay)      | 10,000+                   |
+| Non-spherical Gravity     | J2 term included               | 0.1-1                     | 90% (orbit specialists)      | 1,000-5,000               |
+| Atmospheric Drag/Heating  | Basic drag, visual effects     | 1-10                      | 65% (entry visuals)          | 50-100 active             |
+| Collision Physics         | Rigid body, limited debris     | 1-10                      | 75% (crash realism)          | 100-1,000                 |
+
+5.0 Mission and Exploration
+=========================
+[This section will cover mission types, exploration mechanics, and risk/reward structures]
+
+6.0 Research and Development
+==========================
+[This section will detail the research system, technology trees, and implementation impacts]
+
+7.0 Time Skip and Generational Mechanics
+======================================
+[This section will explain the time skip system, generational transitions, and historical record-keeping]
+
+8.0 Player Decision Systems
+=========================
+[This section will outline decision mechanics, consequences tracking, and procedural narrative generation] 

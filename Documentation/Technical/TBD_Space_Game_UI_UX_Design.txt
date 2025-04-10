@@ -1,0 +1,1984 @@
+# TBD_Space_Game_UI_UX_Design.txt
+Version: April 2025
+
+Table of Contents:
+1.0 UI/UX Design Philosophy
+2.0 Information Architecture
+3.0 Core UI Components
+4.0 Progressive Disclosure System
+5.0 Navigation Patterns
+6.0 Visual Design Language
+7.0 Accessibility Guidelines
+8.0 UI State Management
+9.0 Performance Considerations
+10.0 Testing & Validation
+
+1.0 UI/UX Design Philosophy
+==========================
+The TBD Space Game UI/UX design philosophy balances realism with usability to ensure complex simulation data remains accessible and engaging. Our guiding principles:
+
+1.1 Design Principles
+------------------
+- **Clarity Over Complexity**: Present information clearly without overwhelming the player
+- **Progressive Disclosure**: Reveal details at appropriate depths based on player expertise and current context
+- **Consistent Interaction Patterns**: Maintain consistency across different UI modules
+- **Diegetic Integration**: Immerse UI elements within the game world where appropriate
+- **Accessibility First**: Design for universal access across diverse player abilities
+- **Responsive Layout**: Adapt to various screen sizes and device capabilities
+- **Performance Conscious**: Optimize UI for minimal performance impact
+
+1.2 Player-Centric Design
+----------------------
+The UI/UX design centers on three player profiles:
+
+- **Casual Explorers**: New players who focus on narrative and high-level management
+- **Strategic Managers**: Mid-level players who focus on resource optimization and crew management
+- **Technical Specialists**: Advanced players who engage with detailed simulation systems
+
+Each interface component addresses the needs of all three profiles through layers of complexity.
+
+2.0 Information Architecture
+==========================
+The information architecture organizes and prioritizes the complex simulation data into a coherent, navigable structure.
+
+2.1 Information Hierarchy
+----------------------
+The game information is structured in three tiers:
+
+1. **Critical Information** (Always Visible):
+   - Current ship/habitat status
+   - Immediate hazards or alerts
+   - Active mission objectives
+   - Resource critical thresholds
+
+2. **Tactical Information** (One-Click Access):
+   - Crew status summary
+   - Resource management
+   - System status overviews
+   - Navigation data
+
+3. **Detailed Information** (Drill-Down Access):
+   - Complete crew profiles
+   - Detailed system diagnostics
+   - Scientific data analysis
+   - Historical trends and logs
+
+2.2 Context-Aware Information Display
+----------------------------------
+The UI adapts displayed information based on:
+
+- **Current Game Mode**: (Exploration, Management, Combat, Social)
+- **Player Expertise**: (Dynamically adjusts based on player behavior)
+- **Game Situation**: (Crisis, Routine, Special Event)
+- **Selected System/Character**: (Relevant data appears when interacting with elements)
+
+```csharp
+/// <summary>
+/// Determines what information to display based on current context
+/// </summary>
+public class ContextAwareUIManager
+{
+    public void UpdateDisplayContext(GameMode mode, CrisisLevel crisisLevel, PlayerExpertise expertise)
+    {
+        // Adjust information density based on current context
+        float informationDensity = CalculateInformationDensity(mode, crisisLevel, expertise);
+        
+        // Update UI components with new density setting
+        foreach (IAdaptiveUIComponent component in _adaptiveComponents)
+        {
+            component.SetInformationDensity(informationDensity);
+        }
+        
+        // Prioritize critical information during crisis
+        if (crisisLevel >= CrisisLevel.Major)
+        {
+            _alertSystem.PrioritizeCriticalSystems();
+        }
+    }
+    
+    private float CalculateInformationDensity(GameMode mode, CrisisLevel crisisLevel, PlayerExpertise expertise)
+    {
+        // Implementation details...
+    }
+}
+```
+
+2.3 Information Mapping
+--------------------
+The game data is organized into the following domains:
+
+| Domain | Primary Access Point | Secondary Access Points |
+|--------|---------------------|-------------------------|
+| Crew Management | Crew Deck | Mission Planning, Social Hub |
+| Ship Systems | Engineering Bay | Bridge, Emergency Console |
+| Navigation | Bridge | Engineering Bay, Observation Deck |
+| Research | Science Lab | Bridge, Captain's Terminal |
+| Resources | Cargo Bay | Engineering Bay, Hydroponics |
+| Mission Data | Bridge | Captain's Terminal, Crew Deck |
+
+3.0 Core UI Components
+=====================
+The UI is composed of reusable, modular components that maintain consistent behavior across the game.
+
+3.1 Component Library
+------------------
+Core components include:
+
+- **CommandTerminal**: Primary interface for system management
+- **StatusDisplay**: Overview of critical system statuses
+- **ResourceMonitor**: Real-time resource tracking and forecasting
+- **CrewInterface**: Crew management and social networking
+- **NavigationSystem**: Orbital mechanics and navigation planning
+- **AlertSystem**: Hierarchical notification system
+- **TimeControls**: Time progression and skip controls
+- **ContextualHelp**: Integrated assistance system
+
+3.2 Component Adaptation
+---------------------
+Components adapt to different contexts:
+
+```csharp
+/// <summary>
+/// Base class for UI components that adapt to player context
+/// </summary>
+public abstract class AdaptiveUIComponent : MonoBehaviour
+{
+    [SerializeField] private float _baseInformationDensity = 0.5f;
+    
+    protected PlayerExpertise _currentExpertise;
+    protected GameMode _currentMode;
+    
+    public virtual void SetInformationDensity(float density)
+    {
+        // Base implementation
+    }
+    
+    public virtual void AdaptToPlayerExpertise(PlayerExpertise expertise)
+    {
+        _currentExpertise = expertise;
+        
+        // Show more detailed information for experienced players
+        if (expertise == PlayerExpertise.Technical)
+        {
+            ShowAdvancedControls();
+            EnableDetailedTooltips();
+        }
+        else
+        {
+            HideAdvancedControls();
+            EnableSimplifiedTooltips();
+        }
+    }
+    
+    protected abstract void ShowAdvancedControls();
+    protected abstract void HideAdvancedControls();
+    protected abstract void EnableDetailedTooltips();
+    protected abstract void EnableSimplifiedTooltips();
+}
+```
+
+3.3 UI Layout System
+-----------------
+The layout system uses a combination of:
+
+- **Grid-Based Layout**: For structured, data-dense interfaces
+- **Radial Menus**: For quick contextual actions
+- **Spatial Anchoring**: For diegetic in-world interfaces
+- **Adaptive Panels**: For responsive reconfiguration
+
+4.0 Progressive Disclosure System
+================================
+The progressive disclosure system gradually reveals complexity based on player needs and experience.
+
+4.1 Disclosure Levels
+------------------
+Information is presented in multiple layers:
+
+1. **Essential**: Core information for basic gameplay (always visible)
+2. **Standard**: Information needed for routine decisions (hover/single-click)
+3. **Advanced**: Detailed data for optimization (nested menus)
+4. **Expert**: Complete simulation details (specialized views)
+
+4.2 Contextual Tutorials
+---------------------
+The interface introduces new elements progressively:
+
+- **First Encounter**: Simplified version with guided interaction
+- **Repeated Usage**: More features and options become visible
+- **Mastery Detection**: Full complexity unlocked when player demonstrates competence
+
+4.3 Dynamic Complexity
+-------------------
+The system adjusts interface complexity based on:
+
+```csharp
+/// <summary>
+/// Manages progressive disclosure of interface complexity
+/// </summary>
+public class ProgressiveDisclosureManager
+{
+    private Dictionary<string, int> _featureInteractionCount = new Dictionary<string, int>();
+    private Dictionary<string, float> _featureCompetencyScore = new Dictionary<string, float>();
+    
+    public void RecordInteraction(string featureId, InteractionResult result)
+    {
+        // Track how often player uses this feature
+        if (!_featureInteractionCount.ContainsKey(featureId))
+        {
+            _featureInteractionCount[featureId] = 0;
+        }
+        _featureInteractionCount[featureId]++;
+        
+        // Update competency score based on successful interactions
+        if (!_featureCompetencyScore.ContainsKey(featureId))
+        {
+            _featureCompetencyScore[featureId] = 0f;
+        }
+        
+        float resultScore = EvaluateInteractionSuccess(result);
+        _featureCompetencyScore[featureId] = Mathf.Lerp(
+            _featureCompetencyScore[featureId],
+            resultScore,
+            0.2f  // Learning rate
+        );
+        
+        // Adjust disclosure level based on competency
+        UpdateFeatureDisclosureLevel(featureId);
+    }
+    
+    private void UpdateFeatureDisclosureLevel(string featureId)
+    {
+        DisclosureLevel newLevel = CalculateDisclosureLevel(
+            _featureInteractionCount[featureId],
+            _featureCompetencyScore[featureId]
+        );
+        
+        // Update the UI component with new disclosure level
+        UIRegistry.GetComponentById(featureId)?.SetDisclosureLevel(newLevel);
+    }
+    
+    // Implementation details...
+}
+```
+
+5.0 Navigation Patterns
+=====================
+The navigation system enables players to traverse complex data efficiently.
+
+5.1 Navigation Hierarchy
+---------------------
+The interface is organized hierarchically:
+
+- **Command Deck**: Top-level access to all systems
+- **System Dashboards**: Focused view of specific systems
+- **Detail Panels**: In-depth interaction with specific elements
+- **Contextual Overlays**: Temporary information relevant to current focus
+
+5.2 Navigation Methods
+-------------------
+Players can navigate using:
+
+- **Spatial Navigation**: Direct interaction with 3D ship model
+- **Hierarchical Menus**: Traditional nested menu structure
+- **Search System**: Direct access through search queries
+- **Quick-Access Shortcuts**: Customizable hotkeys and favorites
+- **Voice Commands**: Optional voice-controlled navigation (accessibility)
+
+5.3 Context Retention
+------------------
+The system maintains context when switching between views:
+
+- **Persistent Selection**: Selected elements remain highlighted across views
+- **Breadcrumb Trails**: Visual path of navigation history
+- **Cross-Reference Links**: Direct connections between related information
+- **State Preservation**: Interface remembers expansion states and filters
+
+5.4 View Switching System
+---------------------
+The game provides seamless transitions between 2D and 3D representations of game elements, each optimized for different interaction patterns and information needs.
+
+### View Modes
+- **3D Spatial View**: Immersive representation of ship/habitat with realistic spatial relationships
+- **2D Schematic View**: Simplified, information-dense representation optimized for management and analysis
+- **Hybrid Overlays**: Contextual 2D information overlaid on 3D views for specific interactions
+
+### Automatic View Transitions
+The system automatically transitions between views based on zoom level:
+
+```csharp
+/// <summary>
+/// Manages view transitions based on camera zoom level
+/// </summary>
+public class ViewTransitionManager : MonoBehaviour
+{
+    [SerializeField] private Camera _mainCamera;
+    [SerializeField] private float _3Dto2DTransitionThreshold = 150f;
+    [SerializeField] private float _2Dto3DTransitionThreshold = 120f;
+    [SerializeField] private float _transitionDuration = 0.6f;
+    
+    private ViewMode _currentViewMode = ViewMode.Spatial3D;
+    private bool _isTransitioning = false;
+    
+    public void Update()
+    {
+        if (_isTransitioning)
+            return;
+            
+        float currentZoomLevel = _mainCamera.orthographicSize;
+        
+        // Check for 3D to 2D transition
+        if (_currentViewMode == ViewMode.Spatial3D && currentZoomLevel > _3Dto2DTransitionThreshold)
+        {
+            TransitionToView(ViewMode.Schematic2D);
+        }
+        // Check for 2D to 3D transition
+        else if (_currentViewMode == ViewMode.Schematic2D && currentZoomLevel < _2Dto3DTransitionThreshold)
+        {
+            TransitionToView(ViewMode.Spatial3D);
+        }
+    }
+    
+    /// <summary>
+    /// Handle mouse wheel input for zooming
+    /// </summary>
+    public void OnMouseWheel(float delta)
+    {
+        float zoomSpeed = _currentViewMode == ViewMode.Spatial3D ? 
+            _3DZoomSpeed : _2DZoomSpeed;
+            
+        float newZoomLevel = _mainCamera.orthographicSize - delta * zoomSpeed;
+        
+        // Clamp to valid zoom ranges
+        newZoomLevel = Mathf.Clamp(newZoomLevel, _minZoom, _maxZoom);
+        
+        // Apply zoom with smooth damping
+        _mainCamera.orthographicSize = Mathf.SmoothDamp(
+            _mainCamera.orthographicSize, 
+            newZoomLevel, 
+            ref _zoomVelocity, 
+            _zoomSmoothTime
+        );
+    }
+    
+    /// <summary>
+    /// Transitions between view modes with smooth animation
+    /// </summary>
+    public void TransitionToView(ViewMode targetMode, bool immediate = false)
+    {
+        if (_currentViewMode == targetMode || _isTransitioning)
+            return;
+            
+        _isTransitioning = true;
+        
+        // Save focus point to maintain context
+        Vector3 focusPoint = GetCurrentFocusPoint();
+        
+        // Begin transition animation
+        StartCoroutine(AnimateViewTransition(_currentViewMode, targetMode, focusPoint, immediate ? 0f : _transitionDuration));
+        
+        // Update current mode
+        _currentViewMode = targetMode;
+        
+        // Notify systems about view change
+        OnViewModeChanged?.Invoke(_currentViewMode);
+    }
+    
+    // Implementation details...
+}
+```
+
+### Quick View Switch
+A dedicated button provides instant switching between views:
+
+```csharp
+/// <summary>
+/// Controls the quick view switch button
+/// </summary>
+public class ViewSwitchButton : MonoBehaviour
+{
+    [SerializeField] private ViewTransitionManager _viewManager;
+    [SerializeField] private Image _buttonIcon;
+    [SerializeField] private Sprite _3DViewIcon;
+    [SerializeField] private Sprite _2DViewIcon;
+    
+    private void Start()
+    {
+        _viewManager.OnViewModeChanged += UpdateButtonAppearance;
+        UpdateButtonAppearance(_viewManager.CurrentViewMode);
+    }
+    
+    public void OnButtonPressed()
+    {
+        // Toggle between view modes
+        ViewMode targetMode = _viewManager.CurrentViewMode == ViewMode.Spatial3D ? 
+            ViewMode.Schematic2D : ViewMode.Spatial3D;
+            
+        _viewManager.TransitionToView(targetMode);
+        
+        // Haptic feedback
+        HapticFeedbackSystem.TriggerFeedback(HapticPattern.ViewSwitch);
+        
+        // Analytics tracking
+        AnalyticsManager.TrackEvent("view_mode_switched", new Dictionary<string, object>
+        {
+            { "previous_mode", _viewManager.CurrentViewMode.ToString() },
+            { "new_mode", targetMode.ToString() },
+            { "method", "quick_switch_button" }
+        });
+    }
+    
+    private void UpdateButtonAppearance(ViewMode currentMode)
+    {
+        // Show the opposite mode icon (what you'll switch to)
+        _buttonIcon.sprite = currentMode == ViewMode.Spatial3D ? _2DViewIcon : _3DViewIcon;
+        
+        // Update tooltip
+        _tooltipText = currentMode == ViewMode.Spatial3D ? 
+            "Switch to Schematic View" : "Switch to 3D View";
+    }
+}
+```
+
+### View-Specific UI Adaptation
+UI elements adapt to the current view mode:
+
+- **3D View**:
+  - Spatial context menus anchored to 3D objects
+  - Minimized data panels to maximize visibility
+  - Interactive 3D elements with hover information
+  - Camera controls for rotation and perspective
+
+- **2D View**:
+  - Expanded data panels with detailed information
+  - Grid-based layout for precise alignment
+  - Color-coded system representation
+  - Filtering and sorting tools for information management
+  - **Interactive Ship Displays**: Functional monitors and terminals within the 2D cutaway view
+  - **Exterior Camera Feeds**: Mounted camera displays showing relevant external objects
+
+### Interactive Ship Systems
+The 2D cutaway view emphasizes interaction with the ship's internal systems:
+
+```csharp
+/// <summary>
+/// Manages interactive displays and terminals within the ship's 2D view
+/// </summary>
+public class ShipDisplayManager : MonoBehaviour
+{
+    [SerializeField] private List<ShipDisplay> _shipDisplays = new List<ShipDisplay>();
+    [SerializeField] private List<ExteriorCamera> _exteriorCameras = new List<ExteriorCamera>();
+    
+    private void Start()
+    {
+        // Register displays with interaction system
+        foreach (ShipDisplay display in _shipDisplays)
+        {
+            InteractionManager.RegisterInteractable(display);
+        }
+        
+        // Initialize exterior cameras to track relevant objects
+        UpdateExteriorCameraTargets();
+    }
+    
+    /// <summary>
+    /// Updates exterior camera targets based on proximity and relevance
+    /// </summary>
+    public void UpdateExteriorCameraTargets()
+    {
+        List<SpaceObject> relevantObjects = SpaceObjectTracker.GetRelevantObjects();
+        
+        // Assign most relevant objects to available cameras
+        for (int i = 0; i < _exteriorCameras.Count && i < relevantObjects.Count; i++)
+        {
+            _exteriorCameras[i].SetTarget(relevantObjects[i]);
+        }
+    }
+    
+    /// <summary>
+    /// Activates a display when clicked in 2D view
+    /// </summary>
+    public void OnDisplayClicked(ShipDisplay display)
+    {
+        // Show detailed interface for the selected display
+        UIManager.ShowDetailPanel(display.DisplayType, display.CurrentData);
+        
+        // Log interaction for analytics
+        AnalyticsManager.TrackEvent("ship_display_interaction", new Dictionary<string, object>
+        {
+            { "display_type", display.DisplayType.ToString() },
+            { "display_location", display.Location },
+            { "current_view", "2D" }
+        });
+    }
+}
+
+/// <summary>
+/// Represents an interactive display or terminal within the ship
+/// </summary>
+public class ShipDisplay : MonoBehaviour, IInteractable
+{
+    [SerializeField] private DisplayType _displayType;
+    [SerializeField] private string _location;
+    [SerializeField] private GameObject _displayVisual;
+    [SerializeField] private GameObject _highlightEffect;
+    
+    private bool _isActive = false;
+    private DisplayData _currentData;
+    
+    public DisplayType DisplayType => _displayType;
+    public string Location => _location;
+    public DisplayData CurrentData => _currentData;
+    
+    /// <summary>
+    /// Updates display with new data
+    /// </summary>
+    public void UpdateDisplay(DisplayData data)
+    {
+        _currentData = data;
+        
+        // Update visual representation based on data type
+        switch (_displayType)
+        {
+            case DisplayType.SystemStatus:
+                UpdateSystemStatusVisual(data);
+                break;
+                
+            case DisplayType.ExteriorCamera:
+                UpdateCameraFeedVisual(data as CameraFeedData);
+                break;
+                
+            case DisplayType.CrewActivity:
+                UpdateCrewActivityVisual(data as CrewActivityData);
+                break;
+                
+            case DisplayType.ResourceMonitor:
+                UpdateResourceVisual(data as ResourceData);
+                break;
+                
+            case DisplayType.NavigationChart:
+                UpdateNavigationVisual(data as NavigationData);
+                break;
+        }
+    }
+    
+    /// <summary>
+    /// Handles interaction from player
+    /// </summary>
+    public void OnInteract()
+    {
+        ShipDisplayManager displayManager = FindObjectOfType<ShipDisplayManager>();
+        displayManager.OnDisplayClicked(this);
+        
+        // Toggle active state and visual feedback
+        _isActive = !_isActive;
+        _highlightEffect.SetActive(_isActive);
+        
+        // Play interaction sound
+        AudioManager.PlaySFX(SoundType.DisplayInteraction);
+    }
+    
+    /// <summary>
+    /// Handles hover state for the display
+    /// </summary>
+    public void OnHoverEnter()
+    {
+        // Show tooltip with display information
+        TooltipManager.Show($"{_displayType} - {_location}", transform.position);
+        
+        // Subtle highlight effect
+        _displayVisual.transform.localScale = Vector3.one * 1.05f;
+    }
+    
+    public void OnHoverExit()
+    {
+        TooltipManager.Hide();
+        _displayVisual.transform.localScale = Vector3.one;
+    }
+}
+
+/// <summary>
+/// Manages exterior camera that intelligently tracks objects of interest
+/// </summary>
+public class ExteriorCamera : MonoBehaviour
+{
+    [SerializeField] private Transform _cameraMount;
+    [SerializeField] private float _rotationSpeed = 0.5f;
+    [SerializeField] private Renderer _displayScreen;
+    [SerializeField] private RenderTexture _cameraFeed;
+    
+    private SpaceObject _currentTarget;
+    private Camera _camera;
+    private CameraFeedData _currentFeedData;
+    
+    private void Awake()
+    {
+        _camera = GetComponentInChildren<Camera>();
+        _camera.targetTexture = _cameraFeed;
+        _displayScreen.material.SetTexture("_MainTex", _cameraFeed);
+    }
+    
+    /// <summary>
+    /// Sets camera to track a specific space object
+    /// </summary>
+    public void SetTarget(SpaceObject target)
+    {
+        _currentTarget = target;
+        
+        // Update camera feed data
+        _currentFeedData = new CameraFeedData
+        {
+            TargetName = target.Name,
+            TargetType = target.ObjectType,
+            Distance = Vector3.Distance(transform.position, target.transform.position),
+            RelativeVelocity = target.Velocity - ShipController.CurrentVelocity
+        };
+        
+        // Update associated ship display
+        ShipDisplay display = GetComponentInParent<ShipDisplay>();
+        if (display != null)
+        {
+            display.UpdateDisplay(_currentFeedData);
+        }
+        
+        // Log target acquisition
+        Debug.Log($"Exterior camera tracking: {target.Name}");
+    }
+    
+    private void Update()
+    {
+        if (_currentTarget != null)
+        {
+            // Smoothly rotate camera to track target
+            Vector3 targetDirection = _currentTarget.transform.position - _cameraMount.position;
+            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+            _cameraMount.rotation = Quaternion.Slerp(_cameraMount.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
+            
+            // Update distance data
+            _currentFeedData.Distance = Vector3.Distance(transform.position, _currentTarget.transform.position);
+            
+            // Add visual effects based on target type (stars get lens flare, etc.)
+            UpdateVisualEffects();
+        }
+    }
+    
+    private void UpdateVisualEffects()
+    {
+        // Apply appropriate visual effects based on target type
+        switch (_currentTarget.ObjectType)
+        {
+            case SpaceObjectType.Star:
+                ApplyStarEffects();
+                break;
+                
+            case SpaceObjectType.Planet:
+                ApplyPlanetEffects();
+                break;
+                
+            case SpaceObjectType.Ship:
+                ApplyShipEffects();
+                break;
+        }
+    }
+}
+
+### Interactable Ship Elements
+The 2D cutaway view features various interactive ship elements:
+
+- **Mounted Displays**: Show exterior camera feeds intelligently tracking celestial objects, other ships, and anomalies
+- **System Terminals**: Allow direct control of specific ship systems
+- **Engineering Interfaces**: Display schematics and system health diagnostics
+- **Crew Quarters Displays**: Show personal information and recreational content
+- **Bridge Command Center**: Centralized dashboard with mission-critical information
+- **Science Lab Interfaces**: Display research progress and experiment data
+- **Navigation Charts**: Interactive star maps and course planning tools
+- **Resource Monitors**: Track consumption rates and storage levels
+- **Security Feeds**: Internal camera views of different ship sections
+- **Communication Arrays**: Display incoming/outgoing message status
+
+These interactive elements function primarily in the 2D cutaway view, providing detailed information and control capabilities that complement the more immersive but less information-dense 3D view.
+
+### Focus Preservation
+When switching between views, the system maintains focus on the selected element:
+
+```csharp
+/// <summary>
+/// Maintains focus consistency between different view modes
+/// </summary>
+private Vector3 GetCurrentFocusPoint()
+{
+    // If an element is selected, use its position
+    if (SelectionManager.HasSelection)
+    {
+        return SelectionManager.CurrentSelection.WorldPosition;
+    }
+    
+    // Otherwise use camera focal point
+    return _mainCamera.transform.position + _mainCamera.transform.forward * _focalDistance;
+}
+
+/// <summary>
+/// Transitions between views while maintaining focus on the same element
+/// </summary>
+private IEnumerator AnimateViewTransition(ViewMode fromMode, ViewMode toMode, Vector3 focusPoint, float duration)
+{
+    // Disable input during transition
+    InputManager.SetInputEnabled(false);
+    
+    // Setup start and end states for camera and UI
+    CameraConfiguration startConfig = GetCameraConfig(fromMode);
+    CameraConfiguration endConfig = GetCameraConfig(toMode);
+    
+    float startTime = Time.time;
+    float progress = 0f;
+    
+    // Transition view indicator
+    _viewIndicator.ShowTransitionState();
+    
+    while (progress < 1f)
+    {
+        progress = (Time.time - startTime) / duration;
+        float easedProgress = EasingFunction.EaseInOutCubic(progress);
+        
+        // Interpolate camera position and properties
+        _mainCamera.transform.position = Vector3.Lerp(
+            startConfig.Position, 
+            endConfig.Position, 
+            easedProgress
+        );
+        
+        _mainCamera.orthographicSize = Mathf.Lerp(
+            startConfig.OrthographicSize,
+            endConfig.OrthographicSize,
+            easedProgress
+        );
+        
+        // Interpolate UI element positions and scales
+        foreach (UITransformable element in _transformableElements)
+        {
+            element.TransitionToView(fromMode, toMode, easedProgress);
+        }
+        
+        yield return null;
+    }
+    
+    // Apply final view mode-specific settings
+    ApplyViewModeSettings(toMode);
+    
+    // Update view indicator
+    _viewIndicator.ShowCurrentState(toMode);
+    
+    // Re-enable input
+    InputManager.SetInputEnabled(true);
+    
+    _isTransitioning = false;
+}
+
+### Transition Animation
+View transitions use smooth animations to maintain spatial awareness:
+
+- **Morphing**: UI elements morph between representations instead of disappearing/reappearing
+- **Zoom-Through Transition**: Camera zooms in/out during the transition
+- **Cross-Fade**: Gradual opacity changes between view representations
+- **Motion Paths**: Elements follow predictable paths during transitions
+
+### View Mode Indicator
+The current view mode is clearly indicated to the player:
+
+- **Persistent Icon**: Small icon indicating current view mode
+- **Transition Feedback**: Visual feedback during view transitions
+- **View-Specific Cursor**: Cursor changes to indicate available interactions
+- **HUD Adaptation**: HUD elements adapt to current view context
+
+This dual-view system balances immersion and information density, allowing players to seamlessly switch between perspectives based on their current needs and tasks.
+
+5.5 Context-Aware View Transitions
+---------------------------------
+The system intelligently adjusts camera views based on character movement and interactions in zero gravity:
+
+### Zero-G Navigation Through Entryways
+When a character approaches or interacts with doorways, the system intelligently manages view transitions:
+
+```csharp
+/// <summary>
+/// Manages navigation and view transitions for doorways and interactable objects
+/// </summary>
+public class ZeroGNavigationManager : MonoBehaviour
+{
+    [SerializeField] private float _transitionDuration = 0.8f;
+    [SerializeField] private float _doorwayApproachDistance = 1.5f;
+    [SerializeField] private LayerMask _interactableLayer;
+    
+    private Character _activeCharacter;
+    private ViewTransitionManager _viewManager;
+    private Transform _camera;
+    
+    private void Awake()
+    {
+        _viewManager = GetComponent<ViewTransitionManager>();
+        _camera = Camera.main.transform;
+    }
+    
+    /// <summary>
+    /// Handles user clicking on a doorway or interactable object
+    /// </summary>
+    public void OnInteractableObjectSelected(InteractableObject target)
+    {
+        // Get current active character (player or selected crew member)
+        _activeCharacter = CharacterManager.GetActiveCharacter();
+        
+        // Calculate optimal path to interactable object
+        Vector3[] path = PathfindingSystem.CalculateZeroGPath(
+            _activeCharacter.transform.position, 
+            target.GetInteractionPosition()
+        );
+        
+        // Begin character movement
+        StartCoroutine(MoveCharacterToInteractable(path, target));
+    }
+    
+    /// <summary>
+    /// Moves character along path and triggers appropriate view transitions
+    /// </summary>
+    private IEnumerator MoveCharacterToInteractable(Vector3[] path, InteractableObject target)
+    {
+        // Begin character movement animation
+        _activeCharacter.BeginZeroGNavigation(path);
+        
+        // Follow character with camera during approach
+        while (_activeCharacter.IsNavigating)
+        {
+            // Check if we need to adjust view based on orientation
+            if (ShouldAdjustViewForBetterVisibility(_activeCharacter, target))
+            {
+                AdjustViewForOptimalVisibility(target);
+            }
+            
+            yield return null;
+        }
+        
+        // Character has reached interaction position
+        if (target is Doorway doorway)
+        {
+            // Handle doorway transition
+            StartCoroutine(HandleDoorwayTransition(doorway));
+        }
+        else
+        {
+            // Handle generic interactable
+            target.Interact(_activeCharacter);
+            
+            // Adjust view for optimal interaction visibility
+            AdjustViewForInteraction(target, _activeCharacter);
+        }
+    }
+    
+    /// <summary>
+    /// Manages view transition when character moves through a doorway
+    /// </summary>
+    private IEnumerator HandleDoorwayTransition(Doorway doorway)
+    {
+        // Open the door
+        doorway.OpenDoor();
+        yield return new WaitForSeconds(doorway.OpeningDuration);
+        
+        // Begin passing through doorway animation
+        _activeCharacter.PassThroughDoorway(doorway);
+        
+        // Wait for character to begin passing through
+        yield return new WaitForSeconds(0.3f);
+        
+        // Determine optimal view for connected room/area
+        ViewConfiguration newRoomView = DetermineOptimalViewForConnectedArea(doorway);
+        
+        // Transition to new view
+        StartCoroutine(TransitionToNewAreaView(newRoomView, _transitionDuration));
+        
+        // Complete doorway transition
+        yield return new WaitForSeconds(0.7f);
+        
+        // Close door if automatic closing is enabled
+        if (doorway.AutoClose)
+        {
+            doorway.CloseDoor();
+        }
+        
+        // Character has completed transition
+        _activeCharacter.CompleteNavigation();
+    }
+    
+    /// <summary>
+    /// Determines if current view angle is suboptimal for the interaction
+    /// </summary>
+    private bool ShouldAdjustViewForBetterVisibility(Character character, InteractableObject target)
+    {
+        // Calculate viewing angle of the interaction
+        Vector3 interactionDirection = target.transform.position - character.transform.position;
+        Vector3 viewDirection = _camera.forward;
+        float viewingAngle = Vector3.Angle(interactionDirection, viewDirection);
+        
+        // Check if doorway orientation is perpendicular to current view (left/right limitation)
+        if (target is Doorway doorway)
+        {
+            Vector3 doorForward = doorway.transform.forward;
+            float doorAlignment = Mathf.Abs(Vector3.Dot(doorForward, _camera.right));
+            
+            // If door is aligned with camera right vector (perpendicular to view)
+            if (doorAlignment > 0.7f)
+            {
+                return true;
+            }
+        }
+        
+        // Return true if viewing angle is suboptimal
+        return viewingAngle > 60f || viewingAngle < 10f;
+    }
+    
+    /// <summary>
+    /// Adjusts view to provide optimal visibility of an interactable object
+    /// </summary>
+    private void AdjustViewForOptimalVisibility(InteractableObject target)
+    {
+        // Get target's preferred viewing angle if specified
+        Quaternion preferredRotation = target.GetPreferredViewingAngle();
+        
+        // If no preferred angle, calculate optimal position
+        if (preferredRotation == Quaternion.identity)
+        {
+            // For doorways, position camera to see through the door
+            if (target is Doorway doorway)
+            {
+                // Get position slightly offset from doorway center
+                Vector3 optimalPosition = doorway.transform.position + 
+                    doorway.transform.up * 1.2f + 
+                    doorway.transform.forward * -2f;
+                
+                // Interpolate camera to this position
+                StartCoroutine(SmoothCameraPositionTransition(optimalPosition));
+            }
+            else
+            {
+                // For other interactables, position to see both character and object
+                Vector3 midPoint = (_activeCharacter.transform.position + target.transform.position) / 2f;
+                Vector3 viewOffset = Vector3.up * 1.5f + Vector3.back * 4f;
+                
+                StartCoroutine(SmoothCameraPositionTransition(midPoint + viewOffset));
+            }
+        }
+        else
+        {
+            // Use object's preferred viewing angle
+            StartCoroutine(SmoothCameraRotationTransition(preferredRotation));
+        }
+    }
+    
+    /// <summary>
+    /// Transitions to optimal view for connected area when passing through doorway
+    /// </summary>
+    private ViewConfiguration DetermineOptimalViewForConnectedArea(Doorway doorway)
+    {
+        // Get connected room/area
+        ShipArea connectedArea = doorway.GetConnectedArea();
+        
+        // Check for predefined optimal view for this area
+        ViewConfiguration areaDefaultView = connectedArea.GetDefaultViewConfiguration();
+        
+        // If no predefined view, calculate optimal position
+        if (areaDefaultView == null)
+        {
+            // Calculate room center
+            Vector3 roomCenter = connectedArea.GetBounds().center;
+            
+            // Calculate entry vector (direction character is entering from)
+            Vector3 entryVector = doorway.transform.forward;
+            
+            // Create view configuration that looks from opposite entry direction
+            return new ViewConfiguration
+            {
+                Position = roomCenter - entryVector * connectedArea.GetViewDistance(),
+                Rotation = Quaternion.LookRotation(entryVector),
+                OrthographicSize = connectedArea.GetRecommendedOrthographicSize(),
+                ViewMode = connectedArea.GetRecommendedViewMode()
+            };
+        }
+        
+        return areaDefaultView;
+    }
+    
+    /// <summary>
+    /// Adjusts view specifically for optimal interaction visibility
+    /// </summary>
+    private void AdjustViewForInteraction(InteractableObject target, Character character)
+    {
+        // Special case for monitors and displays
+        if (target is ShipDisplay display)
+        {
+            // Position camera to clearly see the display screen
+            Vector3 displayNormal = display.transform.forward;
+            Vector3 optimalPosition = display.transform.position 
+                - displayNormal * 2.0f 
+                + Vector3.up * 0.5f;
+            
+            // Switch to appropriate view mode
+            _viewManager.TransitionToView(ViewMode.Schematic2D);
+            
+            // Move camera to optimal position
+            StartCoroutine(SmoothCameraPositionTransition(optimalPosition));
+            StartCoroutine(SmoothCameraRotationTransition(
+                Quaternion.LookRotation(displayNormal)
+            ));
+        }
+    }
+    
+    // Smooth camera transition coroutines for position and rotation...
+}
+
+/// <summary>
+/// Represents a doorway that characters can navigate through
+/// </summary>
+public class Doorway : InteractableObject
+{
+    [SerializeField] private Animator _doorAnimator;
+    [SerializeField] private float _openingDuration = 0.5f;
+    [SerializeField] private bool _autoClose = true;
+    [SerializeField] private ShipArea _connectedArea;
+    [SerializeField] private Transform _approachPoint;
+    [SerializeField] private Transform _exitPoint;
+    
+    public float OpeningDuration => _openingDuration;
+    public bool AutoClose => _autoClose;
+    
+    public void OpenDoor()
+    {
+        // Play door opening animation
+        _doorAnimator.SetTrigger("Open");
+        
+        // Play sound effect
+        AudioManager.PlaySFX(SoundType.DoorOpen, transform.position);
+        
+        // Update door state
+        IsDoorOpen = true;
+    }
+    
+    public void CloseDoor()
+    {
+        // Play door closing animation
+        _doorAnimator.SetTrigger("Close");
+        
+        // Play sound effect
+        AudioManager.PlaySFX(SoundType.DoorClose, transform.position);
+        
+        // Update door state
+        IsDoorOpen = false;
+    }
+    
+    public ShipArea GetConnectedArea()
+    {
+        return _connectedArea;
+    }
+    
+    public override Vector3 GetInteractionPosition()
+    {
+        // Return the approach point position
+        return _approachPoint.position;
+    }
+    
+    public Vector3 GetExitPosition()
+    {
+        return _exitPoint.position;
+    }
+    
+    public override Quaternion GetPreferredViewingAngle()
+    {
+        // Calculate optimal viewing angle based on door orientation
+        // For side-facing doors, position to see through the doorway
+        Vector3 doorRight = transform.right;
+        Vector3 doorUp = transform.up;
+        
+        // Create a rotation that looks slightly angled toward the doorway
+        return Quaternion.LookRotation(-doorRight + doorUp * 0.3f, Vector3.up);
+    }
+}
+
+### Character Movement and Object Interaction
+The system manages character movement in zero-G environments with physics-based navigation:
+
+- **Object Selection Flow**:
+  1. Player clicks on interactable object (doorway, terminal, equipment)
+  2. Character navigates in zero-G environment to reach interaction position
+  3. View automatically adjusts for optimal visibility during movement
+  4. Upon reaching destination, character initiates interaction
+  5. View transitions to accommodate new area or interaction needs
+
+- **Zero-G Navigation Visualization**:
+  - Push-off visual indicators show movement initiation
+  - Trajectory path preview displays estimated movement
+  - Grab points highlight available stability anchors
+  - Momentum visualization shows current velocity and direction
+
+- **Doorway-Specific Transitions**:
+  - For side-facing doorways (left/right limitation), view automatically rotates for clear visibility
+  - When entering new areas, view smoothly transitions to optimal angle for connected space
+  - Character passes through entryway with zero-G floating animation
+  - Door state visualization shows opening/closing status
+
+### Universal Interaction Pattern
+All interactable objects follow a consistent interaction pattern:
+
+```csharp
+/// <summary>
+/// Base class for all objects that can be interacted with by characters
+/// </summary>
+public abstract class InteractableObject : MonoBehaviour
+{
+    [SerializeField] protected string _interactionPrompt = "Interact";
+    [SerializeField] protected float _interactionRadius = 1.2f;
+    [SerializeField] protected GameObject _highlightEffect;
+    
+    protected bool _isHighlighted = false;
+    
+    /// <summary>
+    /// Returns the position where a character should move to interact
+    /// </summary>
+    public virtual Vector3 GetInteractionPosition()
+    {
+        // Default implementation returns a position at interaction radius
+        return transform.position - transform.forward * _interactionRadius;
+    }
+    
+    /// <summary>
+    /// Called when character interacts with this object
+    /// </summary>
+    public virtual void Interact(Character character)
+    {
+        // Base implementation - override in derived classes
+        Debug.Log($"Character {character.Name} interacted with {gameObject.name}");
+    }
+    
+    /// <summary>
+    /// Returns preferred camera viewing angle for this interaction, if any
+    /// </summary>
+    public virtual Quaternion GetPreferredViewingAngle()
+    {
+        // Default implementation returns identity (no preference)
+        return Quaternion.identity;
+    }
+    
+    /// <summary>
+    /// Called when pointer hovers over this object
+    /// </summary>
+    public virtual void OnHoverEnter()
+    {
+        if (_highlightEffect != null)
+        {
+            _highlightEffect.SetActive(true);
+        }
+        
+        _isHighlighted = true;
+        
+        // Show interaction prompt
+        UIManager.ShowInteractionPrompt(_interactionPrompt, transform.position);
+    }
+    
+    /// <summary>
+    /// Called when pointer exits this object
+    /// </summary>
+    public virtual void OnHoverExit()
+    {
+        if (_highlightEffect != null)
+        {
+            _highlightEffect.SetActive(false);
+        }
+        
+        _isHighlighted = false;
+        
+        // Hide interaction prompt
+        UIManager.HideInteractionPrompt();
+    }
+}
+```
+
+This system ensures smooth transitions between different areas of the ship while maintaining consistent interaction patterns across all objects in both 2D and 3D view modes.
+
+5.6 Crew Interaction Interface
+-----------------------------
+The interface for crew interaction enables seamless communication and management of AI crew members in zero-G environments:
+
+### Crew Visibility and Status
+Crew members have distinct visual indicators in both view modes:
+
+```csharp
+/// <summary>
+/// Manages visual indicators for crew members across different view modes
+/// </summary>
+public class CrewVisualizationManager : MonoBehaviour
+{
+    [SerializeField] private Material _normalStateMaterial;
+    [SerializeField] private Material _stressedStateMaterial;
+    [SerializeField] private Material _criticalStateMaterial;
+    [SerializeField] private Gradient _healthGradient;
+    [SerializeField] private Gradient _staminaGradient;
+    
+    private Dictionary<CrewMember, CrewVisualElements> _crewVisuals = new Dictionary<CrewMember, CrewVisualElements>();
+    
+    /// <summary>
+    /// Sets up visual elements for a crew member
+    /// </summary>
+    public void RegisterCrewMember(CrewMember crewMember, GameObject crewObject)
+    {
+        // Create and configure visual elements
+        CrewVisualElements visuals = new CrewVisualElements
+        {
+            StateIndicator = CreateStateIndicator(crewObject),
+            NameLabel = CreateNameLabel(crewObject, crewMember.FullName),
+            StatusBars = CreateStatusBars(crewObject),
+            ActivityIcon = CreateActivityIcon(crewObject),
+            SelectionHighlight = CreateSelectionHighlight(crewObject)
+        };
+        
+        // Store reference
+        _crewVisuals[crewMember] = visuals;
+        
+        // Initial update
+        UpdateCrewVisuals(crewMember);
+    }
+    
+    /// <summary>
+    /// Updates visual elements based on crew member state
+    /// </summary>
+    public void UpdateCrewVisuals(CrewMember crewMember)
+    {
+        if (!_crewVisuals.TryGetValue(crewMember, out CrewVisualElements visuals))
+            return;
+            
+        // Update state indicator color based on overall state
+        Material stateMaterial = GetStateIndicatorMaterial(crewMember.CurrentState);
+        visuals.StateIndicator.material = stateMaterial;
+        
+        // Update status bars
+        visuals.StatusBars.HealthBar.color = _healthGradient.Evaluate(crewMember.HealthPercentage);
+        visuals.StatusBars.HealthBar.fillAmount = crewMember.HealthPercentage;
+        
+        visuals.StatusBars.StaminaBar.color = _staminaGradient.Evaluate(crewMember.StaminaPercentage);
+        visuals.StatusBars.StaminaBar.fillAmount = crewMember.StaminaPercentage;
+        
+        // Update activity icon
+        visuals.ActivityIcon.sprite = GetActivitySprite(crewMember.CurrentActivity);
+        
+        // Handle view-specific updates
+        UpdateViewSpecificElements(crewMember, visuals, ViewManager.CurrentViewMode);
+    }
+    
+    /// <summary>
+    /// Adjusts crew visualization based on current view mode
+    /// </summary>
+    public void OnViewModeChanged(ViewMode newMode)
+    {
+        foreach (var kvp in _crewVisuals)
+        {
+            UpdateViewSpecificElements(kvp.Key, kvp.Value, newMode);
+        }
+    }
+    
+    /// <summary>
+    /// Updates elements that differ between 2D and 3D views
+    /// </summary>
+    private void UpdateViewSpecificElements(CrewMember crewMember, CrewVisualElements visuals, ViewMode viewMode)
+    {
+        if (viewMode == ViewMode.Spatial3D)
+        {
+            // 3D view shows minimal UI elements to reduce clutter
+            visuals.NameLabel.fontSize = 10;
+            visuals.StatusBars.gameObject.SetActive(false);
+            visuals.ActivityIcon.transform.localScale = Vector3.one * 0.7f;
+            
+            // Position indicators to follow character in 3D space
+            PositionIndicatorsFor3DView(crewMember, visuals);
+        }
+        else // Schematic2D
+        {
+            // 2D view shows more detailed information
+            visuals.NameLabel.fontSize = 14;
+            visuals.StatusBars.gameObject.SetActive(true);
+            visuals.ActivityIcon.transform.localScale = Vector3.one;
+            
+            // Position indicators in 2D layout
+            PositionIndicatorsFor2DView(crewMember, visuals);
+        }
+    }
+    
+    /// <summary>
+    /// Highlights a crew member when selected
+    /// </summary>
+    public void SetCrewHighlighted(CrewMember crewMember, bool isHighlighted)
+    {
+        if (_crewVisuals.TryGetValue(crewMember, out CrewVisualElements visuals))
+        {
+            visuals.SelectionHighlight.SetActive(isHighlighted);
+            
+            // Make UI elements more prominent for highlighted crew
+            if (isHighlighted)
+            {
+                visuals.NameLabel.fontStyle = FontStyle.Bold;
+                visuals.ActivityIcon.transform.localScale *= 1.2f;
+                visuals.StatusBars.gameObject.SetActive(true); // Always show status for selected crew
+            }
+            else
+            {
+                visuals.NameLabel.fontStyle = FontStyle.Normal;
+                visuals.ActivityIcon.transform.localScale = Vector3.one;
+                
+                // In 3D view, hide status bars for non-selected crew
+                if (ViewManager.CurrentViewMode == ViewMode.Spatial3D)
+                {
+                    visuals.StatusBars.gameObject.SetActive(false);
+                }
+            }
+        }
+    }
+    
+    // Helper methods for creating visual elements...
+}
+
+/// <summary>
+/// Contains all visual elements for a crew member
+/// </summary>
+public class CrewVisualElements
+{
+    public Renderer StateIndicator;
+    public TextMeshProUGUI NameLabel;
+    public CrewStatusBars StatusBars;
+    public Image ActivityIcon;
+    public GameObject SelectionHighlight;
+}
+
+### Crew Command Interface
+Players can issue commands to crew members through an intuitive contextual interface:
+
+```csharp
+/// <summary>
+/// Manages crew command interface and execution
+/// </summary>
+public class CrewCommandInterface : MonoBehaviour
+{
+    [SerializeField] private GameObject _commandWheelPrefab;
+    [SerializeField] private float _commandWheelScale = 1.0f;
+    [SerializeField] private float _commandRadius = 120f;
+    
+    private CrewMember _selectedCrewMember;
+    private CommandWheel _activeCommandWheel;
+    private List<CommandCategory> _availableCategories = new List<CommandCategory>();
+    
+    /// <summary>
+    /// Shows command interface for a selected crew member
+    /// </summary>
+    public void ShowCommandInterface(CrewMember crewMember)
+    {
+        _selectedCrewMember = crewMember;
+        
+        // Determine available command categories based on crew member skills and location
+        _availableCategories = DetermineAvailableCommands(crewMember);
+        
+        // Create command wheel
+        if (_activeCommandWheel == null)
+        {
+            GameObject wheelObj = Instantiate(_commandWheelPrefab, UIManager.CommandLayer);
+            _activeCommandWheel = wheelObj.GetComponent<CommandWheel>();
+        }
+        
+        // Position wheel near crew member but ensure it's visible on screen
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(_selectedCrewMember.transform.position);
+        screenPos += new Vector3(0, 50, 0); // Offset slightly above crew member
+        _activeCommandWheel.transform.position = ClampToScreen(screenPos);
+        
+        // Configure wheel with appropriate commands
+        _activeCommandWheel.SetupWheel(_availableCategories, _commandRadius * _commandWheelScale);
+        _activeCommandWheel.OnCommandSelected += ExecuteCommand;
+        
+        // Enable wheel
+        _activeCommandWheel.gameObject.SetActive(true);
+    }
+    
+    /// <summary>
+    /// Hides and cleans up command interface
+    /// </summary>
+    public void HideCommandInterface()
+    {
+        if (_activeCommandWheel != null)
+        {
+            _activeCommandWheel.OnCommandSelected -= ExecuteCommand;
+            _activeCommandWheel.gameObject.SetActive(false);
+        }
+        
+        _selectedCrewMember = null;
+    }
+    
+    /// <summary>
+    /// Determines available commands based on context
+    /// </summary>
+    private List<CommandCategory> DetermineAvailableCommands(CrewMember crewMember)
+    {
+        List<CommandCategory> categories = new List<CommandCategory>();
+        
+        // Movement commands always available
+        categories.Add(new CommandCategory
+        {
+            Name = "Movement",
+            Icon = IconLibrary.GetIcon("movement"),
+            Commands = GenerateMovementCommands(crewMember)
+        });
+        
+        // Check for interactable objects in vicinity
+        List<InteractableObject> nearbyObjects = 
+            InteractionManager.GetInteractablesInRadius(crewMember.transform.position, 5f);
+            
+        if (nearbyObjects.Count > 0)
+        {
+            categories.Add(new CommandCategory
+            {
+                Name = "Interact",
+                Icon = IconLibrary.GetIcon("interact"),
+                Commands = GenerateInteractionCommands(crewMember, nearbyObjects)
+            });
+        }
+        
+        // Add skill-based commands (engineering, science, etc.)
+        if (crewMember.HasSkill(SkillType.Engineering, 1))
+        {
+            categories.Add(new CommandCategory
+            {
+                Name = "Engineering",
+                Icon = IconLibrary.GetIcon("engineering"),
+                Commands = GenerateEngineeringCommands(crewMember)
+            });
+        }
+        
+        // Add more categories based on skills, location, etc.
+        
+        return categories;
+    }
+    
+    /// <summary>
+    /// Executes a command for the selected crew member
+    /// </summary>
+    private void ExecuteCommand(CrewCommand command)
+    {
+        if (_selectedCrewMember == null)
+            return;
+            
+        Debug.Log($"Executing command {command.Name} for {_selectedCrewMember.FullName}");
+        
+        // Hide interface before executing
+        HideCommandInterface();
+        
+        // Execute appropriate command
+        switch (command.CommandType)
+        {
+            case CommandType.MoveTo:
+                Vector3 targetPosition = command.TargetPosition;
+                _selectedCrewMember.AI.SetDestination(targetPosition);
+                break;
+                
+            case CommandType.Interact:
+                InteractableObject target = command.TargetObject as InteractableObject;
+                _selectedCrewMember.AI.InteractWith(target);
+                break;
+                
+            case CommandType.UseSkill:
+                _selectedCrewMember.AI.UseSkill(command.SkillType, command.TargetObject);
+                break;
+                
+            // Handle other command types
+        }
+        
+        // Visual and audio feedback
+        FeedbackManager.ShowCommandFeedback(_selectedCrewMember, command);
+    }
+    
+    // Helper methods for generating specific command types...
+}
+
+/// <summary>
+/// Represents a command that can be given to crew members
+/// </summary>
+public class CrewCommand
+{
+    public string Name;
+    public string Description;
+    public Sprite Icon;
+    public CommandType CommandType;
+    public Vector3 TargetPosition;
+    public UnityEngine.Object TargetObject;
+    public SkillType SkillType;
+    public float ExecutionTime;
+    public List<SkillRequirement> SkillRequirements;
+}
+
+### Crew Feedback System
+The interface provides real-time feedback on crew actions and responses:
+
+- **Command Acknowledgment**: Visual and audio cues when commands are issued
+- **Execution Progress**: Progress indicators for long-running tasks
+- **Status Updates**: Notifications for state changes (health, fatigue, stress)
+- **Dialogue Bubbles**: Contextual speech bubbles for crew communication
+- **Skill Check Visualization**: Visual feedback when crew members attempt skill-based actions
+
+```csharp
+/// <summary>
+/// Provides visual feedback for crew actions and command execution
+/// </summary>
+public class CrewFeedbackManager : MonoBehaviour
+{
+    [SerializeField] private GameObject _feedbackBubblePrefab;
+    [SerializeField] private GameObject _progressBarPrefab;
+    [SerializeField] private GameObject _skillCheckPrefab;
+    [SerializeField] private float _feedbackDuration = 3f;
+    
+    private Dictionary<CrewMember, ActiveFeedback> _activeFeedback = new Dictionary<CrewMember, ActiveFeedback>();
+    
+    /// <summary>
+    /// Shows command acknowledgment feedback
+    /// </summary>
+    public void ShowCommandFeedback(CrewMember crewMember, CrewCommand command)
+    {
+        // Remove any existing feedback
+        RemoveExistingFeedback(crewMember);
+        
+        // Create feedback bubble
+        GameObject bubbleObj = Instantiate(_feedbackBubblePrefab, UIManager.FeedbackLayer);
+        FeedbackBubble bubble = bubbleObj.GetComponent<FeedbackBubble>();
+        
+        // Position above crew member
+        UpdateBubblePosition(bubble, crewMember);
+        
+        // Configure bubble
+        bubble.SetIcon(command.Icon);
+        bubble.SetText(GetAcknowledgmentText(crewMember, command));
+        
+        // Show feedback
+        bubble.Show(_feedbackDuration);
+        
+        // Store active feedback
+        _activeFeedback[crewMember] = new ActiveFeedback
+        {
+            Bubble = bubble,
+            Command = command,
+            ProgressBar = null
+        };
+        
+        // For long-running commands, create progress bar
+        if (command.ExecutionTime > 2f)
+        {
+            GameObject progressObj = Instantiate(_progressBarPrefab, UIManager.FeedbackLayer);
+            ProgressBar progressBar = progressObj.GetComponent<ProgressBar>();
+            
+            // Position below bubble
+            progressBar.transform.position = bubble.transform.position + Vector3.down * 30f;
+            
+            // Configure progress bar
+            progressBar.SetDuration(command.ExecutionTime);
+            progressBar.SetLabel(command.Name);
+            progressBar.OnComplete += () => OnCommandComplete(crewMember, command);
+            
+            // Start progress tracking
+            progressBar.Begin();
+            
+            // Update active feedback
+            _activeFeedback[crewMember].ProgressBar = progressBar;
+        }
+    }
+    
+    /// <summary>
+    /// Shows skill check visualization
+    /// </summary>
+    public void ShowSkillCheck(CrewMember crewMember, SkillType skillType, float difficulty, System.Action<bool> onComplete)
+    {
+        // Create skill check visualization
+        GameObject skillCheckObj = Instantiate(_skillCheckPrefab, UIManager.FeedbackLayer);
+        SkillCheckVisual skillCheck = skillCheckObj.GetComponent<SkillCheckVisual>();
+        
+        // Position near crew member
+        UpdateSkillCheckPosition(skillCheck, crewMember);
+        
+        // Configure skill check
+        skillCheck.SetSkill(skillType);
+        skillCheck.SetDifficulty(difficulty);
+        skillCheck.SetCrewSkillLevel(crewMember.GetSkillLevel(skillType));
+        
+        // Begin skill check animation
+        skillCheck.Begin((success) => {
+            onComplete?.Invoke(success);
+            Destroy(skillCheckObj, 1f); // Remove after a delay
+        });
+    }
+    
+    /// <summary>
+    /// Shows status update for crew member
+    /// </summary>
+    public void ShowStatusUpdate(CrewMember crewMember, StatusType statusType, float severity)
+    {
+        // Remove any non-command feedback
+        RemoveNonCommandFeedback(crewMember);
+        
+        // Create feedback bubble
+        GameObject bubbleObj = Instantiate(_feedbackBubblePrefab, UIManager.FeedbackLayer);
+        FeedbackBubble bubble = bubbleObj.GetComponent<FeedbackBubble>();
+        
+        // Position above crew member
+        UpdateBubblePosition(bubble, crewMember);
+        
+        // Configure bubble
+        bubble.SetIcon(GetStatusIcon(statusType, severity));
+        bubble.SetText(GetStatusText(crewMember, statusType, severity));
+        bubble.SetBubbleColor(GetStatusColor(statusType, severity));
+        
+        // Show feedback
+        bubble.Show(_feedbackDuration);
+    }
+    
+    /// <summary>
+    /// Updates positions of all active feedback elements
+    /// </summary>
+    public void Update()
+    {
+        // Update positions of all active feedback elements to follow crew members
+        foreach (var kvp in _activeFeedback)
+        {
+            CrewMember crewMember = kvp.Key;
+            ActiveFeedback feedback = kvp.Value;
+            
+            if (feedback.Bubble != null)
+            {
+                UpdateBubblePosition(feedback.Bubble, crewMember);
+            }
+            
+            if (feedback.ProgressBar != null)
+            {
+                feedback.ProgressBar.transform.position = feedback.Bubble.transform.position + Vector3.down * 30f;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Updates position of feedback bubble to follow crew member
+    /// </summary>
+    private void UpdateBubblePosition(FeedbackBubble bubble, CrewMember crewMember)
+    {
+        // Convert world position to screen position
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(crewMember.transform.position);
+        
+        // Offset above character
+        screenPos.y += 50f;
+        
+        // Set position
+        bubble.transform.position = screenPos;
+    }
+    
+    // Helper methods for generating text and handling feedback...
+}
+
+/// <summary>
+/// Tracks active feedback for a crew member
+/// </summary>
+private class ActiveFeedback
+{
+    public FeedbackBubble Bubble;
+    public ProgressBar ProgressBar;
+    public CrewCommand Command;
+}
+
+### Multi-Crew Selection
+Players can select and command multiple crew members simultaneously:
+
+- **Group Selection**: Click-drag selection box for multiple crew members
+- **Shift-Click**: Add or remove crew members from current selection
+- **Role Filters**: Quick-select all crew of a specific role (engineers, scientists, etc.)
+- **Command Broadcasting**: Issue same command to all selected crew
+- **Formation Patterns**: Arrange crew in predefined formations for team tasks
+
+### View-Specific Crew Interaction
+Crew interaction adapts to the current view mode:
+
+- **3D Spatial View**:
+  - Direct crew selection through 3D character models
+  - Spatial command targeting (point to destination)
+  - Movement path visualization in 3D space
+  - Minimal status indicators to reduce visual clutter
+
+- **2D Schematic View**:
+  - Crew icons with detailed status information
+  - Precise command targeting through schematic layout
+  - Task assignment through room/station selection
+  - Team organization through drag-and-drop interface
+
+This comprehensive crew interaction system provides intuitive control over AI crew members while maintaining immersion in the zero-G environment and supporting both individual and team-based operations across different view modes.
+
+6.0 Visual Design Language
+========================
+The visual design language establishes a consistent aesthetic while enhancing usability.
+
+6.1 Design System
+--------------
+The UI follows a comprehensive design system:
+
+- **Color Palette**: 
+  - Primary: Deep space blue (#1A2B3C)
+  - Secondary: Tactical orange (#E57B42)
+  - Alert: Critical red (#D64045)
+  - Success: System green (#4CAF50)
+  - Neutral: Interface grey (#9EA3B0)
+
+- **Typography**:
+  - Display: Orbitron (headers, important data)
+  - Interface: Exo 2 (general UI text)
+  - Data: Roboto Mono (code, technical readouts)
+
+- **Iconography**:
+  - Minimalist line-based icons with consistent stroke width
+  - Color-coding for system identification
+  - Animated state changes for system status
+
+6.2 Visual Hierarchy
+-----------------
+Information priority is reinforced through:
+
+- **Size**: More important elements are larger
+- **Contrast**: Critical information has higher contrast
+- **Position**: Essential data positioned in optimal viewing areas
+- **Motion**: Animations draw attention to important changes
+
+6.3 Diegetic vs. Non-Diegetic UI
+-----------------------------
+The interface balances:
+
+- **Diegetic Elements**: UI integrated into the game world (ship terminals, AR displays)
+- **Non-Diegetic Elements**: Traditional overlay UI for complex management
+- **Spatial UI**: Elements anchored to in-game objects but visible from any angle
+- **Meta UI**: System-level information outside the fictional context
+
+7.0 Accessibility Guidelines
+==========================
+Comprehensive accessibility features ensure the game is playable by a diverse audience.
+
+7.1 Visual Accessibility
+---------------------
+- **Text Scaling**: Adjustable text size (100-200%)
+- **High Contrast Mode**: Enhanced contrast for all UI elements
+- **Color Blind Modes**: Deuteranopia, Protanopia, Tritanopia presets
+- **Screen Reader Support**: Complete ARIA implementation for UI elements
+
+7.2 Cognitive Accessibility
+------------------------
+- **Simplified Mode**: Reduced complexity option for core gameplay
+- **Customizable Information Density**: Adjustable detail levels
+- **Consistent Patterns**: Predictable interactions across all systems
+- **Tutorials**: Contextual, repeatable tutorials for all features
+
+7.3 Motor Accessibility
+--------------------
+- **Input Remapping**: Complete keyboard/controller customization
+- **Timing Adjustments**: Configurable timers for time-sensitive actions
+- **Alternative Controls**: Support for specialized input devices
+- **Reduced Precision Requirements**: Adjustable targeting assistance
+
+8.0 UI State Management
+=====================
+The UI maintains consistent state across complex simulation systems.
+
+8.1 State Architecture
+-------------------
+```csharp
+/// <summary>
+/// Manages UI state across the application
+/// </summary>
+public class UIStateManager
+{
+    // Global UI state
+    private UIState _currentState;
+    
+    // History stack for navigation
+    private Stack<UIState> _stateHistory = new Stack<UIState>();
+    
+    // Event system for state changes
+    public event Action<UIState, UIState> OnStateChanged;
+    
+    public void NavigateTo(UIDestination destination, NavigationContext context = null)
+    {
+        // Create new state from destination and context
+        UIState newState = UIStateFactory.CreateState(destination, context);
+        
+        // Save current state to history
+        _stateHistory.Push(_currentState);
+        
+        // Transition to new state
+        TransitionToState(newState);
+    }
+    
+    public void NavigateBack()
+    {
+        if (_stateHistory.Count > 0)
+        {
+            UIState previousState = _stateHistory.Pop();
+            TransitionToState(previousState);
+        }
+    }
+    
+    private void TransitionToState(UIState newState)
+    {
+        UIState oldState = _currentState;
+        _currentState = newState;
+        
+        // Notify listeners of state change
+        OnStateChanged?.Invoke(oldState, newState);
+        
+        // Update UI components
+        UpdateUIForState(newState);
+    }
+    
+    private void UpdateUIForState(UIState state)
+    {
+        // Implementation details...
+    }
+}
+```
+
+8.2 State Synchronization
+----------------------
+The UI maintains synchronization with game state through:
+
+- **Event System**: UI responds to game state changes
+- **Command Pattern**: UI actions generate commands to modify game state
+- **Dirty Checking**: Periodic verification that UI reflects current game state
+- **State Recovery**: Robust error handling for desynchronization
+
+8.3 Persistence
+------------
+UI settings and customizations persist across:
+
+- **Sessions**: UI configuration saved between play sessions
+- **Save Games**: UI state included in save files
+- **Profiles**: Multiple configuration profiles per player
+- **Devices**: Cloud sync for UI preferences across devices
+
+9.0 Performance Considerations
+============================
+UI performance optimization ensures smooth gameplay even during complex simulations.
+
+9.1 Rendering Optimization
+-----------------------
+- **Object Pooling**: Reuse UI elements instead of instantiating/destroying
+- **Virtualization**: Only render visible portions of scrolling lists
+- **Batching**: Optimize draw calls through appropriate batching
+- **Texture Atlasing**: Combine UI textures into optimized atlases
+
+9.2 Update Optimization
+--------------------
+- **Throttling**: Limit update frequency for non-critical elements
+- **Asynchronous Updates**: Move heavy calculations off the main thread
+- **Prioritization**: Update critical UI elements at higher frequency
+- **Caching**: Cache complex calculations and layouts
+
+```csharp
+/// <summary>
+/// Example of optimized list virtualization
+/// </summary>
+public class VirtualizedListView : MonoBehaviour
+{
+    [SerializeField] private RectTransform _contentContainer;
+    [SerializeField] private GameObject _itemPrefab;
+    [SerializeField] private int _poolSize = 20;
+    
+    private List<ListItemData> _allItems = new List<ListItemData>();
+    private List<ListItemView> _pooledItems = new List<ListItemView>();
+    private int _firstVisibleIndex;
+    
+    private void Awake()
+    {
+        // Create object pool
+        for (int i = 0; i < _poolSize; i++)
+        {
+            GameObject item = Instantiate(_itemPrefab, _contentContainer);
+            ListItemView view = item.GetComponent<ListItemView>();
+            view.gameObject.SetActive(false);
+            _pooledItems.Add(view);
+        }
+    }
+    
+    public void SetItems(List<ListItemData> items)
+    {
+        _allItems = items;
+        
+        // Update content size
+        float contentHeight = items.Count * ItemHeight;
+        _contentContainer.sizeDelta = new Vector2(_contentContainer.sizeDelta.x, contentHeight);
+        
+        // Refresh visible items
+        RefreshVisibleItems();
+    }
+    
+    public void OnScroll(Vector2 scrollPosition)
+    {
+        RefreshVisibleItems();
+    }
+    
+    private void RefreshVisibleItems()
+    {
+        // Calculate visible range
+        float scrollY = _contentContainer.anchoredPosition.y;
+        int startIndex = Mathf.FloorToInt(scrollY / ItemHeight);
+        startIndex = Mathf.Max(0, startIndex);
+        
+        // Deactivate all items
+        foreach (var item in _pooledItems)
+        {
+            item.gameObject.SetActive(false);
+        }
+        
+        // Activate and position visible items
+        int itemIndex = 0;
+        for (int i = startIndex; i < startIndex + _poolSize && i < _allItems.Count; i++)
+        {
+            if (itemIndex < _pooledItems.Count)
+            {
+                ListItemView view = _pooledItems[itemIndex];
+                view.gameObject.SetActive(true);
+                view.SetData(_allItems[i]);
+                view.SetPosition(i * ItemHeight);
+                itemIndex++;
+            }
+        }
+    }
+}
+```
+
+9.3 Memory Management
+------------------
+- **Asset Bundling**: Organize UI assets for efficient loading/unloading
+- **Texture Compression**: Use appropriate compression for UI textures
+- **On-Demand Loading**: Load detailed UI elements only when needed
+- **Resource Budgeting**: Strict memory budget for UI components
+
+10.0 Testing & Validation
+=======================
+Comprehensive testing ensures UI/UX quality and effectiveness.
+
+10.1 Usability Testing Methods
+---------------------------
+- **Heuristic Evaluation**: Expert review against UI/UX principles
+- **User Testing**: Structured testing with representative players
+- **A/B Testing**: Comparative testing of alternative designs
+- **Eye Tracking**: Analysis of visual attention patterns
+- **Heat Mapping**: Tracking of interaction frequency across interface
+
+10.2 Performance Testing
+---------------------
+- **Frame Rate Analysis**: Monitoring performance during complex interactions
+- **Memory Profiling**: Tracking memory usage during extended sessions
+- **Load Testing**: Simulating maximum UI complexity and interaction rate
+- **Device Testing**: Validation across target hardware specifications
+
+10.3 Accessibility Validation
+--------------------------
+- **Screen Reader Testing**: Verification with common assistive technologies
+- **Keyboard Navigation**: Complete testing of keyboard-only usage
+- **Color Contrast Analysis**: Automated and manual contrast verification
+- **Compliance Checking**: Validation against WCAG 2.1 AA standards 
