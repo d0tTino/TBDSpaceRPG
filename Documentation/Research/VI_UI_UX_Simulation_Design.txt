@@ -851,6 +851,8 @@ Research on managing cognitive load in complex space simulations reveals:
   - Complexity opt-in mechanisms: Player-controlled activation of advanced features results in 30-45% higher feature adoption
   - Expertise recognition: Systems that detect player proficiency and suggest advanced options increase feature discovery by 35-50%
   - Simplified starting defaults: Basic UI configurations with 5-7 key metrics for beginners expanding to 50+ data points for experts
+  - Performance adaptation: Interfaces that adjust to user's cognitive state improve task completion by 40-60% during performance degradation
+  - Degradation-responsive design: Interfaces that recognize and adapt to specific stressor effects (radiation, sleep debt, CO2, isolation, microgravity) can partially compensate for performance decrements through targeted UI adjustments
 
 - **Error Prevention Interface Design:** [ESTABLISHED]
   - **Slip Reduction Strategies:**
@@ -892,11 +894,18 @@ Research on managing cognitive load in complex space simulations reveals:
     - Adaptive automation demonstrating 25-40% workload reduction during peak cognitive demand periods
     - Stress-adapted interfaces showing 30-50% improved usability during simulated emergency conditions
     - Fatigue-aware design features improving performance by 15-30% during extended operations
+  
+  Cross-references:
+  - See II_Human_Factors_Space.txt Section 2.2 for cognitive effects and human error models in space
+  - See II_Human_Factors_Space.txt Section 2.2 for performance degradation quantification in space environments
+  - See IV_Future_Technologies_Engineering.txt Section 5.1 for AI systems supporting error prevention
+  - See V_Space_Combat_Strategy.txt Section 3.2 for error implications in tactical operations
 
 Cross-references:
-- See II_Human_Factors_Space.txt Section 2.2 for cognitive effects and human error models in space
-- See IV_Future_Technologies_Engineering.txt Section 5.1 for AI systems supporting error prevention
-- See V_Space_Combat_Strategy.txt Section 3.2 for error implications in tactical operations
+- See Section 3.1 for implementation of mental models in interface design
+- See II_Human_Factors_Space.txt Section 1.4 for cognitive adaptation to space environments
+- See I_Astrophysics_Orbital_Mechanics.txt Section 5.4 for detailed game physics engine approximation methods
+- See IV_Future_Technologies_Engineering.txt Section 2.0 for life support system integration
 
 ### 2.3 Learning Curve Design
 Research on effective learning progression in complex simulations reveals:

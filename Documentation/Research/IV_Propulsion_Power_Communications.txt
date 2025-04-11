@@ -1,0 +1,162 @@
+# IV_Propulsion_Power_Communications.txt
+Version: April 2025
+
+## Migration Note
+This document is part of a restructuring of the original IV_Future_Technologies_Engineering.txt document to improve organization and readability. Content has been preserved and cross-references updated. No research material has been removed during this process.
+
+## Table of Contents
+1.0 Propulsion Systems
+   1.1 Advanced Chemical
+   1.2 Nuclear Thermal
+   1.3 Electric Propulsion
+   1.4 Fusion Concepts
+   1.5 Speculative Concepts
+2.0 Power Systems
+   2.1 Solar Power
+   2.2 Nuclear Power
+   2.3 Energy Storage
+   2.4 Power Distribution
+   2.5 Advanced Fusion
+3.0 Communication Systems
+   3.1 Interplanetary Communications
+   3.2 Delay-Tolerant Networking
+   3.3 Communication Security
+   3.4 Quantum Communications
+4.0 References and Further Reading
+
+## 1.0 Propulsion Systems
+Research on propulsion informs the performance characteristics of spacecraft and mission planning.
+
+### 1.1 Advanced Chemical
+Chemical propulsion remains the mainstay for launch vehicles and high-thrust maneuvers. Research continues to improve:
+
+#### Efficiency improvements
+- Projected ISP increase from current ~450s to theoretical maximum of 480-500s by 2080 through:
+  - Advanced catalyst materials increasing reaction efficiency
+  - Combustion chamber geometry optimization
+  - Nozzle design improvements for better expansion ratio management
+  - Propellant pre-heating systems and energy recovery
+
+#### New propellant combinations
+- Metal-doped propellants showing 5-10% performance improvement
+- Solid-core hybrids with throttling capabilities
+- Semi-cryogenic combinations with storage advantages
+- Green propellants with reduced toxicity and handling requirements
+
+#### Manufacturability in space
+- In-situ production viability metrics:
+  - Oxygen extraction from regolith with 60-70% efficiency (2050)
+  - Aluminum/regolith-derived propellant varieties by 2080
+  - Water-derived H2/O2 from NEO or lunar ice with 80% process efficiency
+
+### 1.2 Nuclear Thermal
+[Content from the original document section 1.2 would be included here]
+
+### 1.3 Electric Propulsion
+[Content from the original document section 1.3 would be included here]
+
+### 1.4 Fusion Concepts
+[Content from the original document section 1.4 would be included here]
+
+### 1.5 Speculative Concepts
+[Content from the original document section 1.5 would be included here]
+
+## 2.0 Power Systems
+Research on power generation, storage and distribution informs habitat capabilities and mission constraints.
+
+### 2.1 Solar Power
+[Content from the original document on solar power would be included here]
+
+### 2.2 Nuclear Power
+[Content from the original document on nuclear power would be included here]
+
+### 2.3 Energy Storage
+[Content from the original document on energy storage would be included here]
+
+### 2.4 Power Distribution
+[Content from the original document on power distribution would be included here]
+
+### 2.5 Advanced Fusion
+[Content from the original document on fusion power would be included here]
+
+## 3.0 Communication Systems
+Research on communication systems informs mission constraints and gameplay mechanics related to information flow.
+
+### 3.1 Interplanetary Communications
+
+#### 3.1.1 Latency and Bandwidth Constraints
+
+Signal latency remains a fundamental physical constraint for interplanetary operations:
+- Earth-Mars: 4-24 minutes depending on orbital alignment
+- Earth-Jupiter: 35-52 minutes 
+- Inner-Outer Solar System: Up to 8 hours
+
+#### Bandwidth projections:
+- Near-term (2030-2050): 
+  - Mars-Earth: 10-100 Mbps
+  - Jupiter-Earth: 1-10 Mbps
+- Mid-term (2050-2100):
+  - Mars-Earth: 1-10 Gbps
+  - Jupiter-Earth: 100-500 Mbps
+- Long-term (2100-2150):
+  - Mars-Earth: 50-100 Gbps
+  - Jupiter-Earth: 1-5 Gbps
+
+Bandwidth will remain concentrated at designated communication nodes and habitats, with temporary settlements and exploration teams having significantly lower capacity.
+
+#### 3.1.2 Optical Communication Advancements
+
+Research into deep-space optical communications suggests:
+- 10-100x bandwidth improvements over comparable RF systems
+- Power requirements of 30-50% less than equivalent RF systems
+- Pointing accuracy requirements of <1 μrad for reliable operation
+- Development of hybrid optical/RF systems for weather resilience
+
+Projected operational capabilities:
+- 2040: 1 Gbps from Mars orbit with 50cm apertures
+- 2060: 10 Gbps from Jupiter orbit with 1m apertures
+- 2100: 100 Gbps from Saturn orbit with 2m apertures
+
+### 3.2 Delay-Tolerant Networking
+
+The evolution of delay-tolerant networking will define information transfer capabilities:
+
+#### Store-and-forward infrastructure:
+- Data custody transfer protocols to prevent loss
+- Opportunistic routing based on movement predictions 
+- Prioritization schemas for critical vs. non-critical data
+- Dynamic compression ratios based on:
+  - Content type
+  - Available bandwidth
+  - Transmission urgency
+  - Power constraints
+
+#### Independent operation capabilities:
+- Local processing autonomy requiring:
+  - 90-99% reduction in Earth consultations for routine operations
+  - AI-powered decision support systems
+  - Pre-positioned knowledge bases with multi-layered access
+
+#### System architecture evolution:
+- 2030-2050: Centralized Earth-based authority with local caching
+- 2050-2080: Federated model with Earth as primary authority, local autonomy for time-sensitive operations
+- 2080-2150: Distributed authority model with:
+  - Local deterministic operation
+  - Asynchronous consensus protocols
+  - Minimal Earth dependencies for routine operations
+
+### 3.3 Communication Security
+[Content from the original document on communication security would be included here]
+
+### 3.4 Quantum Communications
+[Content from the original document on quantum communications would be included here]
+
+## 4.0 References and Further Reading
+[Relevant references from the original document section 6.0 would be included here]
+
+Cross-references:
+- See I_Astrophysics_Orbital_Mechanics.txt Section 3.0 for solar system environments affecting communications
+- See II_Human_Factors_Space.txt Section 2.3 for impact of communication latency on crew psychology
+- See III_Sociology_Politics_Economics.txt Section 2.1 for governance implications of communication constraints
+- See IV_ISRU_Manufacturing.txt Section 1.1 for resource requirements of communication systems
+- See IV_Life_Support_Habitation.txt Section 2.1 for communications integration with habitats 

@@ -110,6 +110,7 @@ Research on historical and theoretical governance in isolated environments revea
 Cross-references:
 - See II_Human_Factors_Space.txt Section 2.1 for psychological aspects of leadership in isolation
 - See IV_Future_Technologies_Engineering.txt Section 5.0 for AI governance support systems
+- See Martian_Governance_Models.txt for detailed analysis of hybrid governance systems for Mars settlements
 
 ### 1.2 Cultural Evolution
 Research on cultural evolution in isolated populations reveals:
@@ -2901,10 +2902,42 @@ Cross-references:
 - See Section 2.3 for property rights frameworks affecting resource markets
 - See IV_Future_Technologies_Engineering.txt Section 3.1 for extraction technologies impact on supply
 
+- **Long-Term Resource Dependency Economics:**
+  - **Critical Trace Element Dependencies:**
+    | Critical Element | Estimated Lunar Abundance | Estimated Mars Abundance | Primary Asteroid Sources | Economic Impact of Dependency |
+    |------------------|----------------------------|--------------------------|--------------------------|-------------------------------|
+    | Carbon | Very Low | Moderate (atmosphere) | High (C-type) | Resource premium of 200-300% for lunar settlements |
+    | Nitrogen | Very Low | Trace (atmosphere) | Moderate (C-type) | Strategic reserve requirements adding 5-8% to base operating costs |
+    | Rare Earth Elements | Low-Moderate | Unknown | Variable | Manufacturing bottlenecks adding 15-25% to advanced electronics costs |
+    | Platinum Group Metals | Very Low | Very Low | High (M-type) | Premium pricing creating 20-30% higher catalytic system costs |
+    | Specialized Semiconductors | Low | Low | Variable | Critical for advanced computing, commanding 400-600% Earth price |
 
-Here's the complete Space-Based Industrial Ecosystems section for you to add to the document:
+  - **Import Dependency Economic Modeling:**
+    - Space settlements require 5-15% of total mass as imports for first 30-50 years of operation
+    - Each 5% reduction in import dependency decreases operating costs by 12-18%
+    - Settlements requiring shorter resupply cycles command 25-40% premium on exported resources
+    - Resource security premiums affect investment valuation by 10-15% for import-dependent operations
+    - Secondary markets for recycling specialized components create value chains with 8-14% returns
 
-```
+  - **Trace Element Market Development:**
+    - Early premium pricing phase (2045-2065): 800-1200% Earth prices for critical trace elements
+    - Mid-stage specialization (2065-2085): 300-500% premium with focused asteroid mining operations
+    - Mature market phase (2085+): 150-250% stabilized pricing with established supply chains
+    - Projected asteroid selection efficiency improving 8-12% per decade with better prospecting
+    - Minimum economic concentration thresholds: 2-5 ppm for platinum group metals, 10-25 ppm for rare earths
+
+  - **Supply Chain Risk Factors:**
+    - Transport disruption vulnerability adding 15-25% risk premium to single-source materials
+    - Political leverage from controlling rare element sources creating 10-20% price volatility
+    - Technological breakthroughs in recycling/substitution shifting markets by 30-50% within 1-2 years
+    - Critical element stockpiling representing 3-7% of settlement operating budgets
+    - Minimum viable import diversification requiring 3+ independent supply chains for critical elements
+
+Cross-references:
+- See I_Astrophysics_Orbital_Mechanics.txt Section 4.0 for resource distribution data
+- See IV_ISRU_Manufacturing.txt Section 1.5 for theoretical and practical limits of ISRU
+- See IV_Life_Support_Habitation.txt Section 1.6 for closed-loop recycling systems
+
 ### 3.4 Space-Based Industrial Ecosystems (2060-2150)
 
 The industrialization of space transforms the economic landscape of human space settlement, establishing self-sustaining space economies based on in-situ resource utilization, specialized manufacturing, and inter-settlement trade networks.
@@ -4824,3 +4857,28 @@ Cross-references:
 
 ## 4.0 References and Further Reading
 
+### 4.1 Governance & Social Structures
+
+**Academic References:**
+- Anderson, M. & Collins, P. (2048). "Evolution of Governance Models in Isolated Human Settlements." *Journal of Space Sociology*, 32(4), 217-236.
+- Bhatia, N. et al. (2041). "Technocratic Decision-Making Systems in Resource-Constrained Environments." *Space Policy Quarterly*, 18(2), 89-105.
+- Chen, W. & Rodriguez, D. (2045). "Cultural Identity Development in Second-Generation Lunar Citizens." *Astrosociology Research Journal*, 25(3), 312-330.
+- Nakamura, H. & Singh, P. (2039). "AI-Augmented Governance: Decision Support Systems in Space Settlements." *Journal of AI-Human Integration*, 14(1), 42-68.
+- Zhang, L. & Okafor, C. (2047). "Hybrid Decision-Making Models in High-Risk Environments." *Space Governance Studies*, 22(4), 173-192.
+
+**Reports & Policy Documents:**
+- European Space Agency. (2044). *Governance Frameworks for Autonomous Space Habitats*. ESA-POL-2044-03.
+- International Space Governance Consortium. (2046). *Benchmarking Administrative Effectiveness in Off-Earth Colonies*. ISGC Report 2046-12.
+- Martian Colonial Authority. (2048). *Ten-Year Analysis of Hybrid Governance Models*. MCA Policy Paper 2048-07.
+- United Nations Office for Outer Space Affairs. (2043). *Evolution of Space Settlement Governance 2030-2040*. UNOOSA/2043/TR-8.
+
+### 4.2 Space Law & Geopolitics
+
+**Academic References:**
+- Alvarez, J. & Mbeki, T. (2044). "Legal Jurisdiction in Trans-Orbital Commerce." *Space Law Review*, 41(3), 302-321.
+- Anderson, M. & Collins, P. (2048). 'Evolution of Governance Models in Isolated Human Settlements.' *Journal of Space Sociology*, 32(4), 217-236.
+- Bhatia, N. et al. (2041). 'Technocratic Decision-Making Systems in Resource-Constrained Environments.' *Space Policy Quarterly*, 18(2), 89-105.
+- Chen, W. & Rodriguez, D. (2045). 'Cultural Identity Development in Second-Generation Lunar Citizens.' *Astrosociology Research Journal*, 25(3), 312-330.
+**Academic References:**
+- Anderson, M. & Collins, P. (2048). Evolution of Governance Models in Isolated Human Settlements. Journal of Space Sociology, 32(4), 217-236.
+- Ibrahim, F. & Petrov, A. (2038). 'Extra-Planetary Resource Rights: Evolving Interpretations of the Outer Space Treaty.' Journal of International Space Law, 29(2), 115-134.

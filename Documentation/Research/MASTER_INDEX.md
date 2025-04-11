@@ -386,4 +386,15 @@ For cross-disciplinary topics spanning multiple documents, refer to the CROSS_RE
   - Balance considerations for player experience and learning opportunities
   - Case studies from historical space missions and theoretical scenarios
 
-## Most Requested Documents 
+## Most Requested Documents
+
+| Consolidated Document | Original Source Documents | Status |
+|---|---|---|
+| [Research Foundations](Research/TBD_Space_Game_Research_Foundations.txt) | Gameplay_System/6. Appendices.txt (research sections)<br>External research documents | Completed |
+| [I. Astrophysics & Orbital Mechanics](Research/I_Astrophysics_Orbital_Mechanics.txt) | TBD_Space_Game_Research_Foundations.txt (Section 9.0-9.3) | 100% Complete |
+| [II. Closed Ecosystem Management](Research/II_Closed_Ecosystem_Management.txt) | TBD_Space_Game_Research_Notes.txt, Biology_Research.txt | 80% Complete |
+| [III. Human Psychology & Sociology](Research/III_Human_Psychology_Sociology.txt) | Crew_Psychology_Research.txt, Sociological_Models.txt | 75% Complete |
+| [IV. Future Technologies & Engineering](Research/IV_Future_Technologies_Engineering.txt) | Technology_Projections.txt, Engineering_Possibilities.txt | 70% Complete |
+| [V. Space Combat & Strategy](Research/V_Space_Combat_Strategy.txt) | Combat_Systems_Research.txt, Tactical_Models.txt | 90% Complete |
+| [VI. UI/UX & Simulation Design](Research/VI_UI_UX_Simulation_Design.txt) | Interface_Research.txt, Simulation_Theory.txt | 95% Complete |
+| [Martian Governance Models](Research/Martian_Governance_Models.txt) | Hybrid governance research for isolated Martian settlements | 100% Complete | 

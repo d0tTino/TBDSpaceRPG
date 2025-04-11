@@ -92,9 +92,17 @@ This glossary provides standard definitions for technical terms used throughout 
 
 **Common Heritage Principle**: The concept that certain areas or resources belong to all humanity and cannot be claimed by individual nations, derived from the Outer Space Treaty and Moon Treaty.
 
+**Developmental State Approach**: A governance model focusing on collective development and long-term sustainability, emphasizing self-reliance, state-guided economic development, and strategic cooperation with other settlements while maintaining political independence.
+
 **Faction**: A distinct social, political, or economic group with shared interests, values, or objectives within a space settlement.
 
 **Generational Divergence**: The progressive separation in values, language, and cultural identity between Earth-born settlers and subsequent generations born in space.
+
+**Ideological Drift**: The gradual divergence of political and social values in space settlements from their original Earth-based ideological foundations, due to unique environmental pressures and generational changes.
+
+**Liberal Democracy in Space**: An adaptation of democratic governance models to the space environment, characterized by a balance between individual rights and collective survival needs, often incorporating direct democracy elements enabled by advanced communication technologies.
+
+**Non-Aligned Settlement**: A space habitat or colony that maintains political independence from major Earth-based powers or ideological blocs, typically prioritizing self-determination and flexible external relations.
 
 **Non-Monetary Exchange System**: Economic systems not based on currency, such as reputation economies, energy credit systems, or resource allocation systems often used in closed space habitats.
 
@@ -103,6 +111,10 @@ This glossary provides standard definitions for technical terms used throughout 
 **Social Currency**: Non-monetary systems of value based on contribution, reputation, or social capital, often emerging in small space communities.
 
 **Space-Born Culture**: Distinctive cultural elements that emerge among populations born and raised in space environments, including unique values, norms, and traditions.
+
+**State Capitalism/Techno-Authoritarianism**: A governance model characterized by centralized state control over economy and society, extensive use of technology for social management, and decision-making authority concentrated among technical experts.
+
+**Survivalist Democracy**: A modified democratic system emerging in space settlements that balances individual freedoms with strict adherence to survival-critical protocols and collective decision-making on resource allocation and environmental management.
 
 **Technocracy**: A governance system where decision-makers are selected based on technical expertise rather than popular vote or appointment.
 

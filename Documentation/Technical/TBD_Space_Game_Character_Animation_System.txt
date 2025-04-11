@@ -1,0 +1,1023 @@
+# TBD_Space_Game_Character_Animation_System.txt
+Version: April 2025
+
+Table of Contents:
+1.0 Overview and Core Principles
+2.0 Character Animation Architecture
+3.0 Animation State System
+4.0 Zero-G Movement System
+5.0 Environmental Adaptation
+6.0 Technical Implementation
+7.0 Integration with Other Systems
+8.0 Performance Optimization
+9.0 References and Resources
+
+1.0 Overview and Core Principles
+===============================
+The Character Animation System represents the visual manifestation of crew members in the TBD Space Game, focusing on realistic movement in zero and partial gravity environments. This system bridges the gap between abstract character data and visually convincing representations that convey both state and activity.
+
+Core principles of the character animation system:
+- Physics-based movement that adheres to realistic zero-G and partial gravity dynamics
+- Contextual awareness that adapts animations based on environment and situation
+- Seamless integration with interaction systems and navigation pathfinding
+- Performance optimization for handling multiple animated characters simultaneously
+- Visual feedback that communicates crew member state, health, and activities
+
+2.0 Character Animation Architecture
+==================================
+The animation system follows a component-based architecture that separates concerns while enabling seamless integration across different movement scenarios.
+
+2.1 Primary Components
+---------------------
+The system is built on several key components that work together:
+
+```csharp
+/// <summary>
+/// Controls character animations and transitions between animation states
+/// </summary>
+public class CharacterAnimationController : MonoBehaviour
+{
+    [Header("Animation References")]
+    [SerializeField] private Animator _animator;
+    [SerializeField] private CharacterController _characterController;
+    
+    [Header("Animation Settings")]
+    [SerializeField] private float _transitionSpeed = 0.2f;
+    [SerializeField] private float _rotationSpeed = 120f;
+    
+    // Reference to character data/model
+    private CrewMember _crewMemberData;
+    
+    // Current animation state
+    private CharacterAnimationState _currentState = CharacterAnimationState.Idle;
+    
+    // Animation parameters
+    private float _movementSpeed;
+    private float _verticalMovement;
+    private bool _isGrounded;
+    private float _gravityFactor;
+    
+    /// <summary>
+    /// Initialize the controller with crew member data
+    /// </summary>
+    public void Initialize(CrewMember crewMember)
+    {
+        _crewMemberData = crewMember;
+        // Set initial animation parameters based on crew member attributes
+        UpdateAnimatorParameters();
+    }
+    
+    /// <summary>
+    /// Updates animation state based on movement, environment, and physics
+    /// </summary>
+    public void UpdateAnimation(Vector3 movement, bool isGrounded, float gravityFactor)
+    {
+        _movementSpeed = new Vector2(movement.x, movement.z).magnitude;
+        _verticalMovement = movement.y;
+        _isGrounded = isGrounded;
+        _gravityFactor = gravityFactor;
+        
+        UpdateAnimatorParameters();
+        DetermineAnimationState();
+    }
+    
+    /// <summary>
+    /// Updates the animator with current parameters
+    /// </summary>
+    private void UpdateAnimatorParameters()
+    {
+        _animator.SetFloat("MovementSpeed", _movementSpeed);
+        _animator.SetFloat("VerticalMovement", _verticalMovement);
+        _animator.SetBool("IsGrounded", _isGrounded);
+        _animator.SetFloat("GravityFactor", _gravityFactor);
+        
+        // Update health/status-based parameters
+        _animator.SetFloat("Fatigue", _crewMemberData.Fatigue);
+        _animator.SetFloat("Health", _crewMemberData.Health);
+    }
+    
+    /// <summary>
+    /// Determines appropriate animation state based on current conditions
+    /// </summary>
+    private void DetermineAnimationState()
+    {
+        CharacterAnimationState newState = _currentState;
+        
+        // Determine new state based on movement and environment
+        if (!_isGrounded && _gravityFactor < 0.1f)
+        {
+            newState = CharacterAnimationState.ZeroGFloat;
+            
+            if (_movementSpeed > 0.1f)
+                newState = CharacterAnimationState.ZeroGNavigate;
+        }
+        else if (_isGrounded && _gravityFactor > 0.8f)
+        {
+            if (_movementSpeed < 0.1f)
+                newState = CharacterAnimationState.Idle;
+            else if (_movementSpeed < 3.0f)
+                newState = CharacterAnimationState.Walk;
+            else
+                newState = CharacterAnimationState.Run;
+        }
+        else if (_gravityFactor >= 0.1f && _gravityFactor <= 0.8f)
+        {
+            // Partial gravity states
+            if (_movementSpeed < 0.1f)
+                newState = CharacterAnimationState.PartialGIdle;
+            else
+                newState = CharacterAnimationState.PartialGMove;
+        }
+        
+        // Apply new state if changed
+        if (newState != _currentState)
+        {
+            TransitionToState(newState);
+        }
+    }
+    
+    /// <summary>
+    /// Transitions to a new animation state
+    /// </summary>
+    private void TransitionToState(CharacterAnimationState newState)
+    {
+        // Exit current state
+        _animator.CrossFade(GetStateName(_currentState) + "_Exit", _transitionSpeed);
+        
+        // Enter new state
+        _animator.CrossFade(GetStateName(newState) + "_Enter", _transitionSpeed);
+        
+        _currentState = newState;
+    }
+    
+    /// <summary>
+    /// Directly transitions to specified state, overriding normal transitions
+    /// </summary>
+    public void ForceAnimationState(CharacterAnimationState state)
+    {
+        _animator.CrossFade(GetStateName(state), 0.1f);
+        _currentState = state;
+    }
+    
+    /// <summary>
+    /// Gets the string name of an animation state for the animator
+    /// </summary>
+    private string GetStateName(CharacterAnimationState state)
+    {
+        switch (state)
+        {
+            case CharacterAnimationState.Idle:
+                return "Idle";
+            case CharacterAnimationState.Walk:
+                return "Walk";
+            case CharacterAnimationState.Run:
+                return "Run";
+            case CharacterAnimationState.ZeroGFloat:
+                return "ZeroG_Float";
+            case CharacterAnimationState.ZeroGNavigate:
+                return "ZeroG_Navigate";
+            case CharacterAnimationState.PartialGIdle:
+                return "PartialG_Idle";
+            case CharacterAnimationState.PartialGMove:
+                return "PartialG_Move";
+            case CharacterAnimationState.Interact:
+                return "Interact";
+            default:
+                return "Idle";
+        }
+    }
+    
+    /// <summary>
+    /// Trigger interaction animation with an object
+    /// </summary>
+    public void TriggerInteraction(InteractionType type)
+    {
+        _animator.SetTrigger("Interact");
+        _animator.SetInteger("InteractionType", (int)type);
+    }
+    
+    /// <summary>
+    /// Begins zero-G navigation along a path
+    /// </summary>
+    public void BeginZeroGNavigation(Vector3[] path)
+    {
+        _animator.SetTrigger("StartZeroGMovement");
+        ForceAnimationState(CharacterAnimationState.ZeroGNavigate);
+        
+        // Additional logic for handling the path
+    }
+    
+    /// <summary>
+    /// Completes navigation sequence
+    /// </summary>
+    public void CompleteNavigation()
+    {
+        _animator.SetTrigger("CompleteNavigation");
+    }
+}
+
+/// <summary>
+/// Defines possible character animation states
+/// </summary>
+public enum CharacterAnimationState
+{
+    Idle,
+    Walk,
+    Run,
+    ZeroGFloat,
+    ZeroGNavigate,
+    PartialGIdle,
+    PartialGMove,
+    Interact,
+    PassThroughDoorway,
+    UseTerminal,
+    Maintenance,
+    Distressed,
+    Sleep
+}
+
+/// <summary>
+/// Defines types of interactions with objects
+/// </summary>
+public enum InteractionType
+{
+    Generic,
+    Console,
+    Doorway,
+    Item,
+    Maintenance,
+    Medical,
+    Social
+}
+```
+
+2.2 Animation State Machine
+--------------------------
+Character animations are organized in a hierarchical state machine with the following structure:
+
+- Root
+  - Earth Normal (1g)
+    - Idle
+    - Walk
+    - Run
+    - Interact
+  - Partial Gravity (0.1g - 0.8g)
+    - PartialG_Idle
+    - PartialG_Move
+    - PartialG_Interact
+  - Zero Gravity (<0.1g)
+    - ZeroG_Float
+    - ZeroG_Navigate
+    - ZeroG_Interact
+
+Each state contains:
+- Enter transition animations
+- Loop animations
+- Exit transition animations
+- Blend trees for smooth transitions between related states
+
+2.3 Runtime Animation Blending
+----------------------------
+The system uses dynamic animation blending to create realistic transitions between states:
+
+```csharp
+/// <summary>
+/// Manages animation blending based on environmental factors
+/// </summary>
+public class AnimationBlendManager : MonoBehaviour
+{
+    [SerializeField] private Animator _animator;
+    [SerializeField] private float _blendSpeed = 2.0f;
+    
+    private Dictionary<string, float> _blendWeights = new Dictionary<string, float>();
+    
+    /// <summary>
+    /// Updates blend weights based on gravity and other environmental factors
+    /// </summary>
+    public void UpdateBlendWeights(float gravityFactor)
+    {
+        // Calculate appropriate blend weights
+        float normalGravityWeight = Mathf.Clamp01((gravityFactor - 0.8f) * 5f);
+        float partialGravityWeight = Mathf.Clamp01(1f - Mathf.Abs((gravityFactor - 0.45f) * 2.85f));
+        float zeroGravityWeight = Mathf.Clamp01(1f - (gravityFactor / 0.1f));
+        
+        // Apply weights to animator blend parameters
+        _animator.SetFloat("NormalGravityBlend", normalGravityWeight);
+        _animator.SetFloat("PartialGravityBlend", partialGravityWeight);
+        _animator.SetFloat("ZeroGravityBlend", zeroGravityWeight);
+    }
+}
+```
+
+3.0 Animation State System
+========================
+The animation state system defines how characters visually respond to environments, player commands, and autonomous behaviors.
+
+3.1 Primary Animation States
+--------------------------
+Each character operates within one of several primary animation states:
+
+- **Standard Gravity Animation Set**
+  - Idle: Standing in place with subtle idle animations
+  - Walk: Normal walking animations at various speeds
+  - Run: Running animations with appropriate arm movements
+  - Interact: Context-sensitive interactions with objects
+
+- **Zero-G Animation Set**
+  - ZeroG_Float: Neutral floating position with subtle movements
+  - ZeroG_Navigate: Purposeful movement through zero-G environment
+  - ZeroG_Brace: Stabilizing against a surface with hands or feet
+  - ZeroG_Interact: Interacting with objects while floating
+
+- **Partial Gravity Animation Set**
+  - PartialG_Idle: Standing/floating with light attachment to surface
+  - PartialG_Move: Specialized walking/bounding movement
+  - PartialG_Interact: Interacting while compensating for reduced gravity
+
+3.2 Contextual Animation Triggers
+-------------------------------
+Special animations that trigger based on context:
+
+- **Environmental Transitions**
+  - EnterAirlock: Animations for entering/exiting pressure environments
+  - GravityTransition: Animations when moving between gravity environments
+  - PassThroughDoorway: Specialized animations for doorway navigation
+
+- **Status-Based Animations**
+  - LowHealth: Visual indicators of health problems
+  - Fatigue: Progressive visual signs of tiredness
+  - Stress: Nervous movements and reactions to stressful situations
+
+3.3 Animation Feedback System
+---------------------------
+Visual feedback for player information:
+
+```csharp
+/// <summary>
+/// Provides visual feedback on character state through animation modifiers
+/// </summary>
+public class CharacterFeedbackAnimator : MonoBehaviour
+{
+    [SerializeField] private Animator _animator;
+    [SerializeField] private CrewMember _crewMember;
+    
+    [Header("Visual Thresholds")]
+    [SerializeField] private float _lowHealthThreshold = 0.3f;
+    [SerializeField] private float _highStressThreshold = 0.7f;
+    [SerializeField] private float _fatigueVisibleThreshold = 0.5f;
+    
+    // Animation parameter IDs for efficiency
+    private int _healthParamId;
+    private int _stressParamId;
+    private int _fatigueParamId;
+    
+    private void Awake()
+    {
+        // Cache animation parameter IDs for performance
+        _healthParamId = Animator.StringToHash("HealthFactor");
+        _stressParamId = Animator.StringToHash("StressFactor");
+        _fatigueParamId = Animator.StringToHash("FatigueFactor");
+    }
+    
+    /// <summary>
+    /// Updates animations based on current character status
+    /// </summary>
+    public void UpdateStatusAnimations()
+    {
+        // Apply health status to animations
+        float healthFactor = _crewMember.Health;
+        _animator.SetFloat(_healthParamId, healthFactor);
+        
+        if (healthFactor < _lowHealthThreshold)
+        {
+            _animator.SetLayerWeight(1, 1 - (healthFactor / _lowHealthThreshold));
+        }
+        
+        // Apply stress indicators
+        float stressFactor = _crewMember.Morale < 0.5f ? (1 - _crewMember.Morale) * 2 : 0;
+        _animator.SetFloat(_stressParamId, stressFactor);
+        
+        // Apply fatigue
+        float fatigueFactor = Mathf.Clamp01((_crewMember.Fatigue - _fatigueVisibleThreshold) / 
+                                          (1 - _fatigueVisibleThreshold));
+        _animator.SetFloat(_fatigueParamId, fatigueFactor);
+    }
+}
+```
+
+4.0 Zero-G Movement System
+========================
+A critical component of the animation system is the realistic representation of zero-G movement, which must reflect the unique physics of space environments.
+
+4.1 Physics-Based Movement
+------------------------
+Zero-G movement follows realistic physics principles:
+
+```csharp
+/// <summary>
+/// Handles physics-based zero-G movement and animations
+/// </summary>
+public class ZeroGMovementController : MonoBehaviour
+{
+    [Header("Movement Parameters")]
+    [SerializeField] private float _pushImpulse = 2.0f;
+    [SerializeField] private float _rotationTorque = 1.0f;
+    [SerializeField] private float _stabilizationFactor = 0.5f;
+    
+    [Header("References")]
+    [SerializeField] private Rigidbody _rigidbody;
+    [SerializeField] private CharacterAnimationController _animationController;
+    
+    // Navigation path
+    private Vector3[] _currentPath;
+    private int _currentPathIndex;
+    private bool _isNavigating;
+    
+    /// <summary>
+    /// Begins zero-G navigation along a calculated path
+    /// </summary>
+    public void BeginZeroGNavigation(Vector3[] path)
+    {
+        _currentPath = path;
+        _currentPathIndex = 0;
+        _isNavigating = true;
+        
+        // Initialize momentum for first path segment
+        if (path.Length > 1)
+        {
+            Vector3 initialDirection = (path[1] - transform.position).normalized;
+            _rigidbody.velocity = initialDirection * _pushImpulse;
+            
+            // Rotate toward movement direction
+            Quaternion targetRotation = Quaternion.LookRotation(initialDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 0.5f);
+        }
+        
+        // Trigger animation
+        _animationController.BeginZeroGNavigation(path);
+    }
+    
+    private void FixedUpdate()
+    {
+        if (!_isNavigating) return;
+        
+        // Check if we've reached the current waypoint
+        if (_currentPathIndex < _currentPath.Length)
+        {
+            Vector3 toWaypoint = _currentPath[_currentPathIndex] - transform.position;
+            float distanceToWaypoint = toWaypoint.magnitude;
+            
+            if (distanceToWaypoint < 0.5f)
+            {
+                // Move to next waypoint
+                _currentPathIndex++;
+                
+                // If we have more waypoints, adjust course
+                if (_currentPathIndex < _currentPath.Length)
+                {
+                    // Calculate course correction
+                    Vector3 nextDirection = (_currentPath[_currentPathIndex] - transform.position).normalized;
+                    
+                    // Apply gentle course correction force
+                    _rigidbody.AddForce(nextDirection * _pushImpulse, ForceMode.Impulse);
+                    
+                    // Gradually rotate toward movement direction
+                    Quaternion targetRotation = Quaternion.LookRotation(nextDirection);
+                    _rigidbody.AddTorque(CalculateTorqueForRotation(targetRotation), ForceMode.Force);
+                }
+                else
+                {
+                    // Final waypoint reached
+                    CompleteNavigation();
+                }
+            }
+            else
+            {
+                // Apply minor course corrections during path following
+                ApplyCourseCorrection(toWaypoint.normalized);
+            }
+        }
+        
+        // Update animation parameters based on physics
+        UpdateAnimationFromPhysics();
+    }
+    
+    /// <summary>
+    /// Applies gentle course correction to stay on path
+    /// </summary>
+    private void ApplyCourseCorrection(Vector3 desiredDirection)
+    {
+        // Calculate current deviation from desired path
+        Vector3 currentDirection = _rigidbody.velocity.normalized;
+        float deviationAngle = Vector3.Angle(currentDirection, desiredDirection);
+        
+        if (deviationAngle > 15f)
+        {
+            // Apply subtle correction force perpendicular to velocity
+            Vector3 correctionDirection = Vector3.Cross(
+                Vector3.Cross(currentDirection, desiredDirection).normalized, 
+                currentDirection
+            ).normalized;
+            
+            _rigidbody.AddForce(correctionDirection * _pushImpulse * 0.2f, ForceMode.Force);
+        }
+    }
+    
+    /// <summary>
+    /// Calculates torque needed to achieve desired rotation
+    /// </summary>
+    private Vector3 CalculateTorqueForRotation(Quaternion targetRotation)
+    {
+        // Calculate the shortest rotation from current to target
+        Quaternion rotationDifference = targetRotation * Quaternion.Inverse(transform.rotation);
+        rotationDifference.ToAngleAxis(out float angle, out Vector3 axis);
+        
+        // Avoid invalid results
+        if (float.IsInfinity(axis.x))
+        {
+            return Vector3.zero;
+        }
+        
+        // Convert to torque
+        if (angle > 180f)
+        {
+            angle -= 360f;
+        }
+        
+        return axis.normalized * angle * _rotationTorque;
+    }
+    
+    /// <summary>
+    /// Updates animation parameters based on physics state
+    /// </summary>
+    private void UpdateAnimationFromPhysics()
+    {
+        // Update animation controller with relevant physics data
+        bool isNearSurface = Physics.Raycast(transform.position, -transform.up, 1.5f);
+        _animationController.UpdateAnimation(
+            _rigidbody.velocity, 
+            isNearSurface,
+            0.0f  // Zero gravity
+        );
+    }
+    
+    /// <summary>
+    /// Completes the navigation sequence
+    /// </summary>
+    private void CompleteNavigation()
+    {
+        _isNavigating = false;
+        
+        // Apply braking force
+        _rigidbody.velocity = Vector3.Lerp(_rigidbody.velocity, Vector3.zero, 0.7f);
+        _rigidbody.angularVelocity = Vector3.Lerp(_rigidbody.angularVelocity, Vector3.zero, 0.9f);
+        
+        // Update animation
+        _animationController.CompleteNavigation();
+    }
+}
+```
+
+4.2 Zero-G Animation Blending
+---------------------------
+Special considerations for zero-G movement:
+
+- **Momentum conservation**: Animations blend based on inertial movement
+- **Push-off visualization**: Visual feedback for initiation of movement
+- **Trajectory visualization**: Path prediction visualization
+- **Grab points**: Highlight points where characters can stabilize
+
+4.3 Interaction in Zero-G
+-----------------------
+Special animations for zero-G interactions:
+
+- **Two-handed stabilization**: Character uses one hand to stabilize, other to interact
+- **Foot anchoring**: Using foot restraints during detailed work
+- **Tool use**: Specialized animations for tool use in zero-G
+- **Object handling**: Accounting for inertia when manipulating objects
+
+5.0 Environmental Adaptation
+==========================
+The animation system adapts to different environments throughout the game.
+
+5.1 Gravity-Based Animation Adaptation
+-----------------------------------
+Different animation sets based on gravitational environment:
+
+- **Earth Normal (1g)**: Standard humanoid animations
+- **Mars (0.38g)**: Longer strides, reduced foot impact, slight bounce
+- **Lunar (0.16g)**: Distinctive bouncing gait, reduced ground contact time
+- **Microgravity (<0.1g)**: Full zero-G animation set
+
+5.2 Pressure Suit Animations
+--------------------------
+Animations modified when characters wear pressure suits:
+
+- **Range of motion**: Reduced by joint limitations
+- **Movement speed**: Decreased by suit bulk
+- **Interaction precision**: Reduced by gloves
+- **Visual indicators**: Suit status indicators visible in animations
+
+5.3 Environmental Hazard Responses
+--------------------------------
+Visual responses to environmental hazards:
+
+- **Radiation exposure**: Visual deterioration based on exposure
+- **Toxic atmosphere**: Emergency breathing animations
+- **Temperature extremes**: Shivering/heat stress animations
+- **Decompression**: Emergency response animations
+
+6.0 Technical Implementation
+==========================
+Implementation details for the animation system in Unity.
+
+6.1 Animator Controller Structure
+-------------------------------
+The animation system uses a layered approach:
+
+- **Base Layer**: Primary movement animations
+- **Upper Body Layer**: Overrides for interactions and status
+- **Face/Head Layer**: Facial expressions and head tracking
+- **Status Effect Layer**: Visual status indicators
+
+Each layer uses masks to isolate specific body parts and prevent conflicts.
+
+6.2 Animation Rigging
+-------------------
+Runtime IK (Inverse Kinematics) systems enhance animation:
+
+```csharp
+/// <summary>
+/// Handles runtime IK adjustments for environmental interactions
+/// </summary>
+public class CharacterIKController : MonoBehaviour
+{
+    [SerializeField] private Animator _animator;
+    [SerializeField] private LayerMask _environmentMask;
+    
+    [Header("Hand IK")]
+    [SerializeField] private float _handIKWeight = 1.0f;
+    [SerializeField] private Transform _leftHandTarget;
+    [SerializeField] private Transform _rightHandTarget;
+    
+    [Header("Foot IK")]
+    [SerializeField] private float _footIKWeight = 1.0f;
+    [SerializeField] private float _footRaycastDistance = 1.5f;
+    
+    private Vector3 _leftFootPosition;
+    private Vector3 _rightFootPosition;
+    private Quaternion _leftFootRotation;
+    private Quaternion _rightFootRotation;
+    
+    /// <summary>
+    /// Applies IK adjustments during animation
+    /// </summary>
+    private void OnAnimatorIK(int layerIndex)
+    {
+        if (_animator == null) return;
+        
+        // Apply hand IK for interactions
+        if (_leftHandTarget != null)
+        {
+            _animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, _handIKWeight);
+            _animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, _handIKWeight);
+            _animator.SetIKPosition(AvatarIKGoal.LeftHand, _leftHandTarget.position);
+            _animator.SetIKRotation(AvatarIKGoal.LeftHand, _leftHandTarget.rotation);
+        }
+        
+        if (_rightHandTarget != null)
+        {
+            _animator.SetIKPositionWeight(AvatarIKGoal.RightHand, _handIKWeight);
+            _animator.SetIKRotationWeight(AvatarIKGoal.RightHand, _handIKWeight);
+            _animator.SetIKPosition(AvatarIKGoal.RightHand, _rightHandTarget.position);
+            _animator.SetIKRotation(AvatarIKGoal.RightHand, _rightHandTarget.rotation);
+        }
+        
+        // Apply foot IK for ground adaptation
+        AdjustFeetPositions();
+        
+        _animator.SetIKPositionWeight(AvatarIKGoal.LeftFoot, _footIKWeight);
+        _animator.SetIKRotationWeight(AvatarIKGoal.LeftFoot, _footIKWeight);
+        _animator.SetIKPosition(AvatarIKGoal.LeftFoot, _leftFootPosition);
+        _animator.SetIKRotation(AvatarIKGoal.LeftFoot, _leftFootRotation);
+        
+        _animator.SetIKPositionWeight(AvatarIKGoal.RightFoot, _footIKWeight);
+        _animator.SetIKRotationWeight(AvatarIKGoal.RightFoot, _footIKWeight);
+        _animator.SetIKPosition(AvatarIKGoal.RightFoot, _rightFootPosition);
+        _animator.SetIKRotation(AvatarIKGoal.RightFoot, _rightFootRotation);
+    }
+    
+    /// <summary>
+    /// Adjusts foot positions and rotations to match environment
+    /// </summary>
+    private void AdjustFeetPositions()
+    {
+        // Get foot bone positions
+        Vector3 leftFootPos = _animator.GetIKPosition(AvatarIKGoal.LeftFoot);
+        Vector3 rightFootPos = _animator.GetIKPosition(AvatarIKGoal.RightFoot);
+        
+        // Raycast to find ground positions
+        RaycastHit hit;
+        
+        // Left foot
+        Ray leftRay = new Ray(leftFootPos + Vector3.up * _footRaycastDistance, Vector3.down);
+        if (Physics.Raycast(leftRay, out hit, _footRaycastDistance * 2, _environmentMask))
+        {
+            _leftFootPosition = hit.point;
+            _leftFootRotation = Quaternion.FromToRotation(Vector3.up, hit.normal) * 
+                               _animator.GetIKRotation(AvatarIKGoal.LeftFoot);
+        }
+        else
+        {
+            _leftFootPosition = leftFootPos;
+            _leftFootRotation = _animator.GetIKRotation(AvatarIKGoal.LeftFoot);
+        }
+        
+        // Right foot
+        Ray rightRay = new Ray(rightFootPos + Vector3.up * _footRaycastDistance, Vector3.down);
+        if (Physics.Raycast(rightRay, out hit, _footRaycastDistance * 2, _environmentMask))
+        {
+            _rightFootPosition = hit.point;
+            _rightFootRotation = Quaternion.FromToRotation(Vector3.up, hit.normal) * 
+                                _animator.GetIKRotation(AvatarIKGoal.RightFoot);
+        }
+        else
+        {
+            _rightFootPosition = rightFootPos;
+            _rightFootRotation = _animator.GetIKRotation(AvatarIKGoal.RightFoot);
+        }
+    }
+}
+```
+
+6.3 Animation Events
+------------------
+Events triggered during animations to synchronize with gameplay:
+
+- **Footstep events**: Trigger sound effects and particle effects
+- **Interaction events**: Synchronize with object manipulation
+- **Status events**: Trigger appropriate UI/feedback
+
+6.4 Sprite-Based Implementation
+-----------------------------
+For 2D views, sprites replace 3D animations:
+
+```csharp
+/// <summary>
+/// Manages 2D sprite-based character animations for the schematic view
+/// </summary>
+public class CharacterSpriteAnimator : MonoBehaviour
+{
+    [SerializeField] private SpriteRenderer _spriteRenderer;
+    [SerializeField] private CharacterAnimationController _animationController;
+    
+    [Header("Sprite Sets")]
+    [SerializeField] private SpriteAnimationSet _normalGravitySprites;
+    [SerializeField] private SpriteAnimationSet _partialGravitySprites;
+    [SerializeField] private SpriteAnimationSet _zeroGravitySprites;
+    
+    private SpriteAnimationSet _currentSpriteSet;
+    private CharacterAnimationState _currentState;
+    private float _animationTimer;
+    private int _currentFrameIndex;
+    
+    /// <summary>
+    /// Updates sprite animation based on current character state
+    /// </summary>
+    private void Update()
+    {
+        // Determine appropriate sprite set based on gravity
+        UpdateSpriteSet();
+        
+        // Get state from animation controller
+        CharacterAnimationState state = _animationController.CurrentState;
+        
+        // Check for state change
+        if (state != _currentState)
+        {
+            _currentState = state;
+            _animationTimer = 0;
+            _currentFrameIndex = 0;
+        }
+        
+        // Update animation frame
+        Sprite[] frames = GetFramesForCurrentState();
+        if (frames != null && frames.Length > 0)
+        {
+            float frameTime = 1.0f / _currentSpriteSet.FrameRate;
+            _animationTimer += Time.deltaTime;
+            
+            if (_animationTimer >= frameTime)
+            {
+                _animationTimer -= frameTime;
+                _currentFrameIndex = (_currentFrameIndex + 1) % frames.Length;
+            }
+            
+            _spriteRenderer.sprite = frames[_currentFrameIndex];
+        }
+    }
+    
+    /// <summary>
+    /// Updates the active sprite set based on gravity
+    /// </summary>
+    private void UpdateSpriteSet()
+    {
+        float gravityFactor = _animationController.GravityFactor;
+        
+        if (gravityFactor < 0.1f)
+            _currentSpriteSet = _zeroGravitySprites;
+        else if (gravityFactor < 0.8f)
+            _currentSpriteSet = _partialGravitySprites;
+        else
+            _currentSpriteSet = _normalGravitySprites;
+    }
+    
+    /// <summary>
+    /// Returns the appropriate frame array for the current animation state
+    /// </summary>
+    private Sprite[] GetFramesForCurrentState()
+    {
+        switch (_currentState)
+        {
+            case CharacterAnimationState.Idle:
+                return _currentSpriteSet.IdleFrames;
+            case CharacterAnimationState.Walk:
+                return _currentSpriteSet.WalkFrames;
+            case CharacterAnimationState.Run:
+                return _currentSpriteSet.RunFrames;
+            case CharacterAnimationState.ZeroGFloat:
+                return _zeroGravitySprites.FloatFrames;
+            case CharacterAnimationState.ZeroGNavigate:
+                return _zeroGravitySprites.NavigateFrames;
+            case CharacterAnimationState.PartialGIdle:
+                return _partialGravitySprites.IdleFrames;
+            case CharacterAnimationState.PartialGMove:
+                return _partialGravitySprites.MoveFrames;
+            case CharacterAnimationState.Interact:
+                return _currentSpriteSet.InteractFrames;
+            default:
+                return _currentSpriteSet.IdleFrames;
+        }
+    }
+}
+
+/// <summary>
+/// Contains sprite frame sets for a specific gravity environment
+/// </summary>
+[Serializable]
+public class SpriteAnimationSet
+{
+    public float FrameRate = 12f;
+    public Sprite[] IdleFrames;
+    public Sprite[] WalkFrames;
+    public Sprite[] RunFrames;
+    public Sprite[] MoveFrames;
+    public Sprite[] FloatFrames;
+    public Sprite[] NavigateFrames;
+    public Sprite[] InteractFrames;
+}
+```
+
+7.0 Integration with Other Systems
+================================
+The animation system integrates with various other game systems.
+
+7.1 Character Manager Integration
+-------------------------------
+Connection with the Character/Crew Manager:
+
+```csharp
+/// <summary>
+/// Manages all active character instances and their animations
+/// </summary>
+public class CharacterManager : MonoBehaviour
+{
+    [SerializeField] private GameObject _characterPrefab;
+    [SerializeField] private Transform _charactersParent;
+    
+    private Dictionary<string, GameObject> _activeCharacters = new Dictionary<string, GameObject>();
+    private Character _activeCharacter;
+    
+    /// <summary>
+    /// Creates a visual character representation from crew member data
+    /// </summary>
+    public GameObject CreateCharacterInstance(CrewMember crewMember)
+    {
+        // Create instance
+        GameObject characterObj = Instantiate(_characterPrefab, _charactersParent);
+        characterObj.name = "Character_" + crewMember.Name;
+        
+        // Setup components
+        CharacterAnimationController animController = 
+            characterObj.GetComponent<CharacterAnimationController>();
+        animController.Initialize(crewMember);
+        
+        // Register character
+        _activeCharacters[crewMember.Id] = characterObj;
+        
+        return characterObj;
+    }
+    
+    /// <summary>
+    /// Returns the currently active character
+    /// </summary>
+    public static Character GetActiveCharacter()
+    {
+        return Instance._activeCharacter;
+    }
+    
+    /// <summary>
+    /// Sets the active character for player control
+    /// </summary>
+    public void SetActiveCharacter(string crewMemberId)
+    {
+        if (_activeCharacters.TryGetValue(crewMemberId, out GameObject characterObj))
+        {
+            // Deactivate current character control
+            if (_activeCharacter != null)
+            {
+                _activeCharacter.SetPlayerControlled(false);
+            }
+            
+            // Set new active character
+            _activeCharacter = characterObj.GetComponent<Character>();
+            _activeCharacter.SetPlayerControlled(true);
+            
+            // Notify UI
+            UIManager.UpdateActiveCharacterUI(_activeCharacter.CrewMember);
+        }
+    }
+}
+```
+
+7.2 User Interface Integration
+----------------------------
+Animation responses to UI interactions:
+
+- **Character selection**: Visual highlight animations
+- **Command feedback**: Visual acknowledgment of orders
+- **Status information**: Animation cues for crew status
+
+7.3 Environment System Integration
+--------------------------------
+Animations respond to environmental factors:
+
+- **Gravity changes**: Transitions between gravity animation sets
+- **Atmosphere changes**: Suit-up/suit-removal animations
+- **Hazard responses**: Context-specific hazard animations
+
+8.0 Performance Optimization
+==========================
+The animation system is optimized for performance.
+
+8.1 Level of Detail System
+------------------------
+Animation detail levels based on:
+
+- **Distance from camera**: Simplification at distance
+- **View mode**: Different detail in 2D vs 3D view
+- **Character importance**: Higher detail for player character
+
+8.2 Animation Instancing
+----------------------
+Shared animation resources:
+
+- **Shared AnimationClips**: Reused across characters
+- **Instanced animations**: For background characters
+- **Shared animation states**: Common states use same data
+
+8.3 Animation Throttling
+----------------------
+Performance-based animation reduction:
+
+- **Frame skipping**: For distant characters
+- **Update frequency**: Reduced for non-critical animations
+- **Simplification**: Reduced bone count for distant characters
+
+9.0 References and Resources
+==========================
+Additional reference material for the animation system.
+
+9.1 NASA Studies
+--------------
+- Zero-G movement patterns documented in ISS operations
+- Human movement in partial gravity environments (Apollo missions)
+- Physiological effects of microgravity on movement
+
+9.2 Unity Resources
+----------------
+- Unity Animation Rigging Package
+- Animator Controller best practices
+- Performance optimization techniques for animations
+
+9.3 Implementation Examples
+------------------------
+- Zero-G Navigation Implementation
+- Physics-Based Character Controller
+- IK System Setup
+
+9.4 Workflow Documentation
+------------------------
+- Animation Production Pipeline
+- Character Rigging Guidelines
+- Animation Asset Management 

@@ -54,6 +54,7 @@ This master index maps the consolidated documentation files to their original so
 | [II. Closed Ecosystem Management](Research/II_Closed_Ecosystem_Management.txt) | TBD_Space_Game_Research_Notes.txt, Biology_Research.txt | 80% Complete |
 | [III. Human Psychology & Sociology](Research/III_Human_Psychology_Sociology.txt) | Crew_Psychology_Research.txt, Sociological_Models.txt | 75% Complete |
 | [IV. Future Technologies & Engineering](Research/IV_Future_Technologies_Engineering.txt) | Technology_Projections.txt, Engineering_Possibilities.txt | 70% Complete |
+| [Martian Governance Models](Research/Martian_Governance_Models.txt) | Hybrid governance research for isolated Martian settlements | 100% Complete |
 | [V. Space Combat & Strategy](Research/V_Space_Combat_Strategy.txt) | Combat_Systems_Research.txt, Tactical_Models.txt | 90% Complete |
 | [VI. UI/UX & Simulation Design](Research/VI_UI_UX_Simulation_Design.txt) | Interface_Research.txt, Simulation_Theory.txt | 95% Complete |
 
@@ -133,6 +134,10 @@ This master index maps the consolidated documentation files to their original so
 ## Research Updates
 
 **Latest Update:** August 2025 - Added comprehensive research on information economics in space settlements to III_Sociology_Politics_Economics.txt Section 3.10, IV_Future_Technologies_Engineering.txt Section 4.4, and V_Space_Combat_Strategy.txt Section 2.4. Research covers information valuation metrics, space-adapted digital marketplaces, modified intellectual property frameworks, quantum encryption timelines, and information warfare strategies for high-latency environments.
+
+**New Update:** August 2025 - Added comprehensive comparative analysis of ideological evolution in space settlements to "Ideological_Evolution_of_Space_Settlements.txt" with cross-references to III_A_Governance_Social_Structures.txt. Research compares three major Earth-based political ideologies (liberal democracy, state capitalism/techno-authoritarianism, and developmental state/non-aligned approaches) and projects their adaptation to space environments by 2100. Includes detailed analysis of cultural projection mechanisms, ideological maintenance systems, points of friction and divergence, and comparative evaluation of governance structures, resource management, legal frameworks, and AI integration across ideological models.
+
+**New Update:** August 2025 - Added detailed quantitative modeling of skill acquisition and decay in space environments to II_Human_Factors_Space.txt Section 2.2. Research provides mathematical models for learning rates, proficiency plateaus, and decay curves for both technical and social skills under spaceflight conditions, with specific parameters for different skill types and training methodologies. Includes comparative analysis table of acquisition rates, plateaus, decay rates, and critical thresholds across skill categories, with cross-references to simulation design, skill transmission, supporting technologies, and tactical implications.
 
 **Previous Update:** June 15, 2025 - Comprehensive research on player mental model misconceptions and UI/UX solutions for space games in "VI_UI_UX_Simulation_Design.txt" Sections 2.5-2.7, covering misconceptions in orbital mechanics, resource management, time scales, and command latency, with implementation architectures for adaptive interfaces to address these issues.
 
