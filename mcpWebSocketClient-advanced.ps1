@@ -62,16 +62,13 @@ function Connect-ToWebSocket {
         $connection.Wait()
         
         if ($clientWebSocket.State -eq [System.Net.WebSockets.WebSocketState]::Open) {
-            Write-Host "True"
             Write-Host "WebSocket connected successfully"
             return $clientWebSocket
         } else {
-            Write-Host "False"
             Write-Host "Failed to connect to WebSocket. State: $($clientWebSocket.State)"
             return $null
         }
     } catch {
-        Write-Host "False"
         Write-Host "Error connecting to WebSocket: $_"
         return $null
     }
@@ -97,11 +94,9 @@ function Send-WebSocketMessage {
         )
         $sendTask.Wait()
         
-        Write-Host "True"
         Write-Host "Request sent successfully"
         return $true
     } catch {
-        Write-Host "False"
         Write-Host "Error sending message: $_"
         return $false
     }
@@ -148,7 +143,6 @@ function Close-WebSocketConnection {
                 [System.Threading.CancellationToken]::None
             )
             $closeTask.Wait()
-            Write-Host "True"
             Write-Host "WebSocket connection closed"
         } catch {
             Write-Host "Error closing WebSocket connection: $_"
