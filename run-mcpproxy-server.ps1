@@ -22,6 +22,10 @@ catch {
 }
 
 # Change to the mcpProxy server directory
+if (-not (Test-Path "C:\Users\w1n51\mcpProxy")) {
+    Write-Error "MCP Proxy directory not found: C:\Users\w1n51\mcpProxy"
+    exit 1
+}
 Set-Location -Path "C:\Users\w1n51\mcpProxy"
 
 # Start the mcpProxy server as a background job
