@@ -1,6 +1,16 @@
 # PowerShell script to start the MCP Proxy server
 Write-Host "Starting MCP Proxy Server..."
 
+function Test-ValidPort {
+    param([int]$Port)
+    return $Port -ge 1 -and $Port -le 65535
+}
+
+if (-not (Test-ValidPort -Port 8004)) {
+    Write-Error "Invalid port: 8004. Must be between 1 and 65535."
+    exit 1
+}
+
 # Check if Node.js is available
 try {
     $nodeVersion = node --version
