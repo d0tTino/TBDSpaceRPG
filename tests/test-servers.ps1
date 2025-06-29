@@ -21,6 +21,10 @@ try {
     $pgResponse = Invoke-WebRequest -Uri "http://localhost:$PostgresPort" -UseBasicParsing -TimeoutSec 5
     Write-Host "Postgres server responded: $($pgResponse.Content)"
 } finally {
-    Stop-Process -Id $gitProc.Id -Force
-    Stop-Process -Id $pgProc.Id -Force
+    if ($gitProc -and -not $gitProc.HasExited) {
+        Stop-Process -Id $gitProc.Id -Force
+    }
+    if ($pgProc -and -not $pgProc.HasExited) {
+        Stop-Process -Id $pgProc.Id -Force
+    }
 }

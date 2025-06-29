@@ -264,6 +264,13 @@ else {
     Write-Log "Testing multiple menu items: $($MenuPaths.Count) items" "INFO"
 }
 
+# Validate provided paths before executing
+for ($i = 0; $i -lt $pathsToTest.Count; $i++) {
+    if ([string]::IsNullOrWhiteSpace($pathsToTest[$i])) {
+        throw "Menu path at position $($i + 1) is null, empty, or whitespace."
+    }
+}
+
 # Verify server is running
 if (-not (Test-Server)) {
     Write-Log "MCP server does not appear to be running on port $Port." "WARNING"
