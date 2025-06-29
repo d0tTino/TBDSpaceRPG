@@ -3,6 +3,17 @@ param(
     [string]$ServerPath
 )
 
+# Validate port number
+function Test-ValidPort {
+    param([int]$Port)
+    return $Port -ge 1 -and $Port -le 65535
+}
+
+if (-not (Test-ValidPort -Port $Port)) {
+    Write-Error "Invalid port: $Port. Must be between 1 and 65535."
+    exit 1
+}
+
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
