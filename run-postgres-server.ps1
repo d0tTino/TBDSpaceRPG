@@ -3,15 +3,14 @@ param(
     [string]$ServerPath
 )
 
-# Validate port number
 function Test-ValidPort {
     param([int]$Port)
-    return $Port -ge 1 -and $Port -le 65535
+    return ($Port -ge 1 -and $Port -le 65535)
 }
 
 if (-not (Test-ValidPort -Port $Port)) {
-    Write-Error "Invalid port: $Port. Must be between 1 and 65535."
-    exit 1
+    Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
+
 }
 
 $scriptDir = $PSScriptRoot
