@@ -9,3 +9,4 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`Git MCP server listening on port ${port}`);
 });
+server.on('error', (err) => console.error(err));

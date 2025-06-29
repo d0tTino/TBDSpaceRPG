@@ -9,3 +9,4 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`Postgres MCP server listening on port ${port}`);
 });
+server.on('error', (err) => console.error(err));

@@ -23,4 +23,5 @@ try {
 } finally {
     Stop-Process -Id $gitProc.Id -Force -ErrorAction SilentlyContinue
     Stop-Process -Id $pgProc.Id -Force -ErrorAction SilentlyContinue
+
 }

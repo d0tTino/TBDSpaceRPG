@@ -7,6 +7,18 @@ param (
 # Output what we're doing
 Write-Host "Sending message to Unity: $message"
 
+function Test-ValidPort {
+    param([int]$Port)
+    return $Port -ge 1 -and $Port -le 65535
+}
+
+$uri = "http://localhost:8001/mcp"
+$port = ([System.Uri]$uri).Port
+if (-not (Test-ValidPort -Port $port)) {
+    Write-Error "Invalid port: $port"
+    exit 1
+}
+
 # Form the JSON payload
 $payload = @{
     method = "notify_message"

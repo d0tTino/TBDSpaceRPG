@@ -30,6 +30,17 @@ param (
     [string]$serverUrl = "ws://localhost:8001/McpUnity"
 )
 
+function Test-ValidPort {
+    param([int]$Port)
+    return $Port -ge 1 -and $Port -le 65535
+}
+
+$parsedUri = [System.Uri]$serverUrl
+if (-not (Test-ValidPort -Port $parsedUri.Port)) {
+    Write-Host "Invalid port in -serverUrl parameter: $($parsedUri.Port)" -ForegroundColor Red
+    return
+}
+
 # Load required .NET assemblies
 Add-Type -AssemblyName System.Net.WebSockets
 Add-Type -AssemblyName System.Threading.Tasks

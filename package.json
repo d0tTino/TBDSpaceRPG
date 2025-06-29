@@ -1,0 +1,13 @@
+{
+  "name": "tbdsapcerpg",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/server.test.js",
+    "lint": "eslint servers tests"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "globals": "^16.2.0"
+  }
+}
