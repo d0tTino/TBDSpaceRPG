@@ -527,7 +527,7 @@ This section tracks the implementation status of our research findings into the 
 | Closed-Loop Life Support Systems | ✅ Implemented | `Gameplay_System/3. Crew System.txt`, Section 3.5.4 |
 | Space Economy and Resource Extraction | ✅ Implemented | `Gameplay_System/6. Appendices.txt`, Section 6.5.4 |
 | Near-Future Propulsion Technology | ✅ Implemented | `Gameplay_System/6. Appendices.txt`, Section 6.5.5 |
-| Space Habitat Architecture | ✅ Implemented | `Gameplay_System/4. Techincal Implementation.txt`, Section 4.9 |
+| Space Habitat Architecture | ✅ Implemented | `Gameplay_System/4. Technical Implementation.txt`, Section 4.9 |
 | Communications Protocol Evolution | ✅ Implemented | `Gameplay_System/3. Crew System.txt`, Section 3.5.5 |
 | Space Law Evolution | ✅ Implemented | `Gameplay_System/6. Appendices.txt`, Section 6.5.8 |
 
