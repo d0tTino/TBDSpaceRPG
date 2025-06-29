@@ -16,6 +16,7 @@ function Test-ValidPort {
 
 if (-not (Test-ValidPort -Port $Port)) {
     Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
+
 }
 
 # Load configuration from file if it exists

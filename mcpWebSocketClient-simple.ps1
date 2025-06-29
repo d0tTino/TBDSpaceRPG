@@ -10,6 +10,11 @@ param (
     [string]$logType = "Log"  # Can be: Log, Warning, Error
 )
 
+function Test-ValidPort {
+    param([int]$Port)
+    return $Port -ge 1 -and $Port -le 65535
+}
+
 # Validate parameters
 if (!$menuPath -and !$message) {
     Write-Host "Error: You must provide either -menuPath or -message parameter"
@@ -26,6 +31,11 @@ try {
     # Create client WebSocket
     $client = New-Object System.Net.WebSockets.ClientWebSocket
     $uri = New-Object System.Uri("ws://localhost:8001/McpUnity")
+
+    if (-not (Test-ValidPort -Port $uri.Port)) {
+        Write-Host "Invalid port in WebSocket URI: $($uri.Port)" -ForegroundColor Red
+        return
+    }
     
     # Connect to the server
     $connectTask = $client.ConnectAsync($uri, [System.Threading.CancellationToken]::None)

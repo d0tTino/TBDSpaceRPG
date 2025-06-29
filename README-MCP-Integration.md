@@ -29,7 +29,7 @@ These servers enable AI tools to interact with the Unity project, perform versio
 - Unity 2022.3 or later
 - Node.js v18 or later
 - npm v9 or later
-- PowerShell 7.0 or later
+- PowerShell 7.0 or later (required to run tests)
 - Python 3.8 or later (for server-git)
 - PostgreSQL (for server-postgres)
 
@@ -191,6 +191,16 @@ public class McpServerAutoRestarter
     }
 }
 ```
+
+## Running Tests
+
+All automated tests use PowerShell scripts. Ensure that the `pwsh` command is available before running tests.
+
+```pwsh
+pwsh -File tests/test-servers.ps1
+```
+
+For installation instructions, see the [PowerShell installation guide](https://learn.microsoft.com/powershell/scripting/install/installing-powershell).
 
 ## Ship Customization System
 
