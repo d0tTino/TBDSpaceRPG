@@ -8,6 +8,17 @@ param (
     [string]$ConfigFile = ".mcp-server-config.json"
 )
 
+# Validate the supplied port number
+function Test-ValidPort {
+    param([int]$Port)
+    return ($Port -ge 1 -and $Port -le 65535)
+}
+
+if (-not (Test-ValidPort -Port $Port)) {
+    Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
+
+}
+
 # Load configuration from file if it exists
 $config = @{
     "port" = $Port

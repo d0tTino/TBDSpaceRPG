@@ -29,4 +29,5 @@ try {
 
     # Ensure child Node.js servers are terminated
     Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+
 }

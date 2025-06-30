@@ -11,9 +11,18 @@ param (
     [string[]]$MenuPaths,
     
     [int]$Port = 8001,
-    
+
     [switch]$Verbose
 )
+
+function Test-ValidPort {
+    param([int]$Port)
+    return ($Port -ge 1 -and $Port -le 65535)
+}
+
+if (-not (Test-ValidPort -Port $Port)) {
+    Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
+}
 
 # Import required modules
 Add-Type -AssemblyName System.Net.WebSockets.Client
@@ -262,6 +271,13 @@ if ($PSCmdlet.ParameterSetName -eq "SinglePath") {
 else {
     $pathsToTest = $MenuPaths
     Write-Log "Testing multiple menu items: $($MenuPaths.Count) items" "INFO"
+}
+
+# Validate provided paths before executing
+for ($i = 0; $i -lt $pathsToTest.Count; $i++) {
+    if ([string]::IsNullOrWhiteSpace($pathsToTest[$i])) {
+        throw "Menu path at position $($i + 1) is null, empty, or whitespace."
+    }
 }
 
 # Verify server is running
