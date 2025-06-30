@@ -6,11 +6,15 @@ param(
 $scriptDir = $PSScriptRoot
 $root = Split-Path -Parent $scriptDir
 
-$gitScript = Join-Path $root 'run-git-server.ps1'
-$pgScript  = Join-Path $root 'run-postgres-server.ps1'
+$gitServer = Join-Path $root 'servers/git/index.js'
+$pgServer  = Join-Path $root 'servers/postgres/index.js'
 
-$gitProc = Start-Process -FilePath pwsh -ArgumentList '-File', $gitScript, '-Port', $GitPort -PassThru
-$pgProc  = Start-Process -FilePath pwsh -ArgumentList '-File', $pgScript, '-Port', $PostgresPort -PassThru
+$gitProc = Start-Process node -ArgumentList $gitServer -NoNewWindow -PassThru -Environment @{
+    'PORT' = $GitPort
+}
+$pgProc  = Start-Process node -ArgumentList $pgServer -NoNewWindow -PassThru -Environment @{
+    'PORT' = $PostgresPort
+}
 
 Start-Sleep -Seconds 2
 
