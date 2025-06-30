@@ -21,7 +21,13 @@ try {
     $pgResponse = Invoke-WebRequest -Uri "http://localhost:$PostgresPort" -UseBasicParsing -TimeoutSec 5
     Write-Host "Postgres server responded: $($pgResponse.Content)"
 } finally {
-    Stop-Process -Id $gitProc.Id -Force -ErrorAction SilentlyContinue
-    Stop-Process -Id $pgProc.Id -Force -ErrorAction SilentlyContinue
+    $gitRunning = Get-Process -Id $gitProc.Id -ErrorAction SilentlyContinue
+    if ($gitRunning) { Stop-Process -Id $gitProc.Id -Force }
+
+    $pgRunning = Get-Process -Id $pgProc.Id -ErrorAction SilentlyContinue
+    if ($pgRunning) { Stop-Process -Id $pgProc.Id -Force }
+
+    # Ensure child Node.js servers are terminated
+    Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 
 }

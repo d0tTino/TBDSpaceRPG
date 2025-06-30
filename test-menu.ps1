@@ -307,4 +307,4 @@ if ($results.Failed -eq 0) {
 else {
     Write-Host "`n❌ Some menu items failed: $($results.Failed)/$($results.Total) failed" -ForegroundColor Red
     exit 1
-} 
+}
