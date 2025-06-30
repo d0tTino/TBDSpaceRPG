@@ -6,15 +6,15 @@ param(
 $scriptDir = $PSScriptRoot
 $root = Split-Path -Parent $scriptDir
 
-$gitServer = Join-Path $root 'servers/git/index.js'
-$pgServer  = Join-Path $root 'servers/postgres/index.js'
+$gitScript = Join-Path $root 'servers/git/index.js'
+$pgScript  = Join-Path $root 'servers/postgres/index.js'
 
-$gitProc = Start-Process node -ArgumentList $gitServer -NoNewWindow -PassThru -Environment @{
-    'PORT' = $GitPort
-}
-$pgProc  = Start-Process node -ArgumentList $pgServer -NoNewWindow -PassThru -Environment @{
-    'PORT' = $PostgresPort
-}
+$env:PORT = $GitPort
+$gitProc = Start-Process -FilePath node -ArgumentList $gitScript -PassThru -NoNewWindow
+
+$env:PORT = $PostgresPort
+$pgProc  = Start-Process -FilePath node -ArgumentList $pgScript -PassThru -NoNewWindow
+
 
 Start-Sleep -Seconds 2
 
@@ -25,13 +25,14 @@ try {
     $pgResponse = Invoke-WebRequest -Uri "http://localhost:$PostgresPort" -UseBasicParsing -TimeoutSec 5
     Write-Host "Postgres server responded: $($pgResponse.Content)"
 } finally {
-    $gitRunning = Get-Process -Id $gitProc.Id -ErrorAction SilentlyContinue
-    if ($gitRunning) { Stop-Process -Id $gitProc.Id -Force }
+    $gitProcess = Get-Process -Id $gitProc.Id -ErrorAction SilentlyContinue
+    if ($gitProcess) {
+        Stop-Process -Id $gitProcess.Id -Force
+    }
 
-    $pgRunning = Get-Process -Id $pgProc.Id -ErrorAction SilentlyContinue
-    if ($pgRunning) { Stop-Process -Id $pgProc.Id -Force }
-
-    # Ensure child Node.js servers are terminated
-    Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
+    $pgProcess = Get-Process -Id $pgProc.Id -ErrorAction SilentlyContinue
+    if ($pgProcess) {
+        Stop-Process -Id $pgProcess.Id -Force
+    }
 
 }

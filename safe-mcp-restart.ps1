@@ -12,16 +12,24 @@ $env:UNITY_PORT = "8001"
 # Check if we're in the correct directory
 $currentDir = Get-Location
 $serverFullPath = Join-Path $currentDir $serverPath
+$serverIndex = ''
 
 if (Test-Path $serverFullPath) {
     # We're in the project root, run the command with path
     Write-Host "Running MCP server from project root..."
-    Start-Process -FilePath "node" -ArgumentList "$serverPath/build/index.js" -NoNewWindow
+    $serverIndex = Join-Path $serverPath 'build/index.js'
 } else {
     # Try to run directly - might be already in the server directory
     Write-Host "Running MCP server directly..."
-    Start-Process -FilePath "node" -ArgumentList "build/index.js" -NoNewWindow
+    $serverIndex = 'build/index.js'
 }
+
+if (-not (Test-Path $serverIndex)) {
+    Write-Error "Server file not found: $serverIndex"
+    exit 1
+}
+
+Start-Process -FilePath "node" -ArgumentList "\"$serverIndex\"" -NoNewWindow
 
 Write-Host "MCP server started on port 8001. You can now reconnect from Unity."
 Write-Host ""
