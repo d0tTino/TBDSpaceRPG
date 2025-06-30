@@ -15,6 +15,7 @@ $gitProc = Start-Process -FilePath node -ArgumentList $gitScript -PassThru -NoNe
 $env:PORT = $PostgresPort
 $pgProc  = Start-Process -FilePath node -ArgumentList $pgScript -PassThru -NoNewWindow
 
+
 Start-Sleep -Seconds 2
 
 try {
@@ -33,4 +34,5 @@ try {
     if ($pgProcess) {
         Stop-Process -Id $pgProcess.Id -Force
     }
+
 }
