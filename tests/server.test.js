@@ -26,8 +26,26 @@ function request(port) {
   const pgPort = 8004;
   const git = startServer('servers/git/index.js', gitPort);
   const pg = startServer('servers/postgres/index.js', pgPort);
-  // give servers time to start
-  await new Promise(r => setTimeout(r, 500));
+  async function waitForServer(port, timeout = 5000) {
+    const start = Date.now();
+    let connected = false;
+    while (!connected) {
+      try {
+        await request(port);
+        connected = true;
+      } catch (err) {
+        if (Date.now() - start > timeout) {
+          throw new Error(`Timeout waiting for server on port ${port}`);
+        }
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+  }
+
+  await Promise.all([
+    waitForServer(gitPort),
+    waitForServer(pgPort),
+  ]);
   try {
     const gitResponse = await request(gitPort);
     assert.strictEqual(gitResponse, 'Git MCP server placeholder');
