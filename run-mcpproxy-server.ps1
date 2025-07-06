@@ -1,5 +1,19 @@
+
+param(
+    [string]$ProxyPath
+)
+
 # PowerShell script to start the MCP Proxy server
 Write-Host "Starting MCP Proxy Server..."
+
+$scriptDir = $PSScriptRoot
+if (-not $scriptDir) {
+    $scriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+}
+if (-not $ProxyPath) {
+    # Default to the "servers/mcpProxy" directory relative to this script
+    $ProxyPath = Join-Path $scriptDir 'servers/mcpProxy'
+}
 
 function Test-ValidPort {
     param([int]$Port)
@@ -22,7 +36,7 @@ try {
 
 # Change to the mcpProxy server directory
 try {
-    Set-Location -Path "C:\Users\w1n51\mcpProxy"
+    Set-Location -Path $ProxyPath
 } catch {
     Write-Error "Unable to change directory"
     exit 1

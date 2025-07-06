@@ -67,8 +67,11 @@ Manages database operations through MCP.
 Routes requests to appropriate MCP servers.
 
 ```powershell
-# Start the MCP Proxy server
+# Start the MCP Proxy server (defaults to a path relative to this repo)
 ./run-mcpproxy-server.ps1
+
+# Provide a custom proxy path if needed
+./run-mcpproxy-server.ps1 -ProxyPath "C:\path\to\mcpProxy"
 ```
 
 ### All Servers
