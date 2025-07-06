@@ -111,10 +111,11 @@ The MCP Unity server is configured in the `~/.cursor/mcp.json` file:
 }
 ```
 
-You can update this configuration using the provided script:
+You can update this configuration using the provided script. Provide the
+workspace path for the Unity fallback server with the `-Workspace` parameter:
 
 ```powershell
-./update-mcp-config.ps1
+./update-mcp-config.ps1 -Workspace "C:/path/to/TBD SpaceGame"
 ```
 
 ## Tools
