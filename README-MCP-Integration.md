@@ -260,6 +260,7 @@ Log files are available in the following locations:
 - MCP Unity Server: `TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@*/Server/logs`
 - Server-Git: Terminal output only
 - Server-Postgres: `servers/postgres/logs`
+- Telemetry Server: `servers/telemetry/logs`
 - MCPProxy: Terminal output only
 
 ## Future Enhancements
@@ -268,7 +269,7 @@ Planned enhancements for the MCP integration:
 
 1. **AI Director Integration**: Connect AI Director system to MCP for dynamic storytelling
 2. **Crew Management Tools**: Additional MCP tools for managing crew dynamics
-3. **Telemetry Collection**: Server for collecting gameplay telemetry
+3. **Telemetry Collection**: Implemented telemetry server under `servers/telemetry`
 4. **Enhanced Documentation**: Interactive API documentation for all MCP servers
 5. **Visual MCP Tool**: GUI interface for interacting with MCP servers
 
