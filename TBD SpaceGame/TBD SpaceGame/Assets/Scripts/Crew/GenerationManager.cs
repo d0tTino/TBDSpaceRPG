@@ -43,6 +43,7 @@ namespace Crew
             {
                 NaturalDeath(death);
             }
+
         }
     }
 }

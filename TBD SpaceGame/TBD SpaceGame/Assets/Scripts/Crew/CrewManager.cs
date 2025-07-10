@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -12,6 +13,8 @@ namespace Crew
     {
         [SerializeField] private GenerationManager generationManager;
         public List<CrewMember> activeCrew = new();
+        public int generation;
+        public string lastSaveTimestamp = string.Empty;
 
         private void Awake()
         {
@@ -82,10 +85,22 @@ namespace Crew
 
         /// <summary>
         /// Save the current crew roster to a JSON file.
+        /// Example structure:
+        /// {
+        ///   "crew": [ ... ],
+        ///   "generation": 3,
+        ///   "timestamp": "2024-01-01T00:00:00Z"
+        /// }
         /// </summary>
         public void SaveToFile(string path)
         {
-            var container = new CrewContainer { crew = activeCrew };
+            lastSaveTimestamp = DateTime.UtcNow.ToString("o");
+            var container = new CrewContainer
+            {
+                crew = activeCrew,
+                generation = generation,
+                timestamp = lastSaveTimestamp
+            };
             string json = JsonUtility.ToJson(container, true);
             File.WriteAllText(path, json);
         }
@@ -103,13 +118,24 @@ namespace Crew
 
             string json = File.ReadAllText(path);
             var container = JsonUtility.FromJson<CrewContainer>(json);
-            activeCrew = container != null ? container.crew : new List<CrewMember>();
+            if (container != null)
+            {
+                activeCrew = container.crew ?? new List<CrewMember>();
+                generation = container.generation;
+                lastSaveTimestamp = container.timestamp;
+            }
+            else
+            {
+                activeCrew = new List<CrewMember>();
+            }
         }
 
         [System.Serializable]
         private class CrewContainer
         {
             public List<CrewMember> crew = new();
+            public int generation;
+            public string timestamp = string.Empty;
 
         }
     }
