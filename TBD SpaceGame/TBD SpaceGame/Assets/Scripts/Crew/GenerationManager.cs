@@ -5,91 +5,45 @@ using UnityEngine;
 namespace Crew
 {
     /// <summary>
-    /// Handles long duration time skips and generational changes for the crew.
+    /// Handles generational progression and exposes events for births and natural deaths.
+    /// This is a minimal placeholder so other systems can react to population changes.
     /// </summary>
     public class GenerationManager : MonoBehaviour
     {
-        public event Action<TimeSpan> OnTimeSkipRequested;
-        public event Action<int> OnGenerationAdvanced;
-        public event Action OnTimeSkipCompleted;
-
-        public CrewManager crewManager;
-
-        private readonly List<int> populationHistory = new();
-        private TimeSpan _pendingSkip;
-        private int _currentGeneration = 1;
+        public event Action<CrewMember> OnCrewBorn;
+        public event Action<CrewMember> OnCrewDied;
 
         /// <summary>
-        /// Represents basic generational statistics.
+        /// Invoke when a new crew member is born.
         /// </summary>
-        public struct GenerationStats
+        public void Birth(CrewMember member)
         {
-            public int generation;
-            public int population;
+            OnCrewBorn?.Invoke(member);
         }
 
         /// <summary>
-        /// Get statistics for the current generation.
+        /// Invoke when a crew member dies of natural causes.
         /// </summary>
-        public GenerationStats CurrentStats
+        public void NaturalDeath(CrewMember member)
         {
-            get
+            OnCrewDied?.Invoke(member);
+        }
+
+        /// <summary>
+        /// Simulate a time skip by processing births and deaths.
+        /// </summary>
+        public void ProcessTimeSkip(List<CrewMember> births, List<CrewMember> deaths)
+        {
+            foreach (var birth in births)
             {
-                return new GenerationStats
-                {
-                    generation = _currentGeneration,
-                    population = crewManager != null ? crewManager.activeCrew.Count : 0
-                };
-            }
-        }
-
-        /// <summary>
-        /// Request that the simulation advance by the given duration.
-        /// </summary>
-        public void RequestTimeSkip(TimeSpan duration)
-        {
-            _pendingSkip = duration;
-            OnTimeSkipRequested?.Invoke(duration);
-            ProcessTimeSkip();
-        }
-
-        /// <summary>
-        /// Processes the previously requested time skip, ageing crew and spawning new generations.
-        /// </summary>
-        public void ProcessTimeSkip()
-        {
-            if (crewManager == null) return;
-
-            double years = _pendingSkip.TotalDays / 365.0;
-            int wholeYears = (int)Math.Floor(years);
-
-            for (int i = crewManager.activeCrew.Count - 1; i >= 0; i--)
-            {
-                CrewMember member = crewManager.activeCrew[i];
-                member.age += wholeYears;
-                if (member.age >= 80)
-                {
-                    crewManager.Remove(member);
-                }
+                Birth(birth);
             }
 
-            for (int b = 0; b < wholeYears; b++)
+            foreach (var death in deaths)
             {
-                crewManager.Recruit(new CrewMember { role = "Child", age = 0 });
+                NaturalDeath(death);
             }
 
-            populationHistory.Add(crewManager.activeCrew.Count);
-            _currentGeneration++;
-            OnGenerationAdvanced?.Invoke(_currentGeneration);
-            OnTimeSkipCompleted?.Invoke();
-        }
-
-        /// <summary>
-        /// Get the recorded population count for each completed generation.
-        /// </summary>
-        public IReadOnlyList<int> GetPopulationHistory()
-        {
-            return populationHistory.AsReadOnly();
         }
     }
 }
