@@ -1,6 +1,7 @@
 const http = require('http');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 const assert = require('assert');
 
 function startServer(relativePath, port) {
@@ -47,6 +48,8 @@ function post(port, pathName, data) {
   const git = startServer('servers/git/index.cjs', gitPort);
   const pg = startServer('servers/postgres/index.cjs', pgPort);
   const telemetry = startServer('servers/telemetry/index.cjs', telemetryPort);
+  const logPath = path.join(__dirname, '..', 'servers', 'telemetry', 'logs', 'events.log');
+  if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
   async function waitForServer(port, timeout = 5000) {
     const start = Date.now();
     let connected = false;
@@ -77,6 +80,14 @@ function post(port, pathName, data) {
     assert.strictEqual(telemetryResponse, 'Telemetry server placeholder');
     const postResult = await post(telemetryPort, '/event', { type: 'test' });
     assert.strictEqual(postResult.statusCode, 200);
+
+    const genEvent = { type: 'generation_advanced', generation: 1 };
+    const genResult = await post(telemetryPort, '/event', genEvent);
+    assert.strictEqual(genResult.statusCode, 200);
+    await new Promise(r => setTimeout(r, 100));
+    const logPath = path.join(__dirname, '..', 'servers', 'telemetry', 'logs', 'events.log');
+    const logContents = fs.readFileSync(logPath, 'utf8');
+    assert.ok(logContents.includes(JSON.stringify(genEvent)));
     console.log('Tests passed');
     git.kill();
     pg.kill();
