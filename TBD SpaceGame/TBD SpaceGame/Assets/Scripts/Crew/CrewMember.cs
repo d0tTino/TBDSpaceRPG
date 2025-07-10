@@ -10,6 +10,7 @@ namespace Crew
     public class CrewMember
     {
         public string role;
+        public int age;
         public List<string> traits = new();
         public float health = 100f;
         public float morale = 100f;
