@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Scripts/OrbitalMechanics/*.cs" />
+    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Plugins/SimpleKeplerOrbits/*.cs" />
+    <Compile Include="../UnityStubs/UnityEngine.cs" />
+  </ItemGroup>
+</Project>
