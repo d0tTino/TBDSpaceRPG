@@ -68,6 +68,26 @@ The architecture incorporates performance optimization strategies:
 3.0 Core Systems Implementation
 ==============================
 [This section will be populated from Gameplay_System/4. Technical Implementation.txt and related files]
+3.1 Orbital Mechanics Module
+---------------------------
+The orbital mechanics system provides tools for representing celestial bodies and calculating transfer orbits.
+Core scripts:
+- **CelestialBody**: stores mass and initial orbit data.
+- **OrbitPlanner**: computes basic transfer orbits between bodies.
+- **OrbitFollower**: moves a ship along a planned orbit.
+- **InterceptCalculator**: computes firing solutions for orbital combat using a search-and-refine method.
+- **OrbitManager**: registers all celestial bodies for global lookup.
+These components integrate with existing ship movement scripts under `ShipCustomization`.
+
+3.2 Combat Systems Module
+-------------------------
+The combat systems track thermal signatures and detection probabilities for space engagements.
+Core scripts:
+- **CombatVessel**: container for vessel thermal and sensor properties.
+- **WeaponSystem**: simple weapon component that generates heat.
+- **ThermalSignatureSystem**: updates heat levels and calculates detection chances.
+- **DebrisFieldGenerator**: creates debris objects after impacts for persistent hazards.
+- **DebrisManager**: singleton that tracks active debris for collision checks.
 
 4.0 UI/UX Design Guidelines
 ===========================
