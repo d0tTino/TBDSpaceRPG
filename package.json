@@ -11,5 +11,9 @@
     "eslint": "^8.57.0",
     "globals": "^16.2.0"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "express": "^4.19.2",
+    "rotating-file-stream": "^3.0.4"
+  }
 }

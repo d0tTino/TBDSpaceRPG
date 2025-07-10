@@ -30,6 +30,7 @@ function Test-ServerPort {
 $unityRunning = Test-ServerPort -ServerName "Unity MCP Server" -Port 8001
 $gitRunning = Test-ServerPort -ServerName "Git MCP Server" -Port 8080
 $postgresRunning = Test-ServerPort -ServerName "Postgres MCP Server" -Port 8003
+$telemetryRunning = Test-ServerPort -ServerName "Telemetry Server" -Port 8090
 $proxyRunning = Test-ServerPort -ServerName "MCP Proxy Server" -Port 8004
 
 # 1. Start Unity MCP Server if not already running
@@ -59,7 +60,16 @@ if (-not $postgresRunning) {
     Write-Host "Skipping Postgres MCP Server (already running)" -ForegroundColor Yellow
 }
 
-# 4. Start MCP Proxy Server
+# 4. Start Telemetry Server
+if (-not $telemetryRunning) {
+    Write-Host "Starting Telemetry Server..." -ForegroundColor Green
+    $telemetryScript = Join-Path $scriptDir "run-telemetry-server.ps1"
+    Start-Process PowerShell -ArgumentList "-File `"$telemetryScript`"" -NoNewWindow
+} else {
+    Write-Host "Skipping Telemetry Server (already running)" -ForegroundColor Yellow
+}
+
+# 5. Start MCP Proxy Server
 if (-not $proxyRunning) {
     Write-Host "Starting MCP Proxy Server..." -ForegroundColor Green
     $proxyScript = Join-Path $scriptDir "run-mcpproxy-server.ps1"
@@ -73,4 +83,5 @@ Write-Host "Use the following servers in Cursor:" -ForegroundColor White
 Write-Host "- mcp-unity: ws://localhost:8001/McpUnity" -ForegroundColor White
 Write-Host "- git: http://localhost:8080" -ForegroundColor White
 Write-Host "- postgres: http://localhost:8003" -ForegroundColor White
-Write-Host "- mcpProxy: http://localhost:8004" -ForegroundColor White 
+Write-Host "- telemetry: http://localhost:8090" -ForegroundColor White
+Write-Host "- mcpProxy: http://localhost:8004" -ForegroundColor White
