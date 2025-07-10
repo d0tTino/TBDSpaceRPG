@@ -5,44 +5,35 @@ using UnityEngine;
 namespace Crew
 {
     /// <summary>
-    /// Handles generational progression and exposes events for births and natural deaths.
-    /// This is a minimal placeholder so other systems can react to population changes.
+    /// Manages long-term time progression and generational events.
     /// </summary>
     public class GenerationManager : MonoBehaviour
     {
-        public event Action<CrewMember> OnCrewBorn;
-        public event Action<CrewMember> OnCrewDied;
+        /// <summary>
+        /// Fired when a time skip is requested.
+        /// </summary>
+        public event Action<TimeSkipRequest> OnTimeSkipRequested;
+
+        private TimeSkipRequest pendingRequest;
 
         /// <summary>
-        /// Invoke when a new crew member is born.
+        /// Creates a new <see cref="TimeSkipRequest"/> and notifies listeners.
         /// </summary>
-        public void Birth(CrewMember member)
+        /// <param name="duration">Amount of game time to skip.</param>
+        /// <param name="conditions">Interrupt conditions for the skip.</param>
+        public void RequestTimeSkip(TimeSpan duration, TimeSkipConditions conditions)
         {
-            OnCrewBorn?.Invoke(member);
-        }
-
-        /// <summary>
-        /// Invoke when a crew member dies of natural causes.
-        /// </summary>
-        public void NaturalDeath(CrewMember member)
-        {
-            OnCrewDied?.Invoke(member);
-        }
-
-        /// <summary>
-        /// Simulate a time skip by processing births and deaths.
-        /// </summary>
-        public void ProcessTimeSkip(List<CrewMember> births, List<CrewMember> deaths)
-        {
-            foreach (var birth in births)
+            pendingRequest = new TimeSkipRequest
             {
-                Birth(birth);
-            }
+                Duration = duration,
+                TargetDate = DateTime.Now.Add(duration),
+                Conditions = conditions,
+                InterruptConditionsMet = false,
+                MilestoneEvents = new List<TimelineMilestone>()
+            };
 
-            foreach (var death in deaths)
-            {
-                NaturalDeath(death);
-            }
+            // Notify any subscribers about the requested skip
+            OnTimeSkipRequested?.Invoke(pendingRequest);
 
         }
     }
