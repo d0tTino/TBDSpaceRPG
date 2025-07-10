@@ -24,8 +24,8 @@ function request(port) {
 (async () => {
   const gitPort = 8081;
   const pgPort = 8004;
-  const git = startServer('servers/git/index.js', gitPort);
-  const pg = startServer('servers/postgres/index.js', pgPort);
+  const git = startServer('servers/git/index.cjs', gitPort);
+  const pg = startServer('servers/postgres/index.cjs', pgPort);
   async function waitForServer(port, timeout = 5000) {
     const start = Date.now();
     let connected = false;
