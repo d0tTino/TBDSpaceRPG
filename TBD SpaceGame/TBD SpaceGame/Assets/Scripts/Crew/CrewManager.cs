@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+
 using UnityEngine;
 
 namespace Crew
@@ -63,6 +64,7 @@ namespace Crew
         private class CrewContainer
         {
             public List<CrewMember> crew = new();
+
         }
     }
 }
