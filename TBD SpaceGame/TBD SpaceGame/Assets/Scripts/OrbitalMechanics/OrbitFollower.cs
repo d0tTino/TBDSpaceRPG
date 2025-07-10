@@ -18,7 +18,8 @@ namespace OrbitalMechanics
         private void FixedUpdate()
         {
             if (_orbit == null) return;
-            // Placeholder: update transform along orbit
+            double t = Time.time;
+            transform.position = _orbit.GetPositionAtTime(t);
         }
     }
 }

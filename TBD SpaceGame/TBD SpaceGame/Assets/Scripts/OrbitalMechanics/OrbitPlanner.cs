@@ -1,4 +1,5 @@
 using UnityEngine;
+using SimpleKeplerOrbits;
 
 namespace OrbitalMechanics
 {
@@ -10,8 +11,18 @@ namespace OrbitalMechanics
     {
         public OrbitData PlanTransfer(CelestialBody origin, CelestialBody destination)
         {
-            // Placeholder for planning logic
-            return new OrbitData();
+            var transferOrbit = new KeplerOrbit
+            {
+                semiMajorAxis = (origin.InitialOrbit.orbit.semiMajorAxis + destination.InitialOrbit.orbit.semiMajorAxis) * 0.5,
+                eccentricity = 0.1,
+                inclination = 0,
+                argumentOfPeriapsis = 0,
+                longitudeOfAscendingNode = 0,
+                meanAnomalyAtEpoch = 0,
+                gravitationalParameter = origin.InitialOrbit.orbit.gravitationalParameter
+            };
+
+            return new OrbitData { orbit = transferOrbit };
         }
     }
 }
