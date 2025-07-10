@@ -6,7 +6,8 @@ using UnityEngine;
 namespace Crew
 {
     /// <summary>
-    /// Maintains the active crew roster and handles persistence.
+    /// Maintains the active crew roster, handles persistence, and works with
+    /// <see cref="GenerationManager"/> for long term progression.
     /// </summary>
     public class CrewManager : MonoBehaviour
     {
