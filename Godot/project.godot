@@ -1,0 +1,7 @@
+; Engine configuration file
+
+[application]
+config/name="TBDSpaceRPG"
+
+[dotnet]
+project="TBDSpaceRPG.csproj"

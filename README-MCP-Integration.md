@@ -439,3 +439,11 @@ This workflow verifies that menu items are found, commands are executed, and the
 
 - [MCP Unity Package Documentation](https://github.com/gamelovers/mcp-unity)
 - [Unity Editor Scripting Manual](https://docs.unity3d.com/Manual/ExtendingTheEditor.html) 
+## Godot Integration
+
+To import exported assets into Godot:
+1. Copy or move the contents of `Assets_glTF/` into the `Godot` project folder.
+2. Open the Godot project in the Godot 4 editor.
+3. Each `.gltf` file will automatically generate a scene that can be instanced in your C# scripts.
+
+
