@@ -24,6 +24,7 @@ The TBD Space Game uses MCP (Model Context Protocol) to enable AI-assisted devel
 - **Server-Git**: Version control operations via MCP running on port 8080
 - **Server-Postgres**: Database operations via MCP running on port 8003
 - **MCPProxy**: Routes requests to appropriate MCP servers running on port 8004
+- **KSA Adapter**: Placeholder server for the upcoming KSA engine on port 8005
 
 These servers enable AI tools to interact with the Unity project, perform version control operations, manage database records, and more.
 
@@ -76,6 +77,18 @@ Routes requests to appropriate MCP servers.
 # Provide a custom proxy path if needed
 ./run-mcpproxy-server.ps1 -ProxyPath "C:\path\to\mcpProxy"
 ```
+
+### KSA Adapter
+
+Placeholder adapter for the upcoming KSA engine. It simply echoes MCP requests.
+
+```powershell
+# Start the KSA adapter
+./run-ksa-server.ps1
+```
+
+When the real engine API is available, replace the placeholder server with the
+actual implementation and update configuration values accordingly.
 
 ### All Servers
 
@@ -265,6 +278,7 @@ Log files are available in the following locations:
 - Server-Postgres: `servers/postgres/logs`
 - Telemetry Server: `servers/telemetry/logs`
 - MCPProxy: Terminal output only
+- KSA Adapter: Terminal output only
 
 ## Future Enhancements
 
@@ -275,6 +289,7 @@ Planned enhancements for the MCP integration:
 3. **Telemetry Collection**: Implemented telemetry server under `servers/telemetry`
 4. **Enhanced Documentation**: Interactive API documentation for all MCP servers
 5. **Visual MCP Tool**: GUI interface for interacting with MCP servers
+6. **KSA Engine Adapter**: Replace the placeholder with the real engine API when available
 
 ---
 
