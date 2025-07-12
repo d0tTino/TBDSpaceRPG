@@ -1,6 +1,6 @@
 # TBD Space Game - Code Style Guide
-Version: 1.0
-Date: April 5, 2025
+Version: 1.1
+Date: May 1, 2025
 
 ## 1. Naming Conventions
 
@@ -322,5 +322,13 @@ public void TestFactionInfluence()
 }
 ```
 
+## 5. Automated Formatting
+The repository includes an `.editorconfig` file that defines consistent C#
+styling rules such as 4-space indentation and groupings of `using`
+directives.  Continuous integration runs `dotnet format --verify-no-changes`
+against the `OrbitalMechanics.sln` solution to ensure all committed code
+adheres to these settings.
+
 ## Version History
-- v1.0 (April 5, 2025): Initial guide creation 
+- v1.1 (May 1, 2025): Documented automated formatting rules
+- v1.0 (April 5, 2025): Initial guide creation

@@ -1,9 +1,13 @@
+using System.Reflection;
+
 using NUnit.Framework;
+
 using OrbitalMechanics;
 using OrbitalMechanics.Combat;
+
 using SimpleKeplerOrbits;
+
 using UnityEngine;
-using System.Reflection;
 
 namespace OrbitalMechanics.Tests
 {
