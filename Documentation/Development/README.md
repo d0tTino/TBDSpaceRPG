@@ -16,4 +16,5 @@ This directory contains development workflow and process documentation for the T
 
 - Any development workflow documents from the main folder
 - MCP integration documentation
-- Terminal and environment setup guides 
+- Terminal and environment setup guides
+- Use `npm ci` to install Node.js dependencies
