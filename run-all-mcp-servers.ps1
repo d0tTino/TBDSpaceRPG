@@ -1,4 +1,9 @@
 # PowerShell script to start all MCP servers
+param(
+    [ValidateSet('unity','godot')]
+    [string]$Engine = 'unity'
+)
+
 Write-Host "Starting All MCP Servers..." -ForegroundColor Cyan
 
 # Get the current script directory
@@ -37,7 +42,7 @@ $proxyRunning = Test-ServerPort -ServerName "MCP Proxy Server" -Port 8004
 if (-not $unityRunning) {
     Write-Host "Starting Unity MCP Server..." -ForegroundColor Green
     $unityScript = Join-Path $scriptDir "run-mcp-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$unityScript`"" -NoNewWindow
+    Start-Process PowerShell -ArgumentList "-File `"$unityScript`" -Engine $Engine" -NoNewWindow
 } else {
     Write-Host "Skipping Unity MCP Server (already running)" -ForegroundColor Yellow
 }
