@@ -4,6 +4,8 @@
 
 param (
     [int]$Port = 8001,
+    [ValidateSet("unity","godot")]
+    [string]$Engine = "unity",
     [switch]$Monitor,
     [string]$ConfigFile = ".mcp-server-config.json"
 )
@@ -25,6 +27,7 @@ $config = @{
     "serverPath" = $null
     "logFile" = $null
     "nodeEnv" = "production"
+    "engine" = $Engine
 }
 
 if (Test-Path $ConfigFile) {
@@ -36,6 +39,7 @@ if (Test-Path $ConfigFile) {
         if ($configData.serverPath) { $config.serverPath = $configData.serverPath }
         if ($configData.logFile) { $config.logFile = $configData.logFile }
         if ($configData.nodeEnv) { $config.nodeEnv = $configData.nodeEnv }
+        if ($configData.engine) { $config.engine = $configData.engine }
         
         Write-Host "Configuration loaded from $ConfigFile" -ForegroundColor Green
     }
@@ -48,14 +52,22 @@ if (Test-Path $ConfigFile) {
 if ($PSBoundParameters.ContainsKey('Port')) {
     $config.port = $Port
 }
+if ($PSBoundParameters.ContainsKey('Engine')) {
+    $config.engine = $Engine
+}
 
 # Define paths
 $projectRoot = $PSScriptRoot
 $unityProjectPath = Join-Path $projectRoot "TBD SpaceGame"
+$godotServerPath = Join-Path $projectRoot "servers\godot"
 
 # Use config serverPath if provided, otherwise use default
 if (-not $config.serverPath) {
-    $config.serverPath = Join-Path $unityProjectPath "TBD SpaceGame\Library\PackageCache\com.gamelovers.mcp-unity@3acfb232f564\Server"
+    if ($config.engine -eq 'godot') {
+        $config.serverPath = $godotServerPath
+    } else {
+        $config.serverPath = Join-Path $unityProjectPath "TBD SpaceGame\Library\PackageCache\com.gamelovers.mcp-unity@3acfb232f564\Server"
+    }
 }
 
 # Use config logFile if provided, otherwise use default
@@ -63,19 +75,31 @@ if (-not $config.logFile) {
     $config.logFile = Join-Path $projectRoot "mcp-server.log"
 }
 
-# Verify Node.js is installed
-try {
-    $nodeVersion = node --version
-    Write-Host "Node.js version: $nodeVersion"
-}
-catch {
-    Write-Error "Node.js is not installed or not in PATH. Please install Node.js to run the MCP server."
-    exit 1
+if ($config.engine -eq 'godot') {
+    try {
+        $dotnetVersion = dotnet --version
+        Write-Host "dotnet version: $dotnetVersion"
+    } catch {
+        Write-Error 'dotnet CLI is required to run the Godot MCP server.'
+        exit 1
+    }
+} else {
+    try {
+        $nodeVersion = node --version
+        Write-Host "Node.js version: $nodeVersion"
+    } catch {
+        Write-Error "Node.js is not installed or not in PATH. Please install Node.js to run the MCP server."
+        exit 1
+    }
 }
 
 # Validate server path
 if (-not (Test-Path $config.serverPath)) {
-    Write-Error "MCP Server path not found: $($config.serverPath)`nMake sure Unity is open and the MCP package is imported."
+    if ($config.engine -eq 'godot') {
+        Write-Error "Godot MCP Server path not found: $($config.serverPath)"
+    } else {
+        Write-Error "MCP Server path not found: $($config.serverPath)`nMake sure Unity is open and the MCP package is imported."
+    }
     exit 1
 }
 
@@ -102,35 +126,35 @@ if (Test-PortInUse -Port $config.port) {
 
 # Function to start the MCP server
 function Start-McpServer {
-    Write-Host "Starting MCP Persistent Server..."
+    Write-Host "Starting MCP Persistent Server using $($config.engine) engine..."
     Write-Host "Starting MCP server on port $($config.port)..."
 
     try {
-        # Change to the server directory
         Push-Location $config.serverPath
-        
-        # Configure environment variables
-        $env:UNITY_PORT = $config.port.ToString()
-        $env:NODE_ENV = $config.nodeEnv
-        
-        # Run the server and redirect output to logfile
-        $processInfo = Start-Process -FilePath "node" -ArgumentList "build/index.js" -RedirectStandardOutput $config.logFile -RedirectStandardError $config.logFile -NoNewWindow -PassThru
-        
-        # Return to the original directory
+
+        if ($config.engine -eq 'godot') {
+            $env:PORT = $config.port.ToString()
+            $processInfo = Start-Process -FilePath "dotnet" -ArgumentList "run --project GodotServer.csproj --no-build" -RedirectStandardOutput $config.logFile -RedirectStandardError $config.logFile -NoNewWindow -PassThru
+        }
+        else {
+            $env:UNITY_PORT = $config.port.ToString()
+            $env:NODE_ENV = $config.nodeEnv
+            $processInfo = Start-Process -FilePath "node" -ArgumentList "build/index.js" -RedirectStandardOutput $config.logFile -RedirectStandardError $config.logFile -NoNewWindow -PassThru
+        }
+
         Pop-Location
-        
+
         Write-Host "MCP server started on port $($config.port) with process ID: $($processInfo.Id)" -ForegroundColor Green
         Write-Host "Output is being logged to: $($config.logFile)"
         Write-Host "To test the connection, run: .\test-menu.ps1 -MenuPath `"GameObject/Create Empty`""
-        
+
         return $processInfo.Id
     }
     catch {
-        # Make sure we return to the original directory even if there's an error
         if ($pwd.Path -eq $config.serverPath) {
             Pop-Location
         }
-        
+
         Write-Error "Failed to start MCP server: $_"
         return $null
     }
