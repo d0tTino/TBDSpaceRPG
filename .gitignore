@@ -1,2 +1,4 @@
 node_modules/
 servers/telemetry/logs/
+**/bin/
+**/obj/

@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Scripts/OrbitalMechanics/*.cs" />
+    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Scripts/ShipCustomization/SpaceshipMovement.cs" />
     <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Plugins/SimpleKeplerOrbits/*.cs" />
     <Compile Include="../UnityStubs/UnityEngine.cs" />
   </ItemGroup>
