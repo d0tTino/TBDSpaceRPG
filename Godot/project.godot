@@ -2,6 +2,13 @@
 
 [application]
 config/name="TBDSpaceRPG"
+run/main_scene="res://Scenes/Flight.tscn"
 
 [dotnet]
 project="TBDSpaceRPG.csproj"
+
+[input]
+move_forward={"deadzone":0.5,"events":[{"type":"key","scancode":87}]}
+move_backward={"deadzone":0.5,"events":[{"type":"key","scancode":83}]}
+turn_left={"deadzone":0.5,"events":[{"type":"key","scancode":65}]}
+turn_right={"deadzone":0.5,"events":[{"type":"key","scancode":68}]}

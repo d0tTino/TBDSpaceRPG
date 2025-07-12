@@ -1,6 +1,6 @@
 # PowerShell script to start all MCP servers
 param(
-    [ValidateSet('unity','godot')]
+    [ValidateSet('unity','godot','ksa')]
     [string]$Engine = 'unity'
 )
 
@@ -37,6 +37,7 @@ $gitRunning = Test-ServerPort -ServerName "Git MCP Server" -Port 8080
 $postgresRunning = Test-ServerPort -ServerName "Postgres MCP Server" -Port 8003
 $telemetryRunning = Test-ServerPort -ServerName "Telemetry Server" -Port 8090
 $proxyRunning = Test-ServerPort -ServerName "MCP Proxy Server" -Port 8004
+$ksaRunning = Test-ServerPort -ServerName "KSA Adapter" -Port 8005
 
 # 1. Start Unity MCP Server if not already running
 if (-not $unityRunning) {
@@ -83,6 +84,15 @@ if (-not $proxyRunning) {
     Write-Host "Skipping MCP Proxy Server (already running)" -ForegroundColor Yellow
 }
 
+# 6. Start KSA Adapter
+if (-not $ksaRunning) {
+    Write-Host "Starting KSA Adapter..." -ForegroundColor Green
+    $ksaScript = Join-Path $scriptDir "run-ksa-server.ps1"
+    Start-Process PowerShell -ArgumentList "-File `"$ksaScript`"" -NoNewWindow
+} else {
+    Write-Host "Skipping KSA Adapter (already running)" -ForegroundColor Yellow
+}
+
 Write-Host "All MCP servers have been started!" -ForegroundColor Cyan
 Write-Host "Use the following servers in Cursor:" -ForegroundColor White
 Write-Host "- mcp-unity: ws://localhost:8001/McpUnity" -ForegroundColor White
@@ -90,3 +100,4 @@ Write-Host "- git: http://localhost:8080" -ForegroundColor White
 Write-Host "- postgres: http://localhost:8003" -ForegroundColor White
 Write-Host "- telemetry: http://localhost:8090" -ForegroundColor White
 Write-Host "- mcpProxy: http://localhost:8004" -ForegroundColor White
+Write-Host "- ksa-adapter: http://localhost:8005" -ForegroundColor White

@@ -21,6 +21,16 @@ jobs:
       - run: npm run lint
       - run: npm test
 
+  dotnet-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet test csharp/ShipCustomization.Tests/ShipCustomization.Tests.csproj --verbosity normal
+      - run: dotnet test csharp/OrbitalMechanics.Tests/OrbitalMechanics.Tests.csproj --verbosity normal
+
   unity-tests:
     runs-on: ubuntu-latest
     steps:
