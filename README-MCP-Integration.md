@@ -264,6 +264,7 @@ Log files are available in the following locations:
 - Server-Git: Terminal output only
 - Server-Postgres: `servers/postgres/logs`
 - Telemetry Server: `servers/telemetry/logs`
+- Telemetry reports: `Documentation/Technical/Telemetry_Reports.md`
 - MCPProxy: Terminal output only
 
 ## Future Enhancements
