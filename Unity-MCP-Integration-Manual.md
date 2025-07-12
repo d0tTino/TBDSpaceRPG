@@ -144,18 +144,6 @@ EditorApplication.ExecuteMenuItem("MCP/Ship/V2/Create Test Ship");
    .\test-menu.ps1 -MenuPath "MCP/Ship/V2/Log Current Upgrades"
    ```
 
-### Standard Unity Operations
-
-Always test standard Unity menu paths if custom paths aren't working:
-
-```powershell
-# Create empty GameObject
-.\test-menu.ps1 -MenuPath "GameObject/Create Empty"
-
-# Create 3D cube
-.\test-menu.ps1 -MenuPath "GameObject/3D Object/Cube"
-```
-
 ## CI/CD Integration
 
 The MCP integration can be incorporated into your CI/CD pipeline to automate testing and validation of Unity menu items.
@@ -380,14 +368,27 @@ public class ShipCustomizationWindow : EditorWindow
 5. **Test in Edit mode**: Ensure all functionality works in Edit mode, not just Play mode
 6. **Maintain undo support**: Use Undo.RecordObject for changes to persist properly
 
-## Appendix: Common Unity Menu Paths
+## Server Utility Scripts
 
-These standard Unity menu paths should work reliably:
+Use `safe-mcp-restart.ps1` to safely restart the MCP server without killing unrelated Node processes:
+```powershell
+./safe-mcp-restart.ps1
+```
+If Unity updates its packages, run `restart-mcp-after-unity-update.ps1`:
+```powershell
+./restart-mcp-after-unity-update.ps1
+```
 
-- `GameObject/Create Empty`
-- `GameObject/3D Object/Cube`
-- `GameObject/3D Object/Sphere`
-- `GameObject/Light/Directional Light`
-- `GameObject/UI/Button`
-- `Edit/Duplicate`
-- `Edit/Delete` 
+
+## Godot Workflow
+
+### Exporting glTF Assets
+Use the glTFast plugin or Blender\x27s exporter to convert Unity prefabs or Blender models into `.gltf` files. Place the exports in `Assets_glTF/`.
+
+### Launching Servers for Godot
+Start all MCP services with Godot-specific settings:
+```powershell
+./run-all-mcp-servers.ps1 -Engine godot
+```
+
+The Godot project under `Godot/` will automatically import these assets and generate reusable scenes.

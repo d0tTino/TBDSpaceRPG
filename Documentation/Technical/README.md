@@ -16,4 +16,6 @@ This directory contains technical implementation documents for the TBD Space Gam
 - Gameplay_System/4. Technical Implementation.txt
 - Gameplay_System/4.12 UI_UX_Design.txt
 - Gameplay_System/6. Appendices.txt (technical sections)
-- Scripts/ (technical documentation) 
+
+- Scripts/ (technical documentation)
+- [Godot Migration Steps](Godot_Migration_Steps.md)
