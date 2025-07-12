@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
+const analytics = require('../servers/telemetry/analytics.cjs');
 
 function startServer(relativePath, port) {
   const fullPath = path.join(__dirname, '..', relativePath);
@@ -96,6 +97,12 @@ function post(port, pathName, data) {
     const logPath = path.join(__dirname, '..', 'servers', 'telemetry', 'logs', 'events.log');
     const logContents = fs.readFileSync(logPath, 'utf8');
     assert.ok(logContents.includes(JSON.stringify(genEvent)));
+
+    const metrics = analytics.parseLogFile(logPath);
+    assert.strictEqual(metrics.totalEvents, 2);
+    assert.strictEqual(metrics.eventCounts.test, 1);
+    assert.strictEqual(metrics.eventCounts.generation_advanced, 1);
+    assert.strictEqual(metrics.latestGeneration, 1);
     console.log('Tests passed');
     git.kill();
     pg.kill();
