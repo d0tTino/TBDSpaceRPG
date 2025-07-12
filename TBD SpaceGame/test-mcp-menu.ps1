@@ -17,10 +17,17 @@ $ErrorActionPreference = "Stop"
 # Function to check if the server is running
 function Test-ServerRunning {
     param([string]$port)
-    
+
     try {
-        $connections = netstat -ano | Select-String ":$port.*LISTENING"
-        return ($null -ne $connections)
+        if (Get-Command Test-NetConnection -ErrorAction SilentlyContinue) {
+            return Test-NetConnection -ComputerName 'localhost' -Port $port -InformationLevel Quiet
+        } else {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $task = $client.ConnectAsync('localhost', [int]$port)
+            $connected = $task.Wait(500)
+            $client.Dispose()
+            return $connected
+        }
     }
     catch {
         Write-Host "Error checking server status: $_" -ForegroundColor Red

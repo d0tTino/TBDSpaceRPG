@@ -65,9 +65,18 @@ function Write-Log {
 function Test-Server {
     # Check if the server is running by testing if the port is in use
     try {
-        $connection = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-        if ($connection) {
-            return $true
+        if (Get-Command Test-NetConnection -ErrorAction SilentlyContinue) {
+            if (Test-NetConnection -ComputerName 'localhost' -Port $Port -InformationLevel Quiet) {
+                return $true
+            }
+        } else {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $task = $client.ConnectAsync('localhost', $Port)
+            if ($task.Wait(500)) {
+                $client.Dispose()
+                return $true
+            }
+            $client.Dispose()
         }
     }
     catch {

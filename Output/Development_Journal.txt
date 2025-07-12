@@ -100,7 +100,7 @@ env UNITY_PORT=8001 node [path-to-server]/build/index.js
 ./mcpWebSocketClient-simple.ps1 -menuPath "MCP/Ship/V2/Create Test Ship"
 
 # Check server status
-netstat -ano | findstr :8001
+Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet
 ```
 
 ## Development Workflow

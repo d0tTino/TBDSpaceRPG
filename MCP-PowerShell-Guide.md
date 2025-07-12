@@ -137,15 +137,14 @@ function Test-PortAvailable {
     )
     
     try {
-        # Check if port is in use
-        $inUse = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-        
+        # Check if port is in use (cross-platform)
+        $inUse = Test-NetConnection -ComputerName 'localhost' -Port $Port -InformationLevel Quiet
+
         if ($inUse) {
             Write-Warning "Port $Port is already in use!"
-            Write-Warning "Process using port: $(Get-Process -Id $inUse[0].OwningProcess -ErrorAction SilentlyContinue | Select-Object -ExpandProperty ProcessName)"
             return $false
         }
-        
+
         return $true
     }
     catch {
