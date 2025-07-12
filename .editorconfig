@@ -1,0 +1,20 @@
+root = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+charset = utf-8
+end_of_line = lf
+
+# Sort System directives first
+dotnet_sort_system_directives_first = true
+# Separate groups of using directives
+dotnet_separate_import_directive_groups = true
+
+# Prefer braces
+csharp_prefer_braces = true:suggestion
+
+# Naming conventions
+# Private fields use _camelCase
+# Public members use PascalCase
+

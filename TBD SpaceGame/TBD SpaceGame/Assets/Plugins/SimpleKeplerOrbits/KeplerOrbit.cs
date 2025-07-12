@@ -1,6 +1,8 @@
 using System;
-using UnityEngine;
+
 using OrbitalMechanics;
+
+using UnityEngine;
 
 namespace SimpleKeplerOrbits
 {

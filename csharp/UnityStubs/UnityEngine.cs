@@ -14,38 +14,33 @@ namespace UnityEngine
             float dx = a.x - b.x;
             float dy = a.y - b.y;
             float dz = a.z - b.z;
-            return (float)Math.Sqrt(dx*dx + dy*dy + dz*dz);
+            return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
         public Vector3 normalized
         {
             get
             {
-                float mag = (float)Math.Sqrt(x*x + y*y + z*z);
-                return mag > 1e-5 ? new Vector3(x/mag, y/mag, z/mag) : zero;
+                float mag = (float)Math.Sqrt(x * x + y * y + z * z);
+                return mag > 1e-5 ? new Vector3(x / mag, y / mag, z / mag) : zero;
             }
         }
-        public float magnitude => (float)Math.Sqrt(x*x + y*y + z*z);
-        public static Vector3 ClampMagnitude(Vector3 v, float max)
-        {
-            var mag = v.magnitude;
-            return mag > max ? v.normalized * max : v;
-        }
-        public static Vector3 operator -(Vector3 v) => new Vector3(-v.x, -v.y, -v.z);
-        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x-b.x, a.y-b.y, a.z-b.z);
-        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x+b.x, a.y+b.y, a.z+b.z);
-        public static Vector3 operator *(Vector3 v, float d) => new Vector3(v.x*d, v.y*d, v.z*d);
+        public float magnitude => (float)Math.Sqrt(x * x + y * y + z * z);
+        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
+        public static Vector3 operator *(Vector3 v, float d) => new Vector3(v.x * d, v.y * d, v.z * d);
+
     }
 
-    public class MonoBehaviour {
+    public class MonoBehaviour
+    {
         public Transform transform = new Transform();
         public GameObject gameObject = new GameObject();
         public string name { get => gameObject.name; set => gameObject.name = value; }
-        public static void Destroy(object obj) {}
-        public T GetComponent<T>() where T : class => gameObject.GetComponent<T>();
+        public static void Destroy(object obj) { }
+
     }
 
-    public class SerializeField : Attribute {}
-    public class RequireComponent : Attribute { public RequireComponent(Type t) {} }
+    public class SerializeField : Attribute { }
+    public class RequireComponent : Attribute { public RequireComponent(Type t) { } }
 
     public static class Mathf
     {
@@ -108,3 +103,5 @@ namespace UnityEngine
     }
 
 }
+public class SpaceshipMovement : UnityEngine.MonoBehaviour { }
+
