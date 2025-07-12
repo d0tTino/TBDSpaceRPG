@@ -22,5 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: game-ci/unity-test-runner@v4
+        id: tests
         with:
           projectPath: 'TBD SpaceGame/TBD SpaceGame'
+          githubToken: ${{ github.token }}
+          testMode: all
+          artifactsPath: artifacts
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: Unity Test Results
+          path: ${{ steps.tests.outputs.artifactsPath }}
