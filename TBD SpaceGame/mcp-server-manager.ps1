@@ -17,15 +17,36 @@ $logFile = Join-Path (Get-Location) "mcp-server.log"
 # Function to check if the server is running
 function Test-ServerRunning {
     param([string]$port)
-    
+
     try {
-        $connections = netstat -ano | Select-String ":$port.*LISTENING"
-        return ($connections -ne $null)
+        if (Get-Command Test-NetConnection -ErrorAction SilentlyContinue) {
+            return Test-NetConnection -ComputerName 'localhost' -Port $port -InformationLevel Quiet
+        } else {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $task = $client.ConnectAsync('localhost', [int]$port)
+            $connected = $task.Wait(500)
+            $client.Dispose()
+            return $connected
+        }
     }
     catch {
         Write-Host "Error checking server status: $_" -ForegroundColor Red
         return $false
     }
+}
+
+function Get-ProcessIdOnPort {
+    param([int]$Port)
+    try {
+        if (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue) {
+            $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($conn) { return $conn.OwningProcess }
+        } elseif (Get-Command lsof -ErrorAction SilentlyContinue) {
+            $pid = lsof -i :$Port -sTCP:LISTEN -t 2>$null | Select-Object -First 1
+            if ($pid) { return [int]$pid }
+        }
+    } catch {}
+    return $null
 }
 
 # Function to start the MCP server
@@ -87,9 +108,8 @@ function Stop-McpServer {
         Write-Host "Stopping MCP server on port $port..." -ForegroundColor Cyan
         
         # Find and stop the process
-        $connections = netstat -ano | Select-String ":$port.*LISTENING"
-        if ($connections -ne $null) {
-            $processId = ($connections -split ' ')[-1]
+        $processId = Get-ProcessIdOnPort -Port $port
+        if ($processId) {
             Stop-Process -Id $processId -Force
             Write-Host "MCP server stopped successfully" -ForegroundColor Green
         }
@@ -109,9 +129,13 @@ function Show-ServerStatus {
     Write-Host "Checking MCP server status..." -ForegroundColor Cyan
     
     if (Test-ServerRunning -port $port) {
-        $connections = netstat -ano | Select-String ":$port"
-        $listeningCount = ($connections | Select-String "LISTENING").Count
-        $establishedCount = ($connections | Select-String "ESTABLISHED").Count
+        $listeningCount = 0
+        $establishedCount = 0
+        if (Get-Command netstat -ErrorAction SilentlyContinue) {
+            $connections = netstat -ano | Select-String ":$port"
+            $listeningCount = ($connections | Select-String "LISTENING").Count
+            $establishedCount = ($connections | Select-String "ESTABLISHED").Count
+        }
         
         Write-Host "MCP server is RUNNING on port $port" -ForegroundColor Green
         Write-Host "Listening connections: $listeningCount" -ForegroundColor Green

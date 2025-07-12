@@ -369,7 +369,7 @@ env UNITY_PORT=8001 node [path-to-server]/build/index.js
 ./mcpWebSocketClient-simple.ps1 -menuPath "MCP/Test/Ping"
 
 # Check port availability
-netstat -ano | findstr :8001
+Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet
 ```
 
 ## Troubleshooting Guide
@@ -377,7 +377,7 @@ netstat -ano | findstr :8001
 ### MCP Connection Issues
 1. **Problem**: Unable to connect to MCP server
    **Diagnostic**: Check if server is running and port is available
-   **Solution**: Use `netstat -ano | findstr :8001` to check port, then restart server
+   **Solution**: Use `Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet` to check the port, then restart server
 
 2. **Problem**: Connection errors in Unity console
    **Diagnostic**: WebSocket connection refused or timeout

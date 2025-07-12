@@ -35,15 +35,37 @@ function Test-PortInUse {
     param (
         [int]$Port
     )
-    
+
     try {
-        $portString = [string]$Port
-        $connections = netstat -ano | findstr ":$portString "
-        return ($null -ne $connections -and $connections.Length -gt 0)
+        if (Get-Command Test-NetConnection -ErrorAction SilentlyContinue) {
+            return Test-NetConnection -ComputerName 'localhost' -Port $Port -InformationLevel Quiet
+        }
+        else {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $task = $client.ConnectAsync('localhost', $Port)
+            $connected = $task.Wait(500)
+            $client.Dispose()
+            return $connected
+        }
     }
     catch {
         return $false
     }
+}
+
+function Get-ProcessIdOnPort {
+    param ([int]$Port)
+    try {
+        if (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue) {
+            $conn = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($conn) { return $conn.OwningProcess }
+        }
+        elseif (Get-Command lsof -ErrorAction SilentlyContinue) {
+            $pid = lsof -i :$Port -sTCP:LISTEN -t 2>$null | Select-Object -First 1
+            if ($pid) { return [int]$pid }
+        }
+    } catch {}
+    return $null
 }
 
 # Function to free up the port if it's in use
@@ -58,18 +80,10 @@ function Free-Port {
         Write-Host "Port $Port is in use. Attempting to free it..."
         
         try {
-            # Get the process ID using the port
-            $portString = [string]$Port
-            $processInfo = netstat -ano | findstr ":$portString " | Select-Object -First 1
-            if ($processInfo) {
-                $processIdString = $processInfo.Trim().Split(' ')[-1]
-                $processId = [int]$processIdString
-                
-                # Kill the process
+            $processId = Get-ProcessIdOnPort -Port $Port
+            if ($processId) {
                 Stop-Process -Id $processId -Force
                 Write-Host "Stopped process with ID $processId that was using port $Port"
-                
-                # Wait briefly to ensure the port is released
                 Start-Sleep -Seconds 2
             }
         }

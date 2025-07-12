@@ -232,8 +232,8 @@ $endTime = (Get-Date).AddMinutes($DurationMinutes)
 $failures = 0
 
 while ((Get-Date) -lt $endTime) {
-    $connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-    
+    $connection = Test-NetConnection -ComputerName 'localhost' -Port $Port -InformationLevel Quiet
+
     if (-not $connection) {
         $failures++
         Write-Warning "MCP server not detected on port $Port. Failure #$failures"
