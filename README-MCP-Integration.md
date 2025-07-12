@@ -23,6 +23,7 @@ The TBD Space Game uses MCP (Model Context Protocol) to enable AI-assisted devel
 - **MCP Unity Fallback**: Backup server running on port 8002
 - **Server-Git**: Version control operations via MCP running on port 8080
 - **Server-Postgres**: Database operations via MCP running on port 8003
+- **Telemetry Server**: Collects runtime events on port 8090
 - **MCPProxy**: Routes requests to appropriate MCP servers running on port 8004
 - **KSA Adapter**: Placeholder server for the upcoming KSA engine on port 8005
 
@@ -65,6 +66,14 @@ Manages database operations through MCP.
 # Start the PostgreSQL server
 ./run-postgres-server.ps1
 ```
+### Telemetry Server
+
+Collects runtime analytics and sends them to the telemetry dashboard.
+```powershell
+# Start the telemetry server
+./run-telemetry-server.ps1
+```
+
 
 ### MCPProxy
 
@@ -322,22 +331,18 @@ This script handles:
 - Path validation
 - Environment variable configuration
 - Server process management
-
-### Manual Server Start (If Needed)
-
-If you need to start the server manually, use semicolons for command chaining:
-
+### Safe MCP Server Restart
+Use `safe-mcp-restart.ps1` to restart the server without terminating unrelated Node processes:
 ```powershell
-cd "TBD SpaceGame\TBD SpaceGame\Library\PackageCache\com.gamelovers.mcp-unity@3acfb232f564\Server"; 
-$env:UNITY_PORT="8001"; 
-node build/index.js
+./safe-mcp-restart.ps1
 ```
 
-❌ DO NOT use the `&&` operator in PowerShell as it causes syntax errors:
+### Restart After Unity Update
+If Unity updates its packages, run `restart-mcp-after-unity-update.ps1` to reconnect:
 ```powershell
-# This will NOT work
-cd "path\to\server" && $env:UNITY_PORT="8001" && node build/index.js
+./restart-mcp-after-unity-update.ps1
 ```
+
 
 ## PowerShell Best Practices
 
@@ -456,6 +461,15 @@ This workflow verifies that menu items are found, commands are executed, and the
 - [MCP Unity Package Documentation](https://github.com/gamelovers/mcp-unity)
 - [Unity Editor Scripting Manual](https://docs.unity3d.com/Manual/ExtendingTheEditor.html) 
 ## Godot Integration
+
+### Exporting glTF Assets
+Use a glTF exporter (such as Unity's glTFast or Blender's exporter) to convert prefabs and models. Export them into `Assets_glTF/` so both Unity and Godot consume the same files.
+
+### Starting Servers for Godot
+Run all MCP servers configured for Godot with:
+```powershell
+./run-all-mcp-servers.ps1 -Engine godot
+```
 
 To import exported assets into Godot:
 1. Copy or move the contents of `Assets_glTF/` into the `Godot` project folder.
