@@ -1,13 +1,30 @@
 const http = require('http');
+
 const port = process.env.PORT || 8005;
+
+function translateMcpToKsa(mcp) {
+  return {
+    command: mcp.method,
+    arguments: mcp.params || {},
+    requestId: mcp.id
+  };
+}
 
 const server = http.createServer((req, res) => {
   if (req.method === 'POST') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(body || '{}');
+      try {
+        const mcp = JSON.parse(body || '{}');
+        const ksaRequest = translateMcpToKsa(mcp);
+        const response = { requestId: ksaRequest.requestId, result: { received: ksaRequest } };
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(response));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Invalid JSON');
+      }
     });
     return;
   }
