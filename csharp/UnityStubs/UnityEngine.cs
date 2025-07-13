@@ -25,14 +25,15 @@ namespace UnityEngine
             }
         }
         public float magnitude => (float)Math.Sqrt(x * x + y * y + z * z);
+        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.x - b.x, a.y - b.y, a.z - b.z);
         public static Vector3 operator -(Vector3 v) => new Vector3(-v.x, -v.y, -v.z);
-        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.x + b.x, a.y + b.y, a.z + b.z);
         public static Vector3 operator *(Vector3 v, float d) => new Vector3(v.x * d, v.y * d, v.z * d);
-        public static Vector3 ClampMagnitude(Vector3 v, float max)
+        public static Vector3 operator *(float d, Vector3 v) => v * d;
+        public static Vector3 ClampMagnitude(Vector3 vector, float maxLength)
         {
-            float mag = v.magnitude;
-            return mag > max ? v.normalized * max : v;
+            return vector.magnitude > maxLength ? vector.normalized * maxLength : vector;
+
         }
 
     }
@@ -43,8 +44,9 @@ namespace UnityEngine
         public GameObject gameObject = new GameObject();
         public string name { get => gameObject.name; set => gameObject.name = value; }
         public static void Destroy(object obj) { }
-        public T GetComponent<T>() where T : class => gameObject.GetComponent<T>();
         public T AddComponent<T>() where T : new() => gameObject.AddComponent<T>();
+        public T GetComponent<T>() where T : class => gameObject.GetComponent<T>();
+
 
     }
 
@@ -112,7 +114,5 @@ namespace UnityEngine
     }
 
 }
-#if false
-public class SpaceshipMovement : UnityEngine.MonoBehaviour { }
-#endif
+
 
