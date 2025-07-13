@@ -84,9 +84,11 @@ function post(port, pathName, data) {
     assert.strictEqual(telemetryResponse, 'Telemetry server placeholder');
     const ksaResponse = await request(ksaPort);
     assert.strictEqual(ksaResponse, 'KSA MCP server placeholder');
-    const echo = await post(ksaPort, '/', { echo: 'test' });
-    assert.strictEqual(echo.statusCode, 200);
-    assert.strictEqual(echo.body, JSON.stringify({ echo: 'test' }));
+    const mcpCmd = { method: 'notify_message', params: { message: 'hi', logType: 'Log' }, id: '42' };
+    const ksaResult = await post(ksaPort, '/', mcpCmd);
+    assert.strictEqual(ksaResult.statusCode, 200);
+    const expectedKsa = { command: 'notify_message', arguments: { message: 'hi', logType: 'Log' }, requestId: '42' };
+    assert.deepStrictEqual(JSON.parse(ksaResult.body), { requestId: '42', result: { received: expectedKsa } });
     const postResult = await post(telemetryPort, '/event', { type: 'test' });
     assert.strictEqual(postResult.statusCode, 200);
 

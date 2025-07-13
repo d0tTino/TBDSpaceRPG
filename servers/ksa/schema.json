@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "KSA Protocol",
+  "definitions": {
+    "request": {
+      "type": "object",
+      "required": ["command", "arguments", "requestId"],
+      "properties": {
+        "command": { "type": "string" },
+        "arguments": { "type": "object" },
+        "requestId": { "type": "string" }
+      }
+    },
+    "response": {
+      "type": "object",
+      "required": ["requestId", "result"],
+      "properties": {
+        "requestId": { "type": "string" },
+        "result": { "type": "object" }
+      }
+    }
+  }
+}
