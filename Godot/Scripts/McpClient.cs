@@ -18,7 +18,7 @@ public partial class McpClient : Control
         var payload = new
         {
             method = "execute_menu_item",
-            params = new { menuPath },
+            @params = new { menuPath },
             id = System.Guid.NewGuid().ToString()
         };
         var json = JsonSerializer.Serialize(payload);
