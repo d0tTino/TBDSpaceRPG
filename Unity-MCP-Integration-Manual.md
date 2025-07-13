@@ -4,6 +4,9 @@
 
 This guide explains how to integrate the Machine Control Protocol (MCP) with Unity for the TBD Space Game project. MCP enables AI-assisted development by allowing external tools to control Unity's editor functionality.
 
+> **Note**
+> The primary game engine is now Godot. Unity is maintained only for creating assets that are exported to `Assets_glTF/` for use in the Godot project.
+
 ## Setup Requirements
 
 - Unity 2022.3 or newer
