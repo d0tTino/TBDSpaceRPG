@@ -4,10 +4,19 @@ using System.Threading.Tasks;
 
 public partial class McpClient : Control
 {
-    private const string Endpoint = "http://localhost:8001/mcp";
+    [Export] public string Endpoint = "http://localhost:8001/mcp";
 
     public override void _Ready()
     {
+        if (ProjectSettings.HasSetting("application/mcp_endpoint"))
+        {
+            var cfg = ProjectSettings.GetSetting("application/mcp_endpoint");
+            if (cfg is StringName sn)
+                Endpoint = sn.ToString();
+            else if (cfg is string str)
+                Endpoint = str;
+        }
+
         GetNode<Button>("VBox/DockButton").Pressed += () => _ = SendCommand("Dock Ship");
         GetNode<Button>("VBox/UpgradeButton").Pressed += () => _ = SendCommand("Ship/Upgrade");
         GetNode<Button>("VBox/RelaunchButton").Pressed += () => _ = SendCommand("Ship/Relaunch");
