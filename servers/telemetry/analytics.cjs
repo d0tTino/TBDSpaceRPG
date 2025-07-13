@@ -6,6 +6,12 @@ const metrics = {
   latestGeneration: null,
 };
 
+function resetMetrics() {
+  metrics.totalEvents = 0;
+  metrics.eventCounts = {};
+  metrics.latestGeneration = null;
+}
+
 function updateMetrics(event) {
   if (!event || typeof event !== 'object') return;
   if (typeof event.type !== 'string') return;
@@ -21,6 +27,7 @@ function computeMetrics(event) {
 }
 
 function parseLogFile(filePath) {
+  resetMetrics();
   if (!fs.existsSync(filePath)) return metrics;
   const contents = fs.readFileSync(filePath, 'utf8');
   const lines = contents.split(/\r?\n/).filter(Boolean);
@@ -42,5 +49,6 @@ function getMetrics() {
 module.exports = {
   computeMetrics,
   parseLogFile,
+  resetMetrics,
   getMetrics,
 };

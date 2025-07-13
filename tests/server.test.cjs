@@ -103,6 +103,12 @@ function post(port, pathName, data) {
     assert.strictEqual(metrics.eventCounts.test, 1);
     assert.strictEqual(metrics.eventCounts.generation_advanced, 1);
     assert.strictEqual(metrics.latestGeneration, 1);
+
+    const metrics2 = analytics.parseLogFile(logPath);
+    assert.strictEqual(metrics2.totalEvents, 2);
+    assert.strictEqual(metrics2.eventCounts.test, 1);
+    assert.strictEqual(metrics2.eventCounts.generation_advanced, 1);
+    assert.strictEqual(metrics2.latestGeneration, 1);
     console.log('Tests passed');
     git.kill();
     pg.kill();
