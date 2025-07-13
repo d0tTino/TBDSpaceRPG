@@ -473,6 +473,15 @@ Godot is now the main runtime engine for TBD Space Game. Assets exported from Un
 ### Exporting glTF Assets
 Use a glTF exporter (such as Unity's glTFast or Blender's exporter) to convert prefabs and models. Export them into `Assets_glTF/` so both Unity and Godot consume the same files.
 
+### Command Line Asset Exporters
+The Unity project includes lightweight exporters that run without opening the editor. Run them with:
+
+```sh
+./TBD\ SpaceGame/Assets/Editor/run-exporters.sh
+```
+
+This script builds `Exporters.csproj` and writes a sample `.gltf` file to `Assets_glTF/` and a JSON data file to `Gameplay_Data/`. Integrate it into your CI pipeline to regenerate assets automatically.
+
 ### Starting Servers for Godot
 Run all MCP servers configured for Godot with:
 ```powershell
