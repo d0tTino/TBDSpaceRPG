@@ -4,9 +4,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Scripts/OrbitalMechanics/*.cs" />
-    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Scripts/ShipCustomization/SpaceshipMovement.cs" />
-    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Plugins/SimpleKeplerOrbits/*.cs" />
+    <Compile Include="../../src/OrbitalMechanics/*.cs" />
+    <Compile Include="../../src/ShipCustomization/SpaceshipMovement.cs" />
+    <Compile Include="../../src/SimpleKeplerOrbits/*.cs" />
     <Compile Include="../UnityStubs/UnityEngine.cs" />
   </ItemGroup>
 </Project>

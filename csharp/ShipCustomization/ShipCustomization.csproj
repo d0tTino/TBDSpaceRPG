@@ -4,7 +4,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../TBD SpaceGame/TBD SpaceGame/Assets/Scripts/ShipCustomization/*.cs" />
+    <Compile Include="../../src/ShipCustomization/*.cs" />
     <Compile Include="../UnityStubs/UnityEngine.cs" />
   </ItemGroup>
 </Project>
