@@ -484,4 +484,18 @@ To import exported assets into Godot:
 2. Open the Godot project in the Godot 4 editor.
 3. Each `.gltf` file will automatically generate a scene that can be instanced in your C# scripts.
 
+### Configuring the MCP Endpoint
+
+The Godot project reads the MCP endpoint from the `mcp_endpoint` setting in
+`project.godot`. The default is `http://localhost:8001/mcp`. Update this value to
+point at a different server without modifying any scripts.
+
+```ini
+[application]
+mcp_endpoint="http://localhost:8001/mcp"
+```
+
+`McpClient.cs` automatically picks up this value during startup, so changing it
+in the configuration or via the Godot editor is enough to redirect requests.
+
 
