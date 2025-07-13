@@ -18,3 +18,4 @@ This directory contains development workflow and process documentation for the T
 - MCP integration documentation
 - Terminal and environment setup guides
 - Use `npm ci` to install Node.js dependencies
+- Run `npm ci` again before executing `npm run lint` or `npm test`

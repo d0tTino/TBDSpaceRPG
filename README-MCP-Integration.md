@@ -225,6 +225,8 @@ public class McpServerAutoRestarter
 
 All automated tests use PowerShell scripts. Ensure that the `pwsh` command is available before running tests.
 
+Run `npm ci` to install Node.js dependencies before executing the test script.
+
 ```pwsh
 pwsh -File tests/test-servers.ps1
 ```
