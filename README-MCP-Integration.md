@@ -2,6 +2,9 @@
 
 This document provides comprehensive information about the Model Context Protocol (MCP) integration for the TBD Space Game project, including server setup, configuration, and tools developed to enhance AI-assisted game development.
 
+> **Note**
+> The project has moved to a **Godot-first** workflow. Unity is now used only as an optional authoring tool for meshes and animations that are exported to `Assets_glTF/` for consumption by the Godot project. Gameplay and scripting take place primarily within Godot.
+
 <!-- Project Comparison -->
 Unlike the classic **Ringworld RPG**, which focuses primarily on tabletop-style exploration of a single megastructure, TBD Space Game centers on managing a starship crew over multiple generations. The two projects share a sci-fi setting, but this project integrates MCP tooling and Unity-based gameplay while **Ringworld RPG** relies on a more traditional ruleset with minimal automation. These notes clarify the unique scope and workflow of this project for anyone familiar with **Ringworld RPG**.
 
@@ -27,11 +30,12 @@ The TBD Space Game uses MCP (Model Context Protocol) to enable AI-assisted devel
 - **MCPProxy**: Routes requests to appropriate MCP servers running on port 8004
 - **KSA Adapter**: Placeholder server for the upcoming KSA engine on port 8005
 
-These servers enable AI tools to interact with the Unity project, perform version control operations, manage database records, and more.
+These servers enable AI tools to interact with the Godot project and, when needed, the optional Unity asset pipeline for glTF exports. They also handle version control operations, manage database records, and more.
 
 ## Prerequisites
 
-- Unity 2022.3 or later
+- Godot 4 or later
+- Unity 2022.3 or later (optional, for asset authoring)
 - Node.js v18 or later
 - npm v9 or later
 - PowerShell 7.0 or later (required to run tests)
@@ -463,6 +467,8 @@ This workflow verifies that menu items are found, commands are executed, and the
 - [MCP Unity Package Documentation](https://github.com/gamelovers/mcp-unity)
 - [Unity Editor Scripting Manual](https://docs.unity3d.com/Manual/ExtendingTheEditor.html) 
 ## Godot Integration
+
+Godot is now the main runtime engine for TBD Space Game. Assets exported from Unity or Blender should be placed in `Assets_glTF/` so the Godot project can import them automatically.
 
 ### Exporting glTF Assets
 Use a glTF exporter (such as Unity's glTFast or Blender's exporter) to convert prefabs and models. Export them into `Assets_glTF/` so both Unity and Godot consume the same files.
