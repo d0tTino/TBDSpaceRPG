@@ -1,49 +1,24 @@
-using Godot;
 using System;
 using System.Text.Json;
-using System.Text;
+using WebSocketSharp;
+using WebSocketSharp.Server;
 
-public partial class McpGodotServer : Node
+public class McpBehavior : WebSocketBehavior
 {
-    private WebSocketServer _server = new();
-
-    public override void _Ready()
+    protected override void OnMessage(MessageEventArgs e)
     {
-        var portEnv = Environment.GetEnvironmentVariable("PORT");
-        if (!int.TryParse(portEnv, out var port))
-            port = 8001;
-
-        _server.Listen(port);
-        GD.Print($"Godot MCP server listening on port {port}");
-        _server.ClientConnected += id => GD.Print($"Client connected: {id}");
-    }
-
-    public override void _Process(double delta)
-    {
-        _server.Poll();
-
-        foreach (var id in _server.GetPeerIds())
+        try
         {
-            var peer = _server.GetPeer(id);
-            while (peer.GetAvailablePacketCount() > 0)
+            var request = JsonSerializer.Deserialize<McpRequest>(e.Data);
+            if (request != null)
             {
-                var bytes = peer.GetPacket();
-                var msg = Encoding.UTF8.GetString(bytes);
-                try
-                {
-                    var request = JsonSerializer.Deserialize<McpRequest>(msg);
-                    if (request != null)
-                    {
-                        var response = new McpResponse { id = request.id };
-                        var respBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
-                        peer.PutPacket(respBytes);
-                    }
-                }
-                catch (Exception e)
-                {
-                    GD.PrintErr($"Failed to process packet: {e.Message}");
-                }
+                var response = new McpResponse { id = request.id };
+                Send(JsonSerializer.Serialize(response));
             }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to process packet: {ex.Message}");
         }
     }
 }
@@ -65,12 +40,15 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        using var gd = new Godot.Godot();
-        gd.Init();
-        var tree = new SceneTree();
-        var server = new McpGodotServer();
-        tree.Root.AddChild(server);
-        gd.Run(tree);
-        gd.Shutdown();
+        if (!int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var port))
+            port = 8001;
+
+        var server = new WebSocketServer(port);
+        server.AddWebSocketService<McpBehavior>("/");
+        server.Start();
+        Console.WriteLine($"Godot MCP server listening on port {port}");
+        Console.WriteLine("Press Enter to stop the server...");
+        Console.ReadLine();
+        server.Stop();
     }
 }
