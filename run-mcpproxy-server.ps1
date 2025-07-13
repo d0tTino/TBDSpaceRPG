@@ -1,6 +1,8 @@
 
 param(
-    [string]$ProxyPath
+    [int]$Port = 8004,
+    [string]$ProxyPath,
+    [string]$ConfigFile = "engine-config.json"
 )
 
 # PowerShell script to start the MCP Proxy server
@@ -9,6 +11,17 @@ Write-Host "Starting MCP Proxy Server..."
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+}
+if (Test-Path $ConfigFile) {
+    try {
+        $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+        if ($cfg.mcpproxy) {
+            if (-not $PSBoundParameters.ContainsKey('Port') -and $cfg.mcpproxy.port) { $Port = [int]$cfg.mcpproxy.port }
+            if (-not $ProxyPath -and $cfg.mcpproxy.directory) { $ProxyPath = Join-Path $scriptDir $cfg.mcpproxy.directory }
+        }
+    } catch {
+        Write-Warning "Failed to load engine config from $ConfigFile: $_"
+    }
 }
 if (-not $ProxyPath) {
     # Default to the "servers/mcpProxy" directory relative to this script
@@ -20,8 +33,8 @@ function Test-ValidPort {
     return $Port -ge 1 -and $Port -le 65535
 }
 
-if (-not (Test-ValidPort -Port 8004)) {
-    Write-Error "Invalid port: 8004. Must be between 1 and 65535."
+if (-not (Test-ValidPort -Port $Port)) {
+    Write-Error "Invalid port: $Port. Must be between 1 and 65535."
     exit 1
 }
 
@@ -46,6 +59,6 @@ try {
 # Start the mcpProxy server as a background job
 Start-Process node -ArgumentList "dist/src/index.js" -NoNewWindow -PassThru
 
-Write-Host "MCP Proxy Server started on port 8004"
+Write-Host "MCP Proxy Server started on port $Port"
 Write-Host "Server will run in the background. To stop, close the Node.js process."
 

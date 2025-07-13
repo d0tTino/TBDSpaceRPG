@@ -1,13 +1,14 @@
 # run-mcp-server.ps1
 # Purpose: Starts the MCP Unity server with proper environment configuration
-# Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-Monitor] [-ConfigFile <path>]
+# Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-Monitor] [-ConfigFile <path>] [-EngineConfigFile <path>]
 
 param (
     [int]$Port = 8001,
     [ValidateSet("unity","godot")]
     [string]$Engine = "unity",
     [switch]$Monitor,
-    [string]$ConfigFile = ".mcp-server-config.json"
+    [string]$ConfigFile = ".mcp-server-config.json",
+    [string]$EngineConfigFile = "engine-config.json"
 )
 
 # Validate the supplied port number
@@ -29,13 +30,14 @@ $config = @{
     "nodeEnv" = "production"
     "engine" = $Engine
 }
+$portFromConfig = $false
 
 if (Test-Path $ConfigFile) {
     try {
         $configData = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
         
         # Override defaults with config file values
-        if ($configData.port) { $config.port = $configData.port }
+        if ($configData.port) { $config.port = $configData.port; $portFromConfig = $true }
         if ($configData.serverPath) { $config.serverPath = $configData.serverPath }
         if ($configData.logFile) { $config.logFile = $configData.logFile }
         if ($configData.nodeEnv) { $config.nodeEnv = $configData.nodeEnv }
@@ -60,6 +62,24 @@ if ($PSBoundParameters.ContainsKey('Engine')) {
 $projectRoot = $PSScriptRoot
 $unityProjectPath = Join-Path $projectRoot "TBD SpaceGame"
 $godotServerPath = Join-Path $projectRoot "servers\godot"
+
+# Load engine-specific defaults from the engine config file
+if (Test-Path $EngineConfigFile) {
+    try {
+        $engineData = Get-Content -Path $EngineConfigFile -Raw | ConvertFrom-Json
+        $engineEntry = $engineData.$($config.engine)
+        if ($engineEntry) {
+            if (-not $PSBoundParameters.ContainsKey('Port') -and -not $portFromConfig -and $engineEntry.port) {
+                $config.port = [int]$engineEntry.port
+            }
+            if (-not $config.serverPath -and $engineEntry.directory) {
+                $config.serverPath = Join-Path $projectRoot $engineEntry.directory
+            }
+        }
+    } catch {
+        Write-Warning "Failed to load engine configuration from $EngineConfigFile: $_"
+    }
+}
 
 # Use config serverPath if provided, otherwise use default
 if (-not $config.serverPath) {

@@ -1,0 +1,30 @@
+{
+  "unity": {
+    "port": 8001,
+    "directory": "TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@3acfb232f564/Server"
+  },
+  "godot": {
+    "port": 8001,
+    "directory": "servers/godot"
+  },
+  "git": {
+    "port": 8080,
+    "directory": "servers/git"
+  },
+  "postgres": {
+    "port": 8003,
+    "directory": "servers/postgres"
+  },
+  "telemetry": {
+    "port": 8090,
+    "directory": "servers/telemetry"
+  },
+  "mcpproxy": {
+    "port": 8004,
+    "directory": "servers/mcpProxy"
+  },
+  "ksa": {
+    "port": 8005,
+    "directory": "servers/ksa"
+  }
+}
