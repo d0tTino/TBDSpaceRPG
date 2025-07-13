@@ -17,7 +17,8 @@ This section details the setup process for the development environment, includin
 
 1.1 Required Software and Tools
 -----------------------------
-- Unity 2025.1 LTS or newer (project is built on 2025.1.5f1 specifically)
+- Godot 4.0 or later (primary engine)
+- Unity 2025.1 LTS or newer (optional for asset exports)
 - Visual Studio 2025 or JetBrains Rider 2025.1+
 - Git 2.40.0+ for version control
 - Git LFS 3.4.0+ for large file storage
@@ -42,7 +43,7 @@ Development hardware should meet or exceed:
 - Display: 1440p or higher resolution, dual monitor setup recommended
 - Network: 200Mbps+ connection for asset syncing
 
-1.3 Unity Setup and Configuration
+1.3 Unity Asset Export Setup (Optional)
 ------------------------------
 1. Install Unity Hub from Unity's official website
 2. Install Unity 2025.1.5f1 LTS via Hub with these components:

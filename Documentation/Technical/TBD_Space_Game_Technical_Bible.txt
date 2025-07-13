@@ -24,7 +24,7 @@ Core objectives of the technical implementation:
 
 2.0 Game Architecture
 =====================
-The TBD Space Game is built on a modular, component-based architecture designed to support complex, long-term gameplay simulations. The architecture is implemented in C# using Unity's framework with custom extensions.
+The TBD Space Game is built on a modular, component-based architecture designed to support complex, long-term gameplay simulations. The architecture is implemented in C# using Godot 4's framework (with an optional Unity asset pipeline) with custom extensions.
 
 2.1 Code Organization
 --------------------
