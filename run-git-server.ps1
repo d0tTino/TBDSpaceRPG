@@ -1,6 +1,7 @@
 param(
     [int]$Port = 8080,
-    [string]$ServerPath
+    [string]$ServerPath,
+    [string]$ConfigFile = "engine-config.json"
 )
 
 function Test-ValidPort {
@@ -16,6 +17,17 @@ if (-not (Test-ValidPort -Port $Port)) {
 $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+}
+if (Test-Path $ConfigFile) {
+    try {
+        $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+        if ($cfg.git) {
+            if (-not $PSBoundParameters.ContainsKey('Port') -and $cfg.git.port) { $Port = [int]$cfg.git.port }
+            if (-not $ServerPath -and $cfg.git.directory) { $ServerPath = Join-Path $scriptDir $cfg.git.directory }
+        }
+    } catch {
+        Write-Warning "Failed to load engine config from $ConfigFile: $_"
+    }
 }
 if (-not $ServerPath) {
     $ServerPath = Join-Path $scriptDir 'servers/git'
