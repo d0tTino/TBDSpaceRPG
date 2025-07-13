@@ -33,6 +33,7 @@ namespace UnityEngine
         public static Vector3 ClampMagnitude(Vector3 vector, float maxLength)
         {
             return vector.magnitude > maxLength ? vector.normalized * maxLength : vector;
+
         }
 
     }
@@ -45,6 +46,7 @@ namespace UnityEngine
         public static void Destroy(object obj) { }
         public T AddComponent<T>() where T : new() => gameObject.AddComponent<T>();
         public T GetComponent<T>() where T : class => gameObject.GetComponent<T>();
+
 
     }
 
@@ -112,4 +114,5 @@ namespace UnityEngine
     }
 
 }
+
 

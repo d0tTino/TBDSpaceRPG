@@ -108,10 +108,18 @@ function Test-PortInUse {
     param (
         [int]$Port
     )
-    
+
     try {
-        $inUse = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-        return ($null -ne $inUse)
+        if (Get-Command Test-NetConnection -ErrorAction SilentlyContinue) {
+            return Test-NetConnection -ComputerName 'localhost' -Port $Port -InformationLevel Quiet
+        }
+        else {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $task = $client.ConnectAsync('localhost', $Port)
+            $connected = $task.Wait(500)
+            $client.Dispose()
+            return $connected
+        }
     }
     catch {
         return $false
@@ -170,8 +178,7 @@ function Test-ServerRunning {
     # Check process
     if ($ProcessId -and (Get-Process -Id $ProcessId -ErrorAction SilentlyContinue)) {
         # Process exists, now check if it's listening on the port
-        $listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-        if ($listener) {
+        if (Test-PortInUse -Port $Port) {
             return $true
         }
     }
@@ -186,8 +193,7 @@ $processId = Start-McpServer
 Start-Sleep -Seconds 2
 $serverRunning = $false
 try {
-    $listeners = Get-NetTCPConnection -LocalPort $config.port -State Listen -ErrorAction SilentlyContinue
-    if ($listeners) {
+    if (Test-PortInUse -Port $config.port) {
         $serverRunning = $true
         Write-Host "Server is now listening on port $($config.port)." -ForegroundColor Green
     }

@@ -48,7 +48,7 @@ alias docs='cd ~/TBD_Space_Game/Documentation'
 # MCP Commands
 alias mcpbuild='bun Server/build/index.js'
 alias mcptest='./test-mcp-menu.ps1'
-alias mcpmon='watch -n 1 "netstat -ano | grep 8001"'
+alias mcpmon='watch -n 1 "pwsh -Command \"Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet\""'
 
 # AI Tools
 alias ailog='tail -f ~/ai-logs/latest.log'

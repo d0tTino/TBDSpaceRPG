@@ -467,7 +467,7 @@ The following custom aliases are configured to accelerate common tasks:
 | `mcpbuild` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && bun Server/build/index.js` | Start MCP server with Bun |
 | `mcp_test` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && ./test-mcp-menu.ps1 -MenuPath "Basic/Test"` | Run test MCP command |
 | `mcpship` | `cd /c/Users/w1n51/OneDrive/Desktop/Gamedev/TBD\ Space\ Game/TBD\ SpaceGame && ./test-mcp-menu.ps1 -MenuPath "MCP/Ship/V2/Upgrade Thrust"` | Test ship upgrade via MCP |
-| `mcpmon` | `watch -n 1 "netstat -ano | grep 8001"` | Monitor MCP server port activity |
+| `mcpmon` | `watch -n 1 \"pwsh -Command 'Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet'\"` | Monitor MCP server port activity |
 | `sim_monitor` | `cd /c/Users/w1n51/mcp-logs && tail -f latest.log \| grep "SIMULATION"` | Monitor simulation logs |
 | `bun_watch` | `winpty bun.cmd run --watch` | Run Bun with watch mode |
 
@@ -496,7 +496,7 @@ To add new aliases, edit your `~/.bashrc` file and add new alias lines following
 
 #### MCP Server Connection Failed
 1. Verify server is running: `ps -ef | grep node`
-2. Check port availability: `netstat -ano | findstr :8001`
+2. Check port availability: `Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet`
 3. Restart server with `mcpbuild` alias
 
 #### Windows Terminal Profile Missing

@@ -22,8 +22,19 @@ function Test-ServerPort {
         [int]$Port
     )
     
-    $portTest = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
-    
+    if (Test-Path Function:\Test-PortInUse) {
+        $portTest = Test-PortInUse -Port $Port
+    } else {
+        if (Get-Command Test-NetConnection -ErrorAction SilentlyContinue) {
+            $portTest = Test-NetConnection -ComputerName 'localhost' -Port $Port -InformationLevel Quiet
+        } else {
+            $client = [System.Net.Sockets.TcpClient]::new()
+            $task = $client.ConnectAsync('localhost', $Port)
+            $portTest = $task.Wait(500)
+            $client.Dispose()
+        }
+    }
+
     if ($portTest) {
         Write-Host "$ServerName is already running on port $Port." -ForegroundColor Yellow
         return $true

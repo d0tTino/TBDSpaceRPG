@@ -407,7 +407,7 @@ Here are specific error messages you might encounter and how to resolve them:
 
 3. **"System.Net.WebSockets.WebSocketException: Unable to connect to the remote server"**:
    - MCP server is not running or wrong port
-   - Solution: Check if server is running with `netstat -ano | findstr :8001`
+   - Solution: Check if server is running with `Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet`
    - Start server with `.\run-mcp-server.ps1`
 
 4. **"ExecuteMenuItem failed because there is no menu named 'X'"**:

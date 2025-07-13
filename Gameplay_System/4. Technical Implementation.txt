@@ -3092,7 +3092,7 @@ The development workflow employs a powerful terminal-based debugging approach th
   # Configure each pane for different log types
   tmux send-keys -t debug:Logs.0 'tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log' C-m
   tmux send-keys -t debug:Logs.1 'tail -f ~/mcp-logs/latest.log' C-m
-  tmux send-keys -t debug:Logs.2 'watch -n 1 "netstat -ano | grep 8001"' C-m
+  tmux send-keys -t debug:Logs.2 'watch -n 1 "pwsh -Command \"Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet\""' C-m
   ```
 
 - **Remote Debugging:**
@@ -3108,10 +3108,10 @@ The MCP (Machine Control Protocol) server requires specialized monitoring to ens
 - **Connection Monitoring:**
   ```bash
   # Check active WebSocket connections
-  netstat -ano | findstr :8001 | findstr ESTABLISHED | wc -l
-  
+  Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet | Out-Null
+
   # Monitor connections in real-time
-  watch -n 1 "netstat -ano | findstr :8001 | findstr ESTABLISHED | wc -l"
+  watch -n 1 "pwsh -Command \"Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet\""
   ```
 
 - **Performance Metrics:**
