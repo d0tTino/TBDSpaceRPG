@@ -8,7 +8,8 @@ param (
     [string]$Engine = "unity",
     [switch]$Monitor,
     [string]$ConfigFile = ".mcp-server-config.json",
-    [string]$EngineConfigFile = "engine-config.json"
+    [string]$EngineConfigFile = "engine-config.json",
+    [string]$ServerConfigFile = "server-config.json"
 )
 
 # Validate the supplied port number
@@ -29,6 +30,7 @@ $config = @{
     "logFile" = $null
     "nodeEnv" = "production"
     "engine" = $Engine
+    "runtime" = ($Engine -eq 'godot' ? 'dotnet' : 'node')
 }
 $portFromConfig = $false
 
@@ -42,6 +44,7 @@ if (Test-Path $ConfigFile) {
         if ($configData.logFile) { $config.logFile = $configData.logFile }
         if ($configData.nodeEnv) { $config.nodeEnv = $configData.nodeEnv }
         if ($configData.engine) { $config.engine = $configData.engine }
+        if ($configData.runtime) { $config.runtime = $configData.runtime }
         
         Write-Host "Configuration loaded from $ConfigFile" -ForegroundColor Green
     }
@@ -81,6 +84,22 @@ if (Test-Path $EngineConfigFile) {
     }
 }
 
+# Load shared runtime/port settings from the server config file
+if (Test-Path $ServerConfigFile) {
+    try {
+        $serverData = Get-Content -Path $ServerConfigFile -Raw | ConvertFrom-Json
+        $serverEntry = $serverData.$($config.engine)
+        if ($serverEntry) {
+            if (-not $PSBoundParameters.ContainsKey('Port') -and -not $portFromConfig -and $serverEntry.port) {
+                $config.port = [int]$serverEntry.port
+            }
+            if ($serverEntry.engine) { $config.runtime = $serverEntry.engine }
+        }
+    } catch {
+        Write-Warning "Failed to load server configuration from $ServerConfigFile: $_"
+    }
+}
+
 # Use config serverPath if provided, otherwise use default
 if (-not $config.serverPath) {
     if ($config.engine -eq 'godot') {
@@ -95,7 +114,7 @@ if (-not $config.logFile) {
     $config.logFile = Join-Path $projectRoot "mcp-server.log"
 }
 
-if ($config.engine -eq 'godot') {
+if ($config.runtime -eq 'dotnet') {
     try {
         $dotnetVersion = dotnet --version
         Write-Host "dotnet version: $dotnetVersion"
@@ -115,7 +134,7 @@ if ($config.engine -eq 'godot') {
 
 # Validate server path
 if (-not (Test-Path $config.serverPath)) {
-    if ($config.engine -eq 'godot') {
+    if ($config.runtime -eq 'dotnet') {
         Write-Error "Godot MCP Server path not found: $($config.serverPath)"
     } else {
         Write-Error "MCP Server path not found: $($config.serverPath)`nMake sure Unity is open and the MCP package is imported."
@@ -154,13 +173,13 @@ if (Test-PortInUse -Port $config.port) {
 
 # Function to start the MCP server
 function Start-McpServer {
-    Write-Host "Starting MCP Persistent Server using $($config.engine) engine..."
+    Write-Host "Starting MCP Persistent Server using $($config.engine) engine ($($config.runtime))..."
     Write-Host "Starting MCP server on port $($config.port)..."
 
     try {
         Push-Location $config.serverPath
 
-        if ($config.engine -eq 'godot') {
+        if ($config.runtime -eq 'dotnet') {
             $env:PORT = $config.port.ToString()
             $processInfo = Start-Process -FilePath "dotnet" -ArgumentList "run --project GodotServer.csproj --no-build" -RedirectStandardOutput $config.logFile -RedirectStandardError $config.logFile -NoNewWindow -PassThru
         }
