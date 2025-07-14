@@ -22,7 +22,7 @@ public partial class McpClient : Control
         GetNode<Button>("VBox/RelaunchButton").Pressed += () => _ = SendCommand("Ship/Relaunch");
     }
 
-    private async Task SendCommand(string menuPath)
+    public async Task SendCommand(string menuPath)
     {
         var payload = new
         {
