@@ -31,6 +31,7 @@ jobs:
           dotnet-version: '8.0.x'
       - run: dotnet test csharp/ShipCustomization.Tests/ShipCustomization.Tests.csproj --verbosity normal
       - run: dotnet test csharp/OrbitalMechanics.Tests/OrbitalMechanics.Tests.csproj --verbosity normal
+      - run: dotnet test servers/godot.Tests/GodotServer.Tests.csproj --verbosity normal
 
   dotnet-build:
     runs-on: ubuntu-latest
