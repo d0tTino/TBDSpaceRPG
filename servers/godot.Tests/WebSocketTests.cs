@@ -4,28 +4,25 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using WebSocketSharp.Server;
-
 namespace GodotServer.Tests;
 
 public class WebSocketTests
 {
-    private WebSocketServer? _server;
+    private SimpleWebSocketServer? _server;
     private int _port;
 
     [SetUp]
     public void Setup()
     {
         _port = GetFreePort();
-        _server = new WebSocketServer(_port);
-        _server.AddWebSocketService<McpBehavior>("/");
+        _server = new SimpleWebSocketServer(_port);
         _server.Start();
     }
 
     [TearDown]
     public void Teardown()
     {
-        _server?.Stop();
+        _server?.Dispose();
     }
 
     [Test]
