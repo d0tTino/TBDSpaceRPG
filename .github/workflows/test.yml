@@ -32,6 +32,17 @@ jobs:
       - run: dotnet test csharp/ShipCustomization.Tests/ShipCustomization.Tests.csproj --verbosity normal
       - run: dotnet test csharp/OrbitalMechanics.Tests/OrbitalMechanics.Tests.csproj --verbosity normal
       - run: dotnet test servers/godot.Tests/GodotServer.Tests.csproj --verbosity normal
+      - name: Download Godot
+        run: |
+          curl -L -o godot.zip https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_mono_linux_x86_64.zip
+          unzip -q godot.zip -d godot
+          mv godot/Godot_v4.4.1-stable_mono_linux_x86_64/GodotSharp godot/
+          mv godot/Godot_v4.4.1-stable_mono_linux_x86_64/Godot_v4.4.1-stable_mono_linux.x86_64 godot/godot
+          chmod +x godot/godot
+      - name: Build Godot test project
+        run: dotnet build Godot.Tests/Godot.Tests.csproj
+      - name: Run Godot tests
+        run: ./godot/godot --headless --path Godot.Tests --run-tests --quit-on-finish
 
   dotnet-build:
     runs-on: ubuntu-latest

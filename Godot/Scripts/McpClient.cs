@@ -11,10 +11,10 @@ public partial class McpClient : Control
         if (ProjectSettings.HasSetting("application/mcp_endpoint"))
         {
             var cfg = ProjectSettings.GetSetting("application/mcp_endpoint");
-            if (cfg is StringName sn)
-                Endpoint = sn.ToString();
-            else if (cfg is string str)
-                Endpoint = str;
+            if (cfg.VariantType == Variant.Type.StringName)
+                Endpoint = ((StringName)cfg).ToString();
+            else if (cfg.VariantType == Variant.Type.String)
+                Endpoint = (string)cfg;
         }
 
         GetNode<Button>("VBox/DockButton").Pressed += () => _ = SendCommand("Dock Ship");

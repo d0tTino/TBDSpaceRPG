@@ -1,0 +1,15 @@
+<Project Sdk="Godot.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RootNamespace>Godot.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Chickensoft.GoDotTest" Version="1.7.4" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Godot/TBDSpaceRPG.csproj" />
+  </ItemGroup>
+</Project>
