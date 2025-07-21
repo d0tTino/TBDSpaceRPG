@@ -1,40 +1,28 @@
-using UnityEngine;
+using Godot;
 
-public class SpaceshipMovement : MonoBehaviour
+public partial class SpaceshipMovement : CharacterBody3D
 {
-    public float thrustForce = 10f;
-    public float maxSpeed = 20f;
-    public float rotationSpeed = 90f;
-    public float brakingForce = 5f;
+    [Export] public float ThrustForce = 10f;
+    [Export] public float MaxSpeed = 20f;
+    [Export] public float RotationSpeed = 90f;
+    [Export] public float BrakingForce = 5f;
 
-    private Rigidbody _rb;
-
-    private void Awake()
+    public override void _PhysicsProcess(double delta)
     {
-        _rb = GetComponent<Rigidbody>();
-    }
+        var vel = Velocity;
+        float dt = (float)delta;
 
-    private void FixedUpdate()
-    {
-        if (_rb == null) return;
+        if (Input.IsActionPressed("move_forward"))
+            vel += -Transform.Basis.Z * ThrustForce * dt;
+        if (Input.IsActionPressed("move_backward"))
+            vel += Transform.Basis.Z * BrakingForce * dt;
+        if (Input.IsActionPressed("turn_left"))
+            RotateY(Mathf.DegToRad(-RotationSpeed * dt));
+        if (Input.IsActionPressed("turn_right"))
+            RotateY(Mathf.DegToRad(RotationSpeed * dt));
 
-        if (Input.GetKey(KeyCode.W))
-        {
-            _rb.AddForce(transform.forward * thrustForce);
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            _rb.AddForce(-transform.forward * brakingForce);
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            _rb.AddTorque(Vector3.up * -rotationSpeed);
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            _rb.AddTorque(Vector3.up * rotationSpeed);
-        }
-
-        _rb.velocity = Vector3.ClampMagnitude(_rb.velocity, maxSpeed);
+        vel = vel.LimitLength(MaxSpeed);
+        Velocity = vel;
+        MoveAndSlide();
     }
 }

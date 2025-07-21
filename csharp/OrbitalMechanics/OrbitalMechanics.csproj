@@ -7,6 +7,6 @@
     <Compile Include="../../src/OrbitalMechanics/*.cs" />
     <Compile Include="../../src/ShipCustomization/SpaceshipMovement.cs" />
     <Compile Include="../../src/SimpleKeplerOrbits/*.cs" />
-    <Compile Include="../UnityStubs/UnityEngine.cs" />
+    <Compile Include="../GodotStubs/Godot.cs" />
   </ItemGroup>
 </Project>

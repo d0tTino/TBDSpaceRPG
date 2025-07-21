@@ -1,41 +1,54 @@
-#if UNITY_EDITOR
-using UnityEditor;
-using UnityEngine;
+#if TOOLS
+using Godot;
 
-public static class ShipUpgradeMenuHelper
+[Tool]
+public partial class ShipUpgradeMenuHelper : EditorPlugin
 {
-    [MenuItem("MCP/Ship/Create Test Ship")]
-    public static void CreateTestShip()
+    public override void _EnterTree()
     {
-        var ship = new GameObject("TestShip");
-        ship.AddComponent<Rigidbody>();
-        ship.AddComponent<SpaceshipMovement>();
-        ship.AddComponent<ShipCustomizationManager>();
-        Selection.activeGameObject = ship;
+        AddToolMenuItem("Ship/Create Test Ship", Callable.From(CreateTestShip));
+        AddToolMenuItem("Ship/Upgrade Thrust", Callable.From(UpgradeThrust));
+        AddToolMenuItem("Ship/Upgrade Speed", Callable.From(UpgradeSpeed));
+        AddToolMenuItem("Ship/Upgrade Rotation", Callable.From(UpgradeRotation));
+        AddToolMenuItem("Ship/Upgrade Braking", Callable.From(UpgradeBraking));
+        AddToolMenuItem("Ship/Reset All Upgrades", Callable.From(ResetUpgrades));
+        AddToolMenuItem("Ship/Log Current Upgrades", Callable.From(LogUpgrades));
     }
 
-    [MenuItem("MCP/Ship/Upgrade Thrust")]
-    public static void UpgradeThrust() => GetManager()?.UpgradeThrust();
-
-    [MenuItem("MCP/Ship/Upgrade Speed")]
-    public static void UpgradeSpeed() => GetManager()?.UpgradeSpeed();
-
-    [MenuItem("MCP/Ship/Upgrade Rotation")]
-    public static void UpgradeRotation() => GetManager()?.UpgradeRotation();
-
-    [MenuItem("MCP/Ship/Upgrade Braking")]
-    public static void UpgradeBraking() => GetManager()?.UpgradeBraking();
-
-    [MenuItem("MCP/Ship/Reset All Upgrades")]
-    public static void ResetUpgrades() => GetManager()?.ResetUpgrades();
-
-    [MenuItem("MCP/Ship/Log Current Upgrades")]
-    public static void LogUpgrades() => GetManager()?.LogCurrentUpgrades();
-
-    private static ShipCustomizationManager GetManager()
+    public override void _ExitTree()
     {
-        var obj = Selection.activeGameObject;
-        return obj ? obj.GetComponent<ShipCustomizationManager>() : null;
+        RemoveToolMenuItem("Ship/Create Test Ship");
+        RemoveToolMenuItem("Ship/Upgrade Thrust");
+        RemoveToolMenuItem("Ship/Upgrade Speed");
+        RemoveToolMenuItem("Ship/Upgrade Rotation");
+        RemoveToolMenuItem("Ship/Upgrade Braking");
+        RemoveToolMenuItem("Ship/Reset All Upgrades");
+        RemoveToolMenuItem("Ship/Log Current Upgrades");
+    }
+
+    private void CreateTestShip()
+    {
+        var ship = new CharacterBody3D { Name = "TestShip" };
+        var move = new SpaceshipMovement();
+        var manager = new ShipCustomizationManager { Movement = move };
+        ship.AddChild(move);
+        ship.AddChild(manager);
+        AddChild(ship);
+    }
+
+    private void UpgradeThrust() => GetManager()?.UpgradeThrust();
+    private void UpgradeSpeed() => GetManager()?.UpgradeSpeed();
+    private void UpgradeRotation() => GetManager()?.UpgradeRotation();
+    private void UpgradeBraking() => GetManager()?.UpgradeBraking();
+    private void ResetUpgrades() => GetManager()?.ResetUpgrades();
+    private void LogUpgrades() => GetManager()?.LogCurrentUpgrades();
+
+    private ShipCustomizationManager? GetManager()
+    {
+        foreach (var node in GetTree().GetNodesInGroup("ShipCustomizationManager"))
+            if (node is ShipCustomizationManager mgr)
+                return mgr;
+        return null;
     }
 }
 #endif

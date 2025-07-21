@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-using UnityEngine;
+using Godot;
 
 namespace OrbitalMechanics
 {
@@ -8,18 +8,18 @@ namespace OrbitalMechanics
     /// Manages all celestial bodies and provides a central lookup for orbital mechanics.
     /// Acts as a simple singleton for now.
     /// </summary>
-    public class OrbitManager : MonoBehaviour
+    public class OrbitManager : Node
     {
         public static OrbitManager Instance { get; private set; }
 
         private readonly List<CelestialBody> bodies = new();
         public IReadOnlyList<CelestialBody> Bodies => bodies;
 
-        private void Awake()
+        public override void _Ready()
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                QueueFree();
                 return;
             }
             Instance = this;
@@ -40,7 +40,7 @@ namespace OrbitalMechanics
 
         public CelestialBody GetBody(string bodyName)
         {
-            return bodies.Find(b => b.name == bodyName);
+            return bodies.Find(b => b.Name == bodyName);
         }
     }
 }

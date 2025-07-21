@@ -1,12 +1,12 @@
-using UnityEngine;
+using Godot;
 
 namespace OrbitalMechanics
 {
     /// <summary>
     /// Follows a predefined orbit using data from OrbitData.
     /// </summary>
-    [RequireComponent(typeof(SpaceshipMovement))]
-    public class OrbitFollower : MonoBehaviour
+    
+    public class OrbitFollower : Node3D
     {
         private OrbitData _orbit;
 
@@ -15,11 +15,11 @@ namespace OrbitalMechanics
             _orbit = orbit;
         }
 
-        private void FixedUpdate()
+        public override void _PhysicsProcess(double delta)
         {
             if (_orbit == null) return;
-            double t = Time.time;
-            transform.position = _orbit.GetPositionAtTime(t);
+            double t = Time.GetTicksMsec()/1000.0;
+            GlobalPosition = _orbit.GetPositionAtTime(t);
         }
     }
 }

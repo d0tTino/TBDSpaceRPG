@@ -1,35 +1,31 @@
 using NUnit.Framework;
-using UnityEngine;
+using Godot;
 
 public class SpaceshipMovementTests
 {
     [Test]
-    public void FixedUpdate_ForwardKeyAppliesThrust()
+    public void PhysicsProcess_ForwardActionAppliesThrust()
     {
-        var rb = new Rigidbody();
         var movement = new SpaceshipMovement();
-        typeof(SpaceshipMovement).GetField("_rb", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(movement, rb);
-        Input.SetKey(KeyCode.W, true);
-        movement.thrustForce = 5f;
-        movement.maxSpeed = 100f;
-        typeof(SpaceshipMovement).GetMethod("FixedUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(movement, null);
-        Assert.AreEqual(0f, rb.velocity.x);
-        Assert.AreEqual(0f, rb.velocity.y);
-        Assert.AreEqual(5f, rb.velocity.z);
-        Input.SetKey(KeyCode.W, false);
+        Input.ActionPress("move_forward");
+        movement.ThrustForce = 5f;
+        movement.MaxSpeed = 100f;
+        movement._PhysicsProcess(1.0);
+        Assert.AreEqual(0f, movement.Velocity.X);
+        Assert.AreEqual(0f, movement.Velocity.Y);
+        Assert.AreEqual(5f, movement.Velocity.Z);
+        Input.ActionRelease("move_forward");
     }
 
     [Test]
-    public void FixedUpdate_ClampsVelocity()
+    public void PhysicsProcess_ClampsVelocity()
     {
-        var rb = new Rigidbody();
         var movement = new SpaceshipMovement();
-        typeof(SpaceshipMovement).GetField("_rb", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(movement, rb);
-        Input.SetKey(KeyCode.W, true);
-        movement.thrustForce = 50f;
-        movement.maxSpeed = 10f;
-        typeof(SpaceshipMovement).GetMethod("FixedUpdate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(movement, null);
-        Assert.AreEqual(10f, rb.velocity.magnitude);
-        Input.SetKey(KeyCode.W, false);
+        Input.ActionPress("move_forward");
+        movement.ThrustForce = 50f;
+        movement.MaxSpeed = 10f;
+        movement._PhysicsProcess(1.0);
+        Assert.AreEqual(10f, movement.Velocity.Length());
+        Input.ActionRelease("move_forward");
     }
 }

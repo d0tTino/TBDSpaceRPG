@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using UnityEngine;
+using Godot;
 
 public class ShipCustomizationManagerTests
 {
@@ -7,20 +7,20 @@ public class ShipCustomizationManagerTests
     public void UpgradeThrust_IncreasesLevelAndAppliesToMovement()
     {
         var movement = new SpaceshipMovement();
-        var manager = new ShipCustomizationManager { movement = movement };
+        var manager = new ShipCustomizationManager { Movement = movement };
         manager.UpgradeThrust();
-        Assert.AreEqual(2, manager.thrustLevel);
-        Assert.AreEqual(20f, movement.thrustForce);
+        Assert.AreEqual(2, manager.ThrustLevel);
+        Assert.AreEqual(20f, movement.ThrustForce);
     }
 
     [Test]
     public void ResetUpgrades_SetsLevelsToOne()
     {
         var movement = new SpaceshipMovement();
-        var manager = new ShipCustomizationManager { movement = movement };
+        var manager = new ShipCustomizationManager { Movement = movement };
         manager.UpgradeSpeed();
         manager.ResetUpgrades();
-        Assert.AreEqual(1, manager.speedLevel);
-        Assert.AreEqual(20f, movement.maxSpeed);
+        Assert.AreEqual(1, manager.SpeedLevel);
+        Assert.AreEqual(20f, movement.MaxSpeed);
     }
 }
