@@ -1,6 +1,6 @@
 {
   "unity": { "port": 8001, "engine": "node" },
-  "godot": { "port": 8001, "engine": "dotnet" },
+  "godot": { "port": 8002, "engine": "dotnet" },
   "git": { "port": 8080, "engine": "node" },
   "postgres": { "port": 8003, "engine": "node" },
   "telemetry": { "port": 8090, "engine": "node" },

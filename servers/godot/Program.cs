@@ -130,7 +130,7 @@ public static class Program
     public static void Main(string[] args)
     {
         if (!int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var port))
-            port = 8001;
+            port = 8002;
 
         using var server = new SimpleWebSocketServer(port);
         server.Start();
