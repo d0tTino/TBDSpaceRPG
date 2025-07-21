@@ -30,6 +30,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end('Event received');
       } catch (e) {
+        console.error(e);
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Invalid JSON');
       }
