@@ -60,7 +60,7 @@ function post(port, pathName, data) {
       try {
         await request(port);
         connected = true;
-      } catch (err) {
+      } catch {
         if (Date.now() - start > timeout) {
           throw new Error(`Timeout waiting for server on port ${port}`);
         }
