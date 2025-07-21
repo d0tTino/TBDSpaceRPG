@@ -16,6 +16,12 @@ namespace OrbitalMechanics
 
         private void Awake()
         {
+            // Ensure we always have valid orbit data
+            if (initialOrbit == null)
+            {
+                initialOrbit = new OrbitData();
+            }
+
             // Register this body with the global orbit manager if present
             if (OrbitManager.Instance != null)
             {
