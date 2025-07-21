@@ -482,6 +482,16 @@ The Unity project includes lightweight exporters that run without opening the ed
 
 This script builds `Exporters.csproj` and writes a sample `.gltf` file to `Assets_glTF/` and a JSON data file to `Gameplay_Data/`. Integrate it into your CI pipeline to regenerate assets automatically.
 
+### Unified Export Tool
+
+Run the following PowerShell script to execute the exporters and automatically move the outputs into the Godot project:
+
+```powershell
+./run-exporters-to-godot.ps1
+```
+
+The script copies glTF files into `Godot/Assets_glTF/` and gameplay data into `Godot/Gameplay_Data/` so the assets are ready for import when you open the Godot editor.
+
 ### Starting Servers for Godot
 Run all MCP servers configured for Godot with:
 ```powershell
@@ -489,7 +499,7 @@ Run all MCP servers configured for Godot with:
 ```
 
 To import exported assets into Godot:
-1. Copy or move the contents of `Assets_glTF/` into the `Godot` project folder.
+1. Run `./run-exporters-to-godot.ps1`.
 2. Open the Godot project in the Godot 4 editor.
 3. Each `.gltf` file will automatically generate a scene that can be instanced in your C# scripts.
 
