@@ -5,7 +5,7 @@
   "scripts": {
     "prelint": "npm ci",
     "pretest": "npm ci",
-    "test": "node tests/server.test.cjs && node tests/analytics.test.cjs && node tests/mcp-commands.test.cjs && if command -v unity-editor >/dev/null 2>&1; then unity-editor -batchmode -nographics -runTests -projectPath \"TBD SpaceGame/TBD SpaceGame\" -testResults UnityTestResults.xml; else echo 'unity-editor not found, skipping Unity tests'; fi",
+    "test": "node tests/server.test.cjs && node tests/aidirector.test.cjs && node tests/analytics.test.cjs && node tests/mcp-commands.test.cjs && if command -v unity-editor >/dev/null 2>&1; then unity-editor -batchmode -nographics -runTests -projectPath \"TBD SpaceGame/TBD SpaceGame\" -testResults UnityTestResults.xml; else echo 'unity-editor not found, skipping Unity tests'; fi",
     "lint": "eslint servers tests"
   },
   "devDependencies": {
