@@ -2,7 +2,7 @@ using System;
 
 using OrbitalMechanics;
 
-using UnityEngine;
+using Godot;
 
 namespace SimpleKeplerOrbits
 {

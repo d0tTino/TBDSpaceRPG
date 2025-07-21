@@ -1,13 +1,9 @@
 using System.Reflection;
-
 using NUnit.Framework;
-
 using OrbitalMechanics;
 using OrbitalMechanics.Combat;
-
 using SimpleKeplerOrbits;
-
-using UnityEngine;
+using Godot;
 
 namespace OrbitalMechanics.Tests
 {
@@ -38,7 +34,7 @@ namespace OrbitalMechanics.Tests
                 orbit = new KeplerOrbit { semiMajorAxis = 5, gravitationalParameter = 1 }
             };
             var calc = new InterceptCalculator();
-            var sol = calc.CalculateOrbitalIntercept(Vector3.zero, Vector3.zero, orbit, 1f, 1f);
+            var sol = calc.CalculateOrbitalIntercept(Vector3.Zero, Vector3.Zero, orbit, 1f, 1f);
             Assert.IsTrue(sol != null);
         }
     }

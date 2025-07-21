@@ -5,6 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/ShipCustomization/*.cs" />
-    <Compile Include="../UnityStubs/UnityEngine.cs" />
+    <Compile Include="../GodotStubs/Godot.cs" />
   </ItemGroup>
 </Project>

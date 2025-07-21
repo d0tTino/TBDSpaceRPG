@@ -1,64 +1,60 @@
-using UnityEngine;
+using Godot;
 
-public class ShipCustomizationManager : MonoBehaviour
+public partial class ShipCustomizationManager : Node
 {
-    public int thrustLevel = 1;
-    public int speedLevel = 1;
-    public int rotationLevel = 1;
-    public int brakingLevel = 1;
+    [Export] public int ThrustLevel = 1;
+    [Export] public int SpeedLevel = 1;
+    [Export] public int RotationLevel = 1;
+    [Export] public int BrakingLevel = 1;
 
-    public SpaceshipMovement movement;
+    [Export] public SpaceshipMovement? Movement;
 
-    private void Awake()
+    public override void _Ready()
     {
-        if (movement == null)
-        {
-            movement = GetComponent<SpaceshipMovement>();
-        }
         ApplyUpgrades();
     }
 
     public void UpgradeThrust()
     {
-        thrustLevel++;
+        ThrustLevel++;
         ApplyUpgrades();
     }
 
     public void UpgradeSpeed()
     {
-        speedLevel++;
+        SpeedLevel++;
         ApplyUpgrades();
     }
 
     public void UpgradeRotation()
     {
-        rotationLevel++;
+        RotationLevel++;
         ApplyUpgrades();
     }
 
     public void UpgradeBraking()
     {
-        brakingLevel++;
+        BrakingLevel++;
         ApplyUpgrades();
     }
 
     public void ResetUpgrades()
     {
-        thrustLevel = speedLevel = rotationLevel = brakingLevel = 1;
+        ThrustLevel = SpeedLevel = RotationLevel = BrakingLevel = 1;
         ApplyUpgrades();
     }
 
     public void LogCurrentUpgrades()
     {
-        Debug.Log($"Thrust {thrustLevel}, Speed {speedLevel}, Rotation {rotationLevel}, Braking {brakingLevel}");
+        GD.Print($"Thrust {ThrustLevel}, Speed {SpeedLevel}, Rotation {RotationLevel}, Braking {BrakingLevel}");
     }
 
     private void ApplyUpgrades()
     {
-        if (movement == null) return;
-        movement.thrustForce = 10f * thrustLevel;
-        movement.maxSpeed = 20f * speedLevel;
-        movement.rotationSpeed = 90f * rotationLevel;
-        movement.brakingForce = 5f * brakingLevel;
+        if (Movement == null) return;
+        Movement.ThrustForce = 10f * ThrustLevel;
+        Movement.MaxSpeed = 20f * SpeedLevel;
+        Movement.RotationSpeed = 90f * RotationLevel;
+        Movement.BrakingForce = 5f * BrakingLevel;
     }
 }
