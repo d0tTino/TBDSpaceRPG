@@ -1,1 +1,5 @@
-{"upgradeLevel": 0}
+{
+  "upgradeLevel": 0,
+  "shipPosition": {"X": 0, "Y": 0, "Z": 0},
+  "crewStats": {"crewCount": 0, "morale": 0}
+}
