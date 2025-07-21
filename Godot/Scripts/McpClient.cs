@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 public partial class McpClient : Control
 {
-    [Export] public string Endpoint = "http://localhost:8001/mcp";
+    [Export] public string Endpoint = "http://localhost:8002/mcp";
 
     public override void _Ready()
     {

@@ -4,7 +4,7 @@
     "directory": "TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@3acfb232f564/Server"
   },
   "godot": {
-    "port": 8001,
+    "port": 8002,
     "directory": "servers/godot"
   },
   "git": {

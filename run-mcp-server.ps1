@@ -1,9 +1,9 @@
 # run-mcp-server.ps1
-# Purpose: Starts the MCP Unity server with proper environment configuration
-# Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-Monitor] [-ConfigFile <path>] [-EngineConfigFile <path>]
+# Purpose: Starts the MCP server for the selected engine with proper environment configuration
+# Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-Engine unity|godot] [-Monitor] [-ConfigFile <path>] [-EngineConfigFile <path>]
 
 param (
-    [int]$Port = 8001,
+    [int]$Port = 0,
     [ValidateSet("unity","godot")]
     [string]$Engine = "unity",
     [switch]$Monitor,
@@ -18,9 +18,8 @@ function Test-ValidPort {
     return ($Port -ge 1 -and $Port -le 65535)
 }
 
-if (-not (Test-ValidPort -Port $Port)) {
+if ($Port -ne 0 -and -not (Test-ValidPort -Port $Port)) {
     Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
-
 }
 
 # Load configuration from file if it exists
@@ -97,6 +96,15 @@ if (Test-Path $ServerConfigFile) {
         }
     } catch {
         Write-Warning "Failed to load server configuration from $ServerConfigFile: $_"
+    }
+}
+
+# Ensure a valid port is set, falling back to engine defaults
+if (-not (Test-ValidPort -Port $config.port)) {
+    if ($config.engine -eq 'godot') {
+        $config.port = 8002
+    } else {
+        $config.port = 8001
     }
 }
 

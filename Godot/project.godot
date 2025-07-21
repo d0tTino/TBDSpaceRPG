@@ -3,7 +3,7 @@
 [application]
 config/name="TBDSpaceRPG"
 run/main_scene="res://Scenes/Flight.tscn"
-mcp_endpoint="http://localhost:8001/mcp"
+mcp_endpoint="http://localhost:8002/mcp"
 
 [dotnet]
 project="TBDSpaceRPG.csproj"
