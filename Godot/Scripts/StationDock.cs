@@ -1,11 +1,11 @@
 using Godot;
-using System.IO;
-using System.Text.Json;
 
 public partial class StationDock : Control
 {
     [Export] public string SaveFile = "Gameplay_Data/game_state.json";
     [Export] public int UpgradeLevel = 0;
+    [Export] public Vector3 ShipPosition = Vector3.Zero;
+    [Export] public CrewStats CrewStats = new CrewStats();
 
     private McpClient _client;
 
@@ -34,27 +34,20 @@ public partial class StationDock : Control
 
     private void SaveState()
     {
-        Directory.CreateDirectory("Gameplay_Data");
-        var json = JsonSerializer.Serialize(new { upgradeLevel = UpgradeLevel });
-        File.WriteAllText(SaveFile, json);
+        var state = new GameState
+        {
+            upgradeLevel = UpgradeLevel,
+            shipPosition = new Vector3Data { X = ShipPosition.X, Y = ShipPosition.Y, Z = ShipPosition.Z },
+            crewStats = CrewStats
+        };
+        state.Save(SaveFile);
     }
 
     private void LoadState()
     {
-        if (!File.Exists(SaveFile))
-            return;
-        try
-        {
-            var json = File.ReadAllText(SaveFile);
-            var state = JsonSerializer.Deserialize<UpgradeState>(json);
-            if (state != null)
-                UpgradeLevel = state.upgradeLevel;
-        }
-        catch { }
-    }
-
-    private class UpgradeState
-    {
-        public int upgradeLevel { get; set; }
+        var state = GameState.Load(SaveFile);
+        UpgradeLevel = state.upgradeLevel;
+        ShipPosition = new Vector3(state.shipPosition.X, state.shipPosition.Y, state.shipPosition.Z);
+        CrewStats = state.crewStats;
     }
 }
