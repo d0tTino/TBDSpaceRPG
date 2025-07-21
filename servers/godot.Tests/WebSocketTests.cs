@@ -53,6 +53,43 @@ public class WebSocketTests
         Assert.That(doc.RootElement.GetProperty("result").GetProperty("status").GetString(), Is.EqualTo("ok"));
     }
 
+    [Test]
+    public async Task InvalidJsonDoesNotCloseConnection()
+    {
+        using var ws = new ClientWebSocket();
+        var uri = new Uri($"ws://localhost:{_port}/");
+        await ws.ConnectAsync(uri, CancellationToken.None);
+
+        var badBytes = Encoding.UTF8.GetBytes("notjson");
+        await ws.SendAsync(badBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+        await Task.Delay(100);
+
+        Assert.That(ws.State, Is.EqualTo(WebSocketState.Open));
+
+        var reqJson = "{\"type\":\"test\",\"id\":\"99\",\"parameters\":{}}";
+        var reqBytes = Encoding.UTF8.GetBytes(reqJson);
+        await ws.SendAsync(reqBytes, WebSocketMessageType.Text, true, CancellationToken.None);
+
+        var buffer = new byte[1024];
+        var result = await ws.ReceiveAsync(buffer, CancellationToken.None);
+        var resp = Encoding.UTF8.GetString(buffer, 0, result.Count);
+        var doc = JsonDocument.Parse(resp);
+        Assert.That(doc.RootElement.GetProperty("id").GetString(), Is.EqualTo("99"));
+        Assert.That(doc.RootElement.GetProperty("result").GetProperty("status").GetString(), Is.EqualTo("ok"));
+    }
+
+    [Test]
+    public async Task CloseConnectionWorks()
+    {
+        using var ws = new ClientWebSocket();
+        var uri = new Uri($"ws://localhost:{_port}/");
+        await ws.ConnectAsync(uri, CancellationToken.None);
+
+        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "closing", CancellationToken.None);
+
+        Assert.That(ws.State, Is.EqualTo(WebSocketState.Closed));
+    }
+
     private static int GetFreePort()
     {
         var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
