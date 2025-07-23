@@ -1,6 +1,6 @@
 # TBD Space Game Documentation
 
-This directory contains the organized documentation for the TBD Space Game project.
+This directory contains the organized documentation for the TBD Space Game project. The Unity project previously stored in `TBD SpaceGame/` has been removed from the main branch and archived on the `unity-archive` branch for reference.
 
 ## Directory Structure
 

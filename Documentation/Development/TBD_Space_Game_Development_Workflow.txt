@@ -1,6 +1,8 @@
 # TBD_Space_Game_Development_Workflow.txt
 Version: April 2025
 
+Note: The Unity project formerly located in `TBD SpaceGame/` has been archived on the `unity-archive` branch. Use that branch if you need the old Unity workflow.
+
 Table of Contents:
 1.0 Development Environment Setup
 2.0 Version Control Guidelines
