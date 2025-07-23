@@ -20,6 +20,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && req.url === '/metrics') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(analytics.getMetrics()));
+    return;
+  }
+
   if (req.method === 'POST' && req.url === '/event') {
     let body = '';
     req.on('data', chunk => { body += chunk; });

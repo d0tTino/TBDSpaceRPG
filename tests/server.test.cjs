@@ -11,9 +11,9 @@ function startServer(relativePath, port) {
   return spawn('node', [fullPath], { env });
 }
 
-function request(port) {
+function request(port, pathName = '/') {
   return new Promise((resolve, reject) => {
-    const req = http.request({ hostname: 'localhost', port, path: '/' }, (res) => {
+    const req = http.request({ hostname: 'localhost', port, path: pathName }, res => {
       let data = '';
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => resolve(data));
@@ -23,23 +23,27 @@ function request(port) {
   });
 }
 
-function post(port, pathName, data) {
+function send(port, method, pathName, data) {
   return new Promise((resolve, reject) => {
     const req = http.request({
       hostname: 'localhost',
       port,
       path: pathName,
-      method: 'POST',
+      method,
       headers: { 'Content-Type': 'application/json' },
-    }, (res) => {
+    }, res => {
       let body = '';
       res.on('data', chunk => { body += chunk; });
       res.on('end', () => resolve({ statusCode: res.statusCode, body }));
     });
     req.on('error', reject);
-    req.write(JSON.stringify(data));
+    if (data) req.write(JSON.stringify(data));
     req.end();
   });
+}
+
+function post(port, pathName, data) {
+  return send(port, 'POST', pathName, data);
 }
 
 (async () => {
@@ -78,8 +82,27 @@ function post(port, pathName, data) {
   try {
     const gitResponse = await request(gitPort);
     assert.strictEqual(gitResponse, 'Git MCP server placeholder');
+    const gitInit = await request(gitPort, '/init');
+    assert.deepStrictEqual(JSON.parse(gitInit), { initialized: true });
+    const gitCommit = await request(gitPort, '/commit');
+    assert.deepStrictEqual(JSON.parse(gitCommit), { committed: true });
+    const gitStatus = await request(gitPort, '/status');
+    assert.deepStrictEqual(JSON.parse(gitStatus), { status: 'clean' });
     const pgResponse = await request(pgPort);
     assert.strictEqual(pgResponse, 'Postgres MCP server placeholder');
+    const created = await send(pgPort, 'POST', '/crew', { name: 'Alice', role: 'captain' });
+    const crewItem = JSON.parse(created.body);
+    assert.strictEqual(created.statusCode, 200);
+    const list1 = await request(pgPort, '/crew');
+    assert.deepStrictEqual(JSON.parse(list1), [crewItem]);
+    const updated = await send(pgPort, 'PUT', `/crew/${crewItem.id}`, { role: 'pilot' });
+    assert.strictEqual(updated.statusCode, 200);
+    const updatedItem = JSON.parse(updated.body);
+    assert.strictEqual(updatedItem.role, 'pilot');
+    const deleted = await send(pgPort, 'DELETE', `/crew/${crewItem.id}`);
+    assert.strictEqual(deleted.statusCode, 200);
+    const list2 = await request(pgPort, '/crew');
+    assert.deepStrictEqual(JSON.parse(list2), []);
     const telemetryResponse = await request(telemetryPort);
     assert.strictEqual(telemetryResponse, 'Telemetry server placeholder');
     const ksaResponse = await request(ksaPort);
@@ -111,6 +134,9 @@ function post(port, pathName, data) {
     assert.strictEqual(metrics2.eventCounts.test, 1);
     assert.strictEqual(metrics2.eventCounts.generation_advanced, 1);
     assert.strictEqual(metrics2.latestGeneration, 1);
+
+    const metricsResult = await request(telemetryPort, '/metrics');
+    assert.deepStrictEqual(JSON.parse(metricsResult), metrics2);
     console.log('Tests passed');
     git.kill();
     pg.kill();
