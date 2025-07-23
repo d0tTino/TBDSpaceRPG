@@ -50,9 +50,7 @@ function post(port, pathName, data) {
 }
 
 (async () => {
-  const gitPort = 8081;
-  const pgPort = 8004;
-  const telemetryPort = 8091;
+  const corePort = 8095;
   const ksaPort = 8006;
   const ksaEnginePort = 8007;
   const ksaEngine = http.createServer((req, res) => {
@@ -64,9 +62,7 @@ function post(port, pathName, data) {
     });
   });
   await new Promise(r => ksaEngine.listen(ksaEnginePort, r));
-  const git = startServer('servers/git/index.cjs', gitPort);
-  const pg = startServer('servers/postgres/index.cjs', pgPort);
-  const telemetry = startServer('servers/telemetry/index.cjs', telemetryPort);
+  const core = startServer('servers/core-mcp/index.cjs', corePort);
   const ksa = startServer('servers/ksa/index.cjs', ksaPort, {
     KSA_ENGINE_HOST: 'localhost',
     KSA_ENGINE_PORT: String(ksaEnginePort)
@@ -90,40 +86,38 @@ function post(port, pathName, data) {
   }
 
   await Promise.all([
-    waitForServer(gitPort),
-    waitForServer(pgPort),
-    waitForServer(telemetryPort),
+    waitForServer(corePort),
     waitForServer(ksaPort),
   ]);
   try {
-    const gitResponse = await request(gitPort);
+    const gitResponse = await request(corePort, '/git');
     assert.strictEqual(gitResponse, 'Git MCP server placeholder');
-    const gitInit = await request(gitPort, '/init');
+    const gitInit = await request(corePort, '/git/init');
     assert.deepStrictEqual(JSON.parse(gitInit), { initialized: true });
-    const gitCommit = await request(gitPort, '/commit');
+    const gitCommit = await request(corePort, '/git/commit');
     assert.deepStrictEqual(JSON.parse(gitCommit), { committed: true });
-    const gitStatus = await request(gitPort, '/status');
+    const gitStatus = await request(corePort, '/git/status');
     assert.deepStrictEqual(JSON.parse(gitStatus), { status: 'clean' });
-    const pgResponse = await request(pgPort);
+    const pgResponse = await request(corePort, '/postgres');
     assert.strictEqual(pgResponse, 'Postgres MCP server placeholder');
-    const created = await send(pgPort, 'POST', '/crew', { name: 'Alice', role: 'captain' });
+    const created = await send(corePort, 'POST', '/postgres/crew', { name: 'Alice', role: 'captain' });
     const crewItem = JSON.parse(created.body);
     assert.strictEqual(created.statusCode, 200);
-    const list1 = await request(pgPort, '/crew');
+    const list1 = await request(corePort, '/postgres/crew');
     assert.deepStrictEqual(JSON.parse(list1), [crewItem]);
-    const updated = await send(pgPort, 'PUT', `/crew/${crewItem.id}`, { role: 'pilot' });
+    const updated = await send(corePort, 'PUT', `/postgres/crew/${crewItem.id}`, { role: 'pilot' });
     assert.strictEqual(updated.statusCode, 200);
     const updatedItem = JSON.parse(updated.body);
     assert.strictEqual(updatedItem.role, 'pilot');
-    const deleted = await send(pgPort, 'DELETE', `/crew/${crewItem.id}`);
+    const deleted = await send(corePort, 'DELETE', `/postgres/crew/${crewItem.id}`);
     assert.strictEqual(deleted.statusCode, 200);
-    const list2 = await request(pgPort, '/crew');
+    const list2 = await request(corePort, '/postgres/crew');
     assert.deepStrictEqual(JSON.parse(list2), []);
-    const badCreate = await send(pgPort, 'POST', '/crew', '{');
+    const badCreate = await send(corePort, 'POST', '/postgres/crew', '{');
     assert.strictEqual(badCreate.statusCode, 400);
-    const badUpdate = await send(pgPort, 'PUT', '/crew/1', '{');
+    const badUpdate = await send(corePort, 'PUT', '/postgres/crew/1', '{');
     assert.strictEqual(badUpdate.statusCode, 400);
-    const telemetryResponse = await request(telemetryPort);
+    const telemetryResponse = await request(corePort, '/telemetry');
     assert.strictEqual(telemetryResponse, 'Telemetry server placeholder');
     const ksaResponse = await request(ksaPort);
     assert.strictEqual(ksaResponse, 'KSA MCP server placeholder');
@@ -133,13 +127,13 @@ function post(port, pathName, data) {
     const expectedKsa = { command: 'notify_message', arguments: { message: 'hi', logType: 'Log' }, requestId: '42' };
     assert.deepStrictEqual(JSON.parse(ksaResult.body), expectedKsa);
 
-    const postResult = await post(telemetryPort, '/event', { type: 'test' });
+    const postResult = await post(corePort, '/telemetry/event', { type: 'test' });
     assert.strictEqual(postResult.statusCode, 200);
-    const badTelemetry = await post(telemetryPort, '/event', '{');
+    const badTelemetry = await post(corePort, '/telemetry/event', '{');
     assert.strictEqual(badTelemetry.statusCode, 400);
 
     const genEvent = { type: 'generation_advanced', generation: 1 };
-    const genResult = await post(telemetryPort, '/event', genEvent);
+    const genResult = await post(corePort, '/telemetry/event', genEvent);
     assert.strictEqual(genResult.statusCode, 200);
     await new Promise(r => setTimeout(r, 100));
     const logPath = path.join(__dirname, '..', 'servers', 'telemetry', 'logs', 'events.log');
@@ -158,18 +152,14 @@ function post(port, pathName, data) {
     assert.strictEqual(metrics2.eventCounts.generation_advanced, 1);
     assert.strictEqual(metrics2.latestGeneration, 1);
 
-    const metricsResult = await request(telemetryPort, '/metrics');
+    const metricsResult = await request(corePort, '/telemetry/metrics');
     assert.deepStrictEqual(JSON.parse(metricsResult), metrics2);
     console.log('Tests passed');
-    git.kill();
-    pg.kill();
-    telemetry.kill();
+    core.kill();
     ksa.kill();
     ksaEngine.close();
   } catch (err) {
-    git.kill();
-    pg.kill();
-    telemetry.kill();
+    core.kill();
     ksa.kill();
     ksaEngine.close();
     console.error(err);
