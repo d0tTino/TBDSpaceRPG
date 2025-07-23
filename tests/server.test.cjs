@@ -5,9 +5,9 @@ const fs = require('fs');
 const assert = require('assert');
 const analytics = require('../servers/telemetry/analytics.cjs');
 
-function startServer(relativePath, port) {
+function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
-  const env = { ...process.env, PORT: String(port) };
+  const env = { ...process.env, PORT: String(port), ...extraEnv };
   return spawn('node', [fullPath], { env });
 }
 
@@ -51,10 +51,23 @@ function post(port, pathName, data) {
   const pgPort = 8004;
   const telemetryPort = 8091;
   const ksaPort = 8006;
+  const ksaEnginePort = 8007;
+  const ksaEngine = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(body);
+    });
+  });
+  await new Promise(r => ksaEngine.listen(ksaEnginePort, r));
   const git = startServer('servers/git/index.cjs', gitPort);
   const pg = startServer('servers/postgres/index.cjs', pgPort);
   const telemetry = startServer('servers/telemetry/index.cjs', telemetryPort);
-  const ksa = startServer('servers/ksa/index.cjs', ksaPort);
+  const ksa = startServer('servers/ksa/index.cjs', ksaPort, {
+    KSA_ENGINE_HOST: 'localhost',
+    KSA_ENGINE_PORT: String(ksaEnginePort)
+  });
   const logPath = path.join(__dirname, '..', 'servers', 'telemetry', 'logs', 'events.log');
   if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
   async function waitForServer(port, timeout = 5000) {
@@ -111,7 +124,7 @@ function post(port, pathName, data) {
     const ksaResult = await post(ksaPort, '/', mcpCmd);
     assert.strictEqual(ksaResult.statusCode, 200);
     const expectedKsa = { command: 'notify_message', arguments: { message: 'hi', logType: 'Log' }, requestId: '42' };
-    assert.deepStrictEqual(JSON.parse(ksaResult.body), { requestId: '42', result: { received: expectedKsa } });
+    assert.deepStrictEqual(JSON.parse(ksaResult.body), expectedKsa);
     const postResult = await post(telemetryPort, '/event', { type: 'test' });
     assert.strictEqual(postResult.statusCode, 200);
 
@@ -142,11 +155,13 @@ function post(port, pathName, data) {
     pg.kill();
     telemetry.kill();
     ksa.kill();
+    ksaEngine.close();
   } catch (err) {
     git.kill();
     pg.kill();
     telemetry.kill();
     ksa.kill();
+    ksaEngine.close();
     console.error(err);
     process.exit(1);
   }
