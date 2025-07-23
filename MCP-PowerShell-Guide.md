@@ -1,5 +1,8 @@
 # PowerShell Best Practices for MCP Integration
 
+> **Note**
+> The Unity project referenced in the examples below was removed from the main branch. Checkout the `unity-archive` branch if you need to run the legacy Unity tools.
+
 ## Common PowerShell Pitfalls
 
 Working with the MCP server in PowerShell requires careful attention to syntax. This guide addresses the most common issues encountered in our development process.

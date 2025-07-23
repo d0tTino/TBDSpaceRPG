@@ -5,8 +5,13 @@ param(
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Push-Location $repoRoot
 try {
-    # Run the Unity exporters
-    & './TBD SpaceGame/Assets/Editor/run-exporters.sh'
+    # Run the Unity exporters if available
+    $exporterScript = Join-Path $repoRoot 'TBD SpaceGame/Assets/Editor/run-exporters.sh'
+    if (Test-Path $exporterScript) {
+        & $exporterScript
+    } else {
+        Write-Host 'Export script not found. Switch to the unity-archive branch for the legacy Unity exporters.'
+    }
 
     $gltfSource = Join-Path $repoRoot 'Assets_glTF'
     $dataSource = Join-Path $repoRoot 'Gameplay_Data'

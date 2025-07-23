@@ -3,7 +3,7 @@
 This document provides comprehensive information about the Model Context Protocol (MCP) integration for the TBD Space Game project, including server setup, configuration, and tools developed to enhance AI-assisted game development.
 
 > **Note**
-> The project has moved to a **Godot-first** workflow. Unity is now used only as an optional authoring tool for meshes and animations that are exported to `Assets_glTF/` for consumption by the Godot project. Gameplay and scripting take place primarily within Godot.
+> The project has moved to a **Godot-first** workflow. Unity is now used only as an optional authoring tool for meshes and animations that are exported to `Assets_glTF/` for consumption by the Godot project. Gameplay and scripting take place primarily within Godot. The Unity project files have been archived on the `unity-archive` branch for historical reference.
 
 <!-- Project Comparison -->
 Unlike the classic **Ringworld RPG**, which focuses primarily on tabletop-style exploration of a single megastructure, TBD Space Game centers on managing a starship crew over multiple generations. The two projects share a sci-fi setting, but this project integrates MCP tooling and Unity-based gameplay while **Ringworld RPG** relies on a more traditional ruleset with minimal automation. These notes clarify the unique scope and workflow of this project for anyone familiar with **Ringworld RPG**.
@@ -487,23 +487,23 @@ Godot is now the main runtime engine for TBD Space Game. Assets exported from Un
 Use a glTF exporter (such as Unity's glTFast or Blender's exporter) to convert prefabs and models. Export them into `Assets_glTF/` so both Unity and Godot consume the same files.
 
 ### Command Line Asset Exporters
-The Unity project includes lightweight exporters that run without opening the editor. Run them with:
+The Unity project included lightweight exporters that ran without opening the editor. These files are now archived on the `unity-archive` branch. If you need them, check out that branch and run:
 
 ```sh
 ./TBD\ SpaceGame/Assets/Editor/run-exporters.sh
 ```
 
-This script builds `Exporters.csproj` and writes a sample `.gltf` file to `Assets_glTF/` and a JSON data file to `Gameplay_Data/`. Integrate it into your CI pipeline to regenerate assets automatically.
+The exporter builds `Exporters.csproj` and writes a sample `.gltf` file to `Assets_glTF/` and a JSON data file to `Gameplay_Data/`. Integrate it into your CI pipeline to regenerate assets automatically.
 
 ### Unified Export Tool
 
-Run the following PowerShell script to execute the exporters and automatically move the outputs into the Godot project:
+Run the following PowerShell script to copy exported assets into the Godot project. It will run the Unity exporters when they are available:
 
 ```powershell
 ./run-exporters-to-godot.ps1
 ```
 
-The script copies glTF files into `Godot/Assets_glTF/` and gameplay data into `Godot/Gameplay_Data/` so the assets are ready for import when you open the Godot editor.
+The script copies glTF files into `Godot/Assets_glTF/` and gameplay data into `Godot/Gameplay_Data/` so the assets are ready for import when you open the Godot editor. If the Unity exporters are missing, checkout the `unity-archive` branch to access them.
 
 ### Starting Servers for Godot
 Run all MCP servers configured for Godot with:
