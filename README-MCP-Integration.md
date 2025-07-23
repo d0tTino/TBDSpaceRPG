@@ -227,9 +227,22 @@ public class McpServerAutoRestarter
 
 ## Running Tests
 
-All automated tests use PowerShell scripts. Ensure that the `pwsh` command is available before running tests.
+Install dependencies with `npm ci` before executing the test scripts. The test suite includes Node-based tests, optional Unity tests, and a Godot test project that requires the `dotnet` CLI.
 
-Run `npm ci` to install Node.js dependencies before executing the test script.
+Run all tests with:
+
+```sh
+npm test
+```
+
+To run only the Godot tests:
+
+```sh
+npm run test:godot
+```
+This command builds the Godot test project using `dotnet` and then executes the tests in a headless Godot instance.
+
+You can still invoke the original PowerShell script if needed:
 
 ```pwsh
 pwsh -File tests/test-servers.ps1

@@ -5,7 +5,7 @@ public partial class StationDock : Control
     [Export] public string SaveFile = "Gameplay_Data/game_state.json";
     [Export] public int UpgradeLevel = 0;
     [Export] public Vector3 ShipPosition = Vector3.Zero;
-    [Export] public CrewStats CrewStats = new CrewStats();
+    public CrewStats CrewStats = new CrewStats();
 
     private McpClient _client;
 
