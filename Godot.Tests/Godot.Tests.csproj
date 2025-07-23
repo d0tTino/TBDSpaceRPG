@@ -1,6 +1,7 @@
 <Project Sdk="Godot.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <RootNamespace>Godot.Tests</RootNamespace>
@@ -11,5 +12,16 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Godot/TBDSpaceRPG.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../src/OrbitalMechanics/OrbitPlanner.cs" />
+    <Compile Include="test/stubs/CelestialBody.cs" />
+    <Compile Include="../src/OrbitalMechanics/OrbitData.cs" />
+    <Compile Include="../src/OrbitalMechanics/Vector3d.cs" />
+    <Compile Include="../src/SimpleKeplerOrbits/*.cs" />
+    <Compile Include="../src/ShipCustomization/ShipCustomizationManager.cs" />
+    <Compile Include="../src/ShipCustomization/SpaceshipMovement.cs" />
+    <Compile Include="test/Tests.cs" />
+    <Compile Include="test/src/*.cs" />
   </ItemGroup>
 </Project>
