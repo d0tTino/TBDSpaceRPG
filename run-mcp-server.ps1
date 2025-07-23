@@ -1,5 +1,7 @@
 # run-mcp-server.ps1
-# Purpose: Starts the MCP server for the selected engine with proper environment configuration
+# Purpose: Starts the MCP server for the selected engine with proper environment configuration.
+# The script now fails fast with clear errors if the provided configuration file
+# or resolved server path does not exist.
 # Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-Engine unity|godot] [-Monitor] [-ConfigFile <path>] [-EngineConfigFile <path>]
 
 param (
@@ -11,6 +13,13 @@ param (
     [string]$EngineConfigFile = "engine-config.json",
     [string]$ServerConfigFile = "server-config.json"
 )
+
+# Exit immediately if the provided configuration file does not exist so the
+# user knows why the server cannot start.
+if (-not (Test-Path $ConfigFile)) {
+    Write-Error "Configuration file not found: $ConfigFile"
+    exit 1
+}
 
 # Validate the supplied port number
 function Test-ValidPort {
@@ -140,7 +149,7 @@ if ($config.runtime -eq 'dotnet') {
     }
 }
 
-# Validate server path
+# Validate server path and stop immediately when it does not exist
 if (-not (Test-Path $config.serverPath)) {
     if ($config.runtime -eq 'dotnet') {
         Write-Error "Godot MCP Server path not found: $($config.serverPath)"
