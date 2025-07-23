@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: 18
       - run: dotnet format --verify-no-changes csharp/OrbitalMechanics.sln
+      - run: dotnet format --verify-no-changes Godot/TBDSpaceRPG.csproj
       - run: npm ci
       - run: npm run lint
       - run: npm ci
