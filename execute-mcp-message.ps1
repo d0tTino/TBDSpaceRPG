@@ -56,4 +56,4 @@ try {
 }
 catch {
     Write-Host "Error executing MCP command: $_"
-} 
+}
