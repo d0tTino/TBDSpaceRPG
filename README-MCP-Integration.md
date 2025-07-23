@@ -250,6 +250,27 @@ pwsh -File tests/test-servers.ps1
 
 For installation instructions, see the [PowerShell installation guide](https://learn.microsoft.com/powershell/scripting/install/installing-powershell).
 
+## Linting
+
+Run the linters to ensure consistent code style for both the C# and Node.js projects.
+
+### .NET Formatting
+
+Use `dotnet format` to verify that the C# projects follow the repository's style guidelines:
+
+```sh
+dotnet format Godot/TBDSpaceRPG.csproj
+dotnet format csharp/OrbitalMechanics.sln
+```
+
+### ESLint
+
+The Node.js servers use ESLint for static analysis. Install dependencies and run:
+
+```sh
+npm run lint
+```
+
 ## Ship Customization System
 
 The Ship Customization System (implemented according to Section 4.16 of the technical documentation) consists of:

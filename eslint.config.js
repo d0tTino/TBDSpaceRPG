@@ -13,4 +13,11 @@ export default [
     rules: {
     },
   },
+  {
+    files: ["servers/**/*.cjs"],
+    rules: {
+      "no-console": "off",
+      "no-unused-vars": "warn",
+    },
+  },
 ];
