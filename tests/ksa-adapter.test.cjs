@@ -6,10 +6,18 @@ const assert = require('assert');
 function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
   const env = { ...process.env, PORT: String(port), ...extraEnv };
-  return spawn('node', [fullPath], { env });
+  const child = spawn('node', [fullPath], { env, stdio: 'inherit' });
+  return child;
 }
 
-function post(port, data) {
+async function stopServer(child) {
+  if (child && child.exitCode === null) {
+    child.kill();
+    await new Promise(resolve => child.once('exit', resolve));
+  }
+}
+
+function post(port, data, raw = false) {
   return new Promise((resolve, reject) => {
     const req = http.request({
       hostname: 'localhost',
@@ -23,28 +31,29 @@ function post(port, data) {
       res.on('end', () => resolve({ statusCode: res.statusCode, body }));
     });
     req.on('error', reject);
-    req.write(JSON.stringify(data));
+    if (raw) req.write(data); else req.write(JSON.stringify(data));
     req.end();
   });
 }
 
+
 (async () => {
-  const enginePort = 9010;
-  const adapterPort = 9011;
+  // Successful forwarding using endpoint URL
+  const enginePort = 19010;
+  const adapterPort = 19011;
   const received = [];
   const engine = http.createServer((req, res) => {
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
-      received.push(JSON.parse(body || '{}'));
+      received.push({ path: req.url, body: JSON.parse(body || '{}') });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
     });
   });
   await new Promise(r => engine.listen(enginePort, r));
   const adapter = startServer('servers/ksa/index.cjs', adapterPort, {
-    KSA_ENGINE_HOST: 'localhost',
-    KSA_ENGINE_PORT: String(enginePort)
+    KSA_ENGINE_ENDPOINT: `http://localhost:${enginePort}/engine`
   });
   try {
     await new Promise(r => setTimeout(r, 100));
@@ -53,14 +62,53 @@ function post(port, data) {
     assert.strictEqual(result.statusCode, 200);
     assert.deepStrictEqual(JSON.parse(result.body), { ok: true });
     assert.deepStrictEqual(received[0], {
-      command: 'notify_message',
-      arguments: { msg: 'hello' },
-      requestId: '99'
+      path: '/engine',
+      body: {
+        command: 'notify_message',
+        arguments: { msg: 'hello' },
+        requestId: '99'
+      }
     });
-    console.log('KSA adapter tests passed');
   } finally {
-    adapter.kill();
-    engine.close();
+    await stopServer(adapter);
+    await new Promise(r => engine.close(r));
   }
-})();
 
+  // Engine failure (unreachable)
+  const failPort = 19012;
+  const adapterFailPort = 19013;
+  const adapterFail = startServer('servers/ksa/index.cjs', adapterFailPort, {
+    KSA_ENGINE_HOST: 'localhost',
+    KSA_ENGINE_PORT: String(failPort)
+  });
+  try {
+    await new Promise(r => setTimeout(r, 100));
+    const result = await post(adapterFailPort, { method: 'ping', id: '1' });
+    assert.strictEqual(result.statusCode, 502);
+  } finally {
+    await stopServer(adapterFail);
+  }
+
+  // Malformed request
+  const engine2Port = 19014;
+  const engine2 = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end('{}');
+  });
+  await new Promise(r => engine2.listen(engine2Port, r));
+  const adapterBadPort = 19015;
+  const adapterBad = startServer('servers/ksa/index.cjs', adapterBadPort, {
+    KSA_ENGINE_HOST: 'localhost',
+    KSA_ENGINE_PORT: String(engine2Port)
+  });
+  try {
+    await new Promise(r => setTimeout(r, 100));
+    const badRes = await post(adapterBadPort, '{', true);
+    assert.strictEqual(badRes.statusCode, 400);
+  } finally {
+    await stopServer(adapterBad);
+    await new Promise(r => engine2.close(r));
+  }
+
+  console.log('KSA adapter tests passed');
+})();

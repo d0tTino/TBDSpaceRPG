@@ -93,15 +93,20 @@ Routes requests to appropriate MCP servers.
 
 ### KSA Adapter
 
-Placeholder adapter for the upcoming KSA engine. It simply echoes MCP requests.
+The KSA adapter forwards MCP commands to a running KSA engine instance. By
+default it looks for an engine on `localhost:9000`, but you can configure a
+custom endpoint using environment variables:
+
+- `KSA_ENGINE_HOST` and `KSA_ENGINE_PORT` – specify the host and port
+- `KSA_ENGINE_ENDPOINT` – full URL including path (overrides host/port)
 
 ```powershell
-# Start the KSA adapter
+# Forward MCP commands to http://my-engine.local:9100/engine
+$env:KSA_ENGINE_ENDPOINT = 'http://my-engine.local:9100/engine'
 ./run-ksa-server.ps1
 ```
 
-When the real engine API is available, replace the placeholder server with the
-actual implementation and update configuration values accordingly.
+The adapter returns the engine's raw HTTP response to the caller.
 
 ### All Servers
 
