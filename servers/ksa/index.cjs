@@ -1,4 +1,5 @@
 const http = require('http');
+const { logError, parseJson } = require('../utils.cjs');
 
 const port = process.env.PORT || 8005;
 const engineHost = process.env.KSA_ENGINE_HOST || 'localhost';
@@ -50,9 +51,15 @@ const server = http.createServer((req, res) => {
         }
       } catch (err) {
         console.error(err);
+
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Invalid JSON');
+        return;
       }
+      const ksaRequest = translateMcpToKsa(mcp);
+      const response = { requestId: ksaRequest.requestId, result: { received: ksaRequest } };
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(response));
     });
     return;
   }
@@ -68,4 +75,4 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`KSA MCP server listening on port ${port}`);
 });
-server.on('error', err => console.error(err));
+server.on('error', logError);

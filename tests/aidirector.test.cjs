@@ -17,8 +17,9 @@ function request(port, options = {}) {
       res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
     });
     req.on('error', reject);
-    if (options.method === 'POST' && options.body) {
-      req.write(JSON.stringify(options.body));
+    if (options.method === 'POST' && options.body !== undefined) {
+      if (typeof options.body === 'string') req.write(options.body);
+      else req.write(JSON.stringify(options.body));
     }
     req.end();
   });
@@ -41,6 +42,13 @@ function request(port, options = {}) {
     });
     assert.strictEqual(cmd.statusCode, 200);
     assert.deepStrictEqual(JSON.parse(cmd.body), { received: { action: 'test' } });
+    const bad = await request(port, {
+      method: 'POST',
+      path: '/command',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    });
+    assert.strictEqual(bad.statusCode, 400);
 
     console.log('AI Director tests passed');
   } finally {

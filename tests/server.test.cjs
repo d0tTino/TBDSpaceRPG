@@ -37,7 +37,10 @@ function send(port, method, pathName, data) {
       res.on('end', () => resolve({ statusCode: res.statusCode, body }));
     });
     req.on('error', reject);
-    if (data) req.write(JSON.stringify(data));
+    if (data !== undefined) {
+      if (typeof data === 'string') req.write(data);
+      else req.write(JSON.stringify(data));
+    }
     req.end();
   });
 }
@@ -116,6 +119,10 @@ function post(port, pathName, data) {
     assert.strictEqual(deleted.statusCode, 200);
     const list2 = await request(pgPort, '/crew');
     assert.deepStrictEqual(JSON.parse(list2), []);
+    const badCreate = await send(pgPort, 'POST', '/crew', '{');
+    assert.strictEqual(badCreate.statusCode, 400);
+    const badUpdate = await send(pgPort, 'PUT', '/crew/1', '{');
+    assert.strictEqual(badUpdate.statusCode, 400);
     const telemetryResponse = await request(telemetryPort);
     assert.strictEqual(telemetryResponse, 'Telemetry server placeholder');
     const ksaResponse = await request(ksaPort);
@@ -125,8 +132,11 @@ function post(port, pathName, data) {
     assert.strictEqual(ksaResult.statusCode, 200);
     const expectedKsa = { command: 'notify_message', arguments: { message: 'hi', logType: 'Log' }, requestId: '42' };
     assert.deepStrictEqual(JSON.parse(ksaResult.body), expectedKsa);
+
     const postResult = await post(telemetryPort, '/event', { type: 'test' });
     assert.strictEqual(postResult.statusCode, 200);
+    const badTelemetry = await post(telemetryPort, '/event', '{');
+    assert.strictEqual(badTelemetry.statusCode, 400);
 
     const genEvent = { type: 'generation_advanced', generation: 1 };
     const genResult = await post(telemetryPort, '/event', genEvent);
