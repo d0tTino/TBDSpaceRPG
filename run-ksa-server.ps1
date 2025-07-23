@@ -1,3 +1,5 @@
+# Starts the KSA adapter server. The script now reports an error and exits if
+# the configuration file or server path are missing.
 param(
     [int]$Port = 8005,
     [string]$ServerPath,
@@ -17,6 +19,11 @@ $scriptDir = $PSScriptRoot
 if (-not $scriptDir) {
     $scriptDir = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 }
+# Fail early when the configuration file is missing
+if (-not (Test-Path $ConfigFile)) {
+    Write-Error "Configuration file not found: $ConfigFile"
+    exit 1
+}
 if (Test-Path $ConfigFile) {
     try {
         $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
@@ -32,6 +39,7 @@ if (-not $ServerPath) {
     $ServerPath = Join-Path $scriptDir 'servers/ksa'
 }
 
+# Fail early if the server directory cannot be located
 if (-not (Test-Path $ServerPath)) {
     Write-Error "KSA adapter path not found: $ServerPath"
     exit 1
