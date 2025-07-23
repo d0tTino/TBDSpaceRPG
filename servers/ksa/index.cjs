@@ -1,5 +1,5 @@
 const http = require('http');
-const { logError, parseJson } = require('../utils.cjs');
+const { logError } = require('../utils.cjs');
 
 const port = process.env.PORT || 8005;
 const engineHost = process.env.KSA_ENGINE_HOST || 'localhost';
@@ -56,10 +56,6 @@ const server = http.createServer((req, res) => {
         res.end('Invalid JSON');
         return;
       }
-      const ksaRequest = translateMcpToKsa(mcp);
-      const response = { requestId: ksaRequest.requestId, result: { received: ksaRequest } };
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(response));
     });
     return;
   }
