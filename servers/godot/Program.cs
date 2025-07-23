@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +14,31 @@ public class McpRequest
     public string type { get; set; } = string.Empty;
     public string id { get; set; } = string.Empty;
     public JsonElement parameters { get; set; }
+}
+
+public interface IMcpCommandHandler
+{
+    Task<object> HandleAsync(JsonElement parameters);
+}
+
+public class ExecuteMenuItemHandler : IMcpCommandHandler
+{
+    public Task<object> HandleAsync(JsonElement parameters)
+    {
+        var item = parameters.TryGetProperty("item", out var itemProp) ? itemProp.GetString() : string.Empty;
+        return Task.FromResult<object>(new { executed = item });
+    }
+}
+
+public class NotifyMessageHandler : IMcpCommandHandler
+{
+    public static string LastMessage = string.Empty;
+
+    public Task<object> HandleAsync(JsonElement parameters)
+    {
+        LastMessage = parameters.TryGetProperty("message", out var msgProp) ? msgProp.GetString() ?? string.Empty : string.Empty;
+        return Task.FromResult<object>(new { notified = true });
+    }
 }
 
 public class McpResponse
@@ -26,14 +52,20 @@ public class SimpleWebSocketServer : IDisposable
     private readonly HttpListener _listener;
     private readonly CancellationTokenSource _cts = new();
     private Task? _listenTask;
+    private readonly IDictionary<string, IMcpCommandHandler> _handlers;
 
     public int Port { get; }
 
-    public SimpleWebSocketServer(int port)
+    public SimpleWebSocketServer(int port, IDictionary<string, IMcpCommandHandler>? handlers = null)
     {
         Port = port;
         _listener = new HttpListener();
         _listener.Prefixes.Add($"http://+:{port}/");
+        _handlers = handlers ?? new Dictionary<string, IMcpCommandHandler>
+        {
+            ["execute_menu_item"] = new ExecuteMenuItemHandler(),
+            ["notify_message"] = new NotifyMessageHandler()
+        };
     }
 
     public void Start()
@@ -95,7 +127,13 @@ public class SimpleWebSocketServer : IDisposable
                 var request = JsonSerializer.Deserialize<McpRequest>(json);
                 if (request != null)
                 {
-                    var response = new McpResponse { id = request.id };
+                    object resultObj = new { status = "unknown_command" };
+                    if (_handlers.TryGetValue(request.type, out var handler))
+                    {
+                        resultObj = await handler.HandleAsync(request.parameters);
+                    }
+
+                    var response = new McpResponse { id = request.id, result = resultObj };
                     var respJson = JsonSerializer.Serialize(response);
                     var respBytes = Encoding.UTF8.GetBytes(respJson);
                     await socket.SendAsync(respBytes, WebSocketMessageType.Text, true, token);
