@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const analytics = require('./analytics.cjs');
+const { logError, parseJson } = require('../utils.cjs');
 
 const port = process.env.PORT || 8090;
 const logDir = path.join(__dirname, 'logs');
@@ -30,16 +31,15 @@ const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
-      try {
-        const event = JSON.parse(body || '{}');
-        logEvent(event);
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('Event received');
-      } catch (e) {
-        console.error(e);
+      const event = parseJson(body);
+      if (!event) {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Invalid JSON');
+        return;
       }
+      logEvent(event);
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('Event received');
     });
     return;
   }
@@ -51,4 +51,4 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`Telemetry server listening on port ${port}`);
 });
-server.on('error', (err) => console.error(err));
+server.on('error', logError);
