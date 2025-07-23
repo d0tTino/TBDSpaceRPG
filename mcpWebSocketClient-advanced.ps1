@@ -259,4 +259,4 @@ if ($webSocket -ne $null) {
         # Close WebSocket connection
         Close-WebSocketConnection -webSocket $webSocket
     }
-} 
+}
