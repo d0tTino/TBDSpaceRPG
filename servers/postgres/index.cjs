@@ -1,4 +1,5 @@
 const http = require('http');
+const { logError, parseJson } = require('../utils.cjs');
 const port = process.env.PORT || 8003;
 
 const crew = [];
@@ -19,14 +20,14 @@ function handleCrew(req, res) {
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
-      try {
-        const data = JSON.parse(body || '{}');
-        const record = { id: nextId++, ...data };
-        crew.push(record);
-        sendJson(res, 200, record);
-      } catch {
+      const data = parseJson(body);
+      if (!data) {
         sendJson(res, 400, { error: 'invalid json' });
+        return;
       }
+      const record = { id: nextId++, ...data };
+      crew.push(record);
+      sendJson(res, 200, record);
     });
     return;
   }
@@ -34,19 +35,19 @@ function handleCrew(req, res) {
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', () => {
-      try {
-        const data = JSON.parse(body || '{}');
-        const id = Number(idMatch[1]);
-        const item = crew.find(c => c.id === id);
-        if (!item) {
-          sendJson(res, 404, { error: 'not found' });
-          return;
-        }
-        Object.assign(item, data);
-        sendJson(res, 200, item);
-      } catch {
+      const data = parseJson(body);
+      if (!data) {
         sendJson(res, 400, { error: 'invalid json' });
+        return;
       }
+      const id = Number(idMatch[1]);
+      const item = crew.find(c => c.id === id);
+      if (!item) {
+        sendJson(res, 404, { error: 'not found' });
+        return;
+      }
+      Object.assign(item, data);
+      sendJson(res, 200, item);
     });
     return;
   }
@@ -84,4 +85,4 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`Postgres MCP server listening on port ${port}`);
 });
-server.on('error', (err) => console.error(err));
+server.on('error', logError);

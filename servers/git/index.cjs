@@ -1,4 +1,5 @@
 const http = require('http');
+const { logError } = require('../utils.cjs');
 const port = process.env.PORT || 8080;
 
 function sendJson(res, obj) {
@@ -29,4 +30,4 @@ const server = http.createServer((req, res) => {
 server.listen(port, () => {
   console.log(`Git MCP server listening on port ${port}`);
 });
-server.on('error', (err) => console.error(err));
+server.on('error', logError);
