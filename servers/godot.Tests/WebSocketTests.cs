@@ -35,13 +35,13 @@ public class WebSocketTests
     }
 
     [Test]
-    public async Task RequestRespondsWithOk()
+    public async Task ExecuteMenuItemRespondsWithExecuted()
     {
         using var ws = new ClientWebSocket();
         var uri = new Uri($"ws://localhost:{_port}/");
         await ws.ConnectAsync(uri, CancellationToken.None);
 
-        var reqJson = "{\"type\":\"test\",\"id\":\"42\",\"parameters\":{}}";
+        var reqJson = "{\"type\":\"execute_menu_item\",\"id\":\"42\",\"parameters\":{\"item\":\"open\"}}";
         var bytes = Encoding.UTF8.GetBytes(reqJson);
         await ws.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
 
@@ -50,7 +50,7 @@ public class WebSocketTests
         var resp = Encoding.UTF8.GetString(buffer, 0, result.Count);
         var doc = JsonDocument.Parse(resp);
         Assert.That(doc.RootElement.GetProperty("id").GetString(), Is.EqualTo("42"));
-        Assert.That(doc.RootElement.GetProperty("result").GetProperty("status").GetString(), Is.EqualTo("ok"));
+        Assert.That(doc.RootElement.GetProperty("result").GetProperty("executed").GetString(), Is.EqualTo("open"));
     }
 
     [Test]
@@ -66,7 +66,7 @@ public class WebSocketTests
 
         Assert.That(ws.State, Is.EqualTo(WebSocketState.Open));
 
-        var reqJson = "{\"type\":\"test\",\"id\":\"99\",\"parameters\":{}}";
+        var reqJson = "{\"type\":\"execute_menu_item\",\"id\":\"99\",\"parameters\":{}}";
         var reqBytes = Encoding.UTF8.GetBytes(reqJson);
         await ws.SendAsync(reqBytes, WebSocketMessageType.Text, true, CancellationToken.None);
 
@@ -75,7 +75,27 @@ public class WebSocketTests
         var resp = Encoding.UTF8.GetString(buffer, 0, result.Count);
         var doc = JsonDocument.Parse(resp);
         Assert.That(doc.RootElement.GetProperty("id").GetString(), Is.EqualTo("99"));
-        Assert.That(doc.RootElement.GetProperty("result").GetProperty("status").GetString(), Is.EqualTo("ok"));
+        Assert.That(doc.RootElement.GetProperty("result").GetProperty("executed").GetString(), Is.EqualTo(string.Empty));
+    }
+
+    [Test]
+    public async Task NotifyMessageStoresMessage()
+    {
+        using var ws = new ClientWebSocket();
+        var uri = new Uri($"ws://localhost:{_port}/");
+        await ws.ConnectAsync(uri, CancellationToken.None);
+
+        var reqJson = "{\"type\":\"notify_message\",\"id\":\"55\",\"parameters\":{\"message\":\"hello\"}}";
+        var bytes = Encoding.UTF8.GetBytes(reqJson);
+        await ws.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+
+        var buffer = new byte[1024];
+        var result = await ws.ReceiveAsync(buffer, CancellationToken.None);
+        var resp = Encoding.UTF8.GetString(buffer, 0, result.Count);
+        var doc = JsonDocument.Parse(resp);
+        Assert.That(doc.RootElement.GetProperty("id").GetString(), Is.EqualTo("55"));
+        Assert.That(doc.RootElement.GetProperty("result").GetProperty("notified").GetBoolean(), Is.True);
+        Assert.That(NotifyMessageHandler.LastMessage, Is.EqualTo("hello"));
     }
 
     [Test]
