@@ -21,3 +21,10 @@ text = "Upgrade"
 
 [node name="RelaunchButton" type="Button" parent="VBox"]
 text = "Relaunch"
+
+[node name="ShowUpgradesToggle" type="CheckButton" parent="VBox"]
+text = "Show Upgrades"
+
+[node name="UpgradeLabel" type="Label" parent="VBox"]
+text = "Upgrade Level: 0"
+visible = false

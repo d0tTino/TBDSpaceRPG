@@ -20,6 +20,9 @@ public partial class McpClient : Control
         GetNode<Button>("VBox/DockButton").Pressed += () => _ = SendCommand("Dock Ship");
         GetNode<Button>("VBox/UpgradeButton").Pressed += () => _ = SendCommand("Ship/Upgrade");
         GetNode<Button>("VBox/RelaunchButton").Pressed += () => _ = SendCommand("Ship/Relaunch");
+        var label = GetNode<Label>("VBox/UpgradeLabel");
+        var toggle = GetNode<CheckButton>("VBox/ShowUpgradesToggle");
+        toggle.Toggled += (toggled) => label.Visible = toggled;
     }
 
     public async Task SendCommand(string menuPath)
