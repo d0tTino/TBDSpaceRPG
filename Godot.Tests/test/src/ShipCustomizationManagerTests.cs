@@ -23,4 +23,31 @@ public class ShipCustomizationManagerTests : TestClass {
         manager.SpeedLevel.ShouldBe(1);
         movement.MaxSpeed.ShouldBe(20f);
     }
+
+    [Test]
+    public void UpgradeSpeed_IncreasesLevelAndAppliesToMovement() {
+        var movement = new SpaceshipMovement();
+        var manager = new ShipCustomizationManager { Movement = movement };
+        manager.UpgradeSpeed();
+        manager.SpeedLevel.ShouldBe(2);
+        movement.MaxSpeed.ShouldBe(40f);
+    }
+
+    [Test]
+    public void UpgradeRotation_IncreasesLevelAndAppliesToMovement() {
+        var movement = new SpaceshipMovement();
+        var manager = new ShipCustomizationManager { Movement = movement };
+        manager.UpgradeRotation();
+        manager.RotationLevel.ShouldBe(2);
+        movement.RotationSpeed.ShouldBe(180f);
+    }
+
+    [Test]
+    public void UpgradeBraking_IncreasesLevelAndAppliesToMovement() {
+        var movement = new SpaceshipMovement();
+        var manager = new ShipCustomizationManager { Movement = movement };
+        manager.UpgradeBraking();
+        manager.BrakingLevel.ShouldBe(2);
+        movement.BrakingForce.ShouldBe(10f);
+    }
 }
