@@ -20,7 +20,6 @@ jobs:
       - run: dotnet format --verify-no-changes Godot/TBDSpaceRPG.csproj
       - run: npm ci
       - run: npm run lint
-      - run: npm ci
       - run: npm test
 
   dotnet-tests:
