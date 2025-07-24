@@ -23,4 +23,24 @@ public class ShipCustomizationManagerTests
         Assert.AreEqual(1, manager.SpeedLevel);
         Assert.AreEqual(20f, movement.MaxSpeed);
     }
+
+    [Test]
+    public void UpgradeRotation_IncreasesLevelAndAppliesToMovement()
+    {
+        var movement = new SpaceshipMovement();
+        var manager = new ShipCustomizationManager { Movement = movement };
+        manager.UpgradeRotation();
+        Assert.AreEqual(2, manager.RotationLevel);
+        Assert.AreEqual(180f, movement.RotationSpeed);
+    }
+
+    [Test]
+    public void UpgradeBraking_IncreasesLevelAndAppliesToMovement()
+    {
+        var movement = new SpaceshipMovement();
+        var manager = new ShipCustomizationManager { Movement = movement };
+        manager.UpgradeBraking();
+        Assert.AreEqual(2, manager.BrakingLevel);
+        Assert.AreEqual(10f, movement.BrakingForce);
+    }
 }
