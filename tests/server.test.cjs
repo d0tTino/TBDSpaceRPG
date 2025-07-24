@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
 const analytics = require('../servers/telemetry/analytics.cjs');
+const getFreePort = require('./helpers/port.cjs');
 
 function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
@@ -50,9 +51,9 @@ function post(port, pathName, data) {
 }
 
 (async () => {
-  const corePort = 8095;
-  const ksaPort = 8006;
-  const ksaEnginePort = 8007;
+  const corePort = await getFreePort();
+  const ksaPort = await getFreePort();
+  const ksaEnginePort = await getFreePort();
   const ksaEngine = http.createServer((req, res) => {
     let body = '';
     req.on('data', c => { body += c; });
