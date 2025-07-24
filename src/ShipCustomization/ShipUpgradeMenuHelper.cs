@@ -31,6 +31,7 @@ public partial class ShipUpgradeMenuHelper : EditorPlugin
         var ship = new CharacterBody3D { Name = "TestShip" };
         var move = new SpaceshipMovement();
         var manager = new ShipCustomizationManager { Movement = move };
+        manager.AddToGroup("ShipCustomizationManager");
         ship.AddChild(move);
         ship.AddChild(manager);
         AddChild(ship);
