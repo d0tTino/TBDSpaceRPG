@@ -38,6 +38,7 @@ namespace Godot
         public string Name { get; set; } = string.Empty;
         public Node? Parent { get; private set; }
         public virtual void AddChild(Node node) { node.Parent = this; Children.Add(node); }
+        public void AddToGroup(string group) { }
         public virtual void QueueFree() { }
         public Node? GetParent() => Parent;
         public T? GetNodeOrNull<T>(string path) where T : class => null;
