@@ -283,6 +283,9 @@ The Ship Customization System (implemented according to Section 4.16 of the tech
 2. **ShipCustomizationManager.cs**: Manages upgrade categories and levels
 3. **ShipUpgradeMenuHelper.cs**: Editor script that provides menu items for MCP integration
 
+> **Note**
+> `ShipCustomizationManager` must belong to the `"ShipCustomizationManager"` group so editor menu items can locate it. The provided Godot plugin automatically adds this group when creating a test ship.
+
 ### Testing the Ship Customization System
 
 The following MCP commands can be used to test the Ship Customization System:
