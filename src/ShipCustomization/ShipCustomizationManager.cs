@@ -11,6 +11,7 @@ public partial class ShipCustomizationManager : Node
 
     public override void _Ready()
     {
+        AddToGroup("ShipCustomizationManager");
         ApplyUpgrades();
     }
 
