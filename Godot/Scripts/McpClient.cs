@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -44,7 +45,19 @@ public partial class McpClient : Control
             req.QueueFree();
             return;
         }
-        await ToSignal(req, HttpRequest.SignalName.RequestCompleted);
+        var signalData = await ToSignal(req, HttpRequest.SignalName.RequestCompleted);
+        var statusCode = req.GetResponseCode();
+        if (statusCode != 200)
+        {
+            string bodyText = string.Empty;
+            if (signalData is Godot.Collections.Array arr && arr.Count >= 4 && arr[3] is byte[] bytes)
+                bodyText = Encoding.UTF8.GetString(bytes);
+            var msg = $"HTTP error {statusCode}: {bodyText}";
+            GD.PrintErr(msg);
+            LogError(msg);
+        }
         req.QueueFree();
     }
+
+    partial void LogError(string message);
 }

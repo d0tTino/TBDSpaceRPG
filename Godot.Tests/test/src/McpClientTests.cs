@@ -32,6 +32,33 @@ public class McpClientTests : TestClass {
         body.ShouldContain("\"menuPath\":\"Test/Path\"");
     }
 
+    [Test]
+    public async Task SendCommand_LogsErrorOnFailure() {
+        int port = GetFreePort();
+        string url = $"http://localhost:{port}/";
+        using var listener = new HttpListener();
+        listener.Prefixes.Add(url);
+        listener.Start();
+
+        var client = new McpClient { Endpoint = url };
+        TestScene.AddChild(client);
+        var sendTask = client.SendCommand("Test/Fail");
+
+        var context = await listener.GetContextAsync();
+        using (var reader = new StreamReader(context.Request.InputStream))
+            await reader.ReadToEndAsync();
+        context.Response.StatusCode = 500;
+        using var writer = new StreamWriter(context.Response.OutputStream);
+        writer.Write("fail");
+        writer.Flush();
+        context.Response.Close();
+        listener.Stop();
+
+        await sendTask;
+        client.LastLoggedError.ShouldContain("500");
+        client.LastLoggedError.ShouldContain("fail");
+    }
+
     private static int GetFreePort() {
         var l = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
         l.Start();

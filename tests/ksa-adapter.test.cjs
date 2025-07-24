@@ -4,17 +4,27 @@ const path = require('path');
 const assert = require('assert');
 const getFreePort = require('./helpers/port.cjs');
 
-function request(port, pathName = '/') {
+function waitForServer(port, timeout = 5000) {
   return new Promise((resolve, reject) => {
-    const req = http.request({ hostname: 'localhost', port, path: pathName }, res => {
-      let data = '';
-      res.on('data', c => { data += c; });
-      res.on('end', () => resolve(data));
-    });
-    req.on('error', reject);
-    req.end();
+    const start = Date.now();
+    (function check() {
+      const req = http.request({ hostname: 'localhost', port }, res => {
+        res.resume();
+        resolve();
+      });
+      req.on('error', err => {
+        if (Date.now() - start > timeout) {
+          reject(err);
+        } else {
+          setTimeout(check, 100);
+        }
+      });
+      req.end();
+    })();
   });
 }
+
+
 
 function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
@@ -49,20 +59,7 @@ function post(port, data, raw = false) {
   });
 }
 
-async function waitForServer(port, timeout = 5000) {
-  const start = Date.now();
-  while (true) {
-    try {
-      await request(port);
-      return;
-    } catch {
-      if (Date.now() - start > timeout) {
-        throw new Error(`Timeout waiting for server on port ${port}`);
-      }
-      await new Promise(r => setTimeout(r, 100));
-    }
-  }
-}
+
 
 
 (async () => {
