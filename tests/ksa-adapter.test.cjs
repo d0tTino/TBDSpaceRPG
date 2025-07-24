@@ -24,6 +24,18 @@ function waitForServer(port, timeout = 5000) {
   });
 }
 
+function request(port, pathName = '/') {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ hostname: 'localhost', port, path: pathName }, res => {
+      let data = '';
+      res.on('data', c => { data += c; });
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
   const env = { ...process.env, PORT: String(port), ...extraEnv };
@@ -55,6 +67,21 @@ function post(port, data, raw = false) {
     if (raw) req.write(data); else req.write(JSON.stringify(data));
     req.end();
   });
+}
+
+async function waitForServer(port, timeout = 5000) {
+  const start = Date.now();
+  while (true) {
+    try {
+      await request(port);
+      return;
+    } catch {
+      if (Date.now() - start > timeout) {
+        throw new Error(`Timeout waiting for server on port ${port}`);
+      }
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
 }
 
 
