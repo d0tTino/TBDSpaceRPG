@@ -1,5 +1,6 @@
-using NUnit.Framework;
 using System.IO;
+
+using NUnit.Framework;
 
 public class SerializationTests
 {
@@ -32,5 +33,32 @@ public class SerializationTests
         Assert.AreEqual(state.shipPosition.Z, loaded.shipPosition.Z);
         Assert.AreEqual(state.crewStats.crewCount, loaded.crewStats.crewCount);
         Assert.AreEqual(state.crewStats.morale, loaded.crewStats.morale);
+    }
+
+    [Test]
+    public void Load_ReturnsDefaultState_WhenFileMissing()
+    {
+        var loaded = GameState.Load(SavePath);
+        Assert.AreEqual(0, loaded.upgradeLevel);
+        Assert.AreEqual(0, loaded.shipPosition.X);
+        Assert.AreEqual(0, loaded.shipPosition.Y);
+        Assert.AreEqual(0, loaded.shipPosition.Z);
+        Assert.AreEqual(0, loaded.crewStats.crewCount);
+        Assert.AreEqual(0, loaded.crewStats.morale);
+    }
+
+    [Test]
+    public void Load_ReturnsDefaultState_OnInvalidJson()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(SavePath)!);
+        File.WriteAllText(SavePath, "not a valid json");
+
+        var loaded = GameState.Load(SavePath);
+        Assert.AreEqual(0, loaded.upgradeLevel);
+        Assert.AreEqual(0, loaded.shipPosition.X);
+        Assert.AreEqual(0, loaded.shipPosition.Y);
+        Assert.AreEqual(0, loaded.shipPosition.Z);
+        Assert.AreEqual(0, loaded.crewStats.crewCount);
+        Assert.AreEqual(0, loaded.crewStats.morale);
     }
 }

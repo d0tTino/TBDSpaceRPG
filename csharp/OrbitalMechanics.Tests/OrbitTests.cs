@@ -1,9 +1,13 @@
 using System.Reflection;
+
+using Godot;
+
 using NUnit.Framework;
+
 using OrbitalMechanics;
 using OrbitalMechanics.Combat;
+
 using SimpleKeplerOrbits;
-using Godot;
 
 namespace OrbitalMechanics.Tests
 {

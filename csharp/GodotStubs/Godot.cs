@@ -9,16 +9,16 @@ namespace Godot
     {
         public float X, Y, Z;
         public Vector3(float x, float y, float z) { X = x; Y = y; Z = z; }
-        public static Vector3 Zero => new Vector3(0,0,0);
-        public static Vector3 Up => new Vector3(0,1,0);
-        public static Vector3 Forward => new Vector3(0,0,-1);
-        public float Length() => (float)Math.Sqrt(X*X + Y*Y + Z*Z);
-        public Vector3 Normalized => Length() > 1e-5 ? this * (1/Length()) : Zero;
-        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.X+b.X, a.Y+b.Y, a.Z+b.Z);
-        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.X-b.X, a.Y-b.Y, a.Z-b.Z);
-        public static Vector3 operator *(Vector3 v, float d) => new Vector3(v.X*d, v.Y*d, v.Z*d);
-       public static Vector3 operator *(float d, Vector3 v) => v*d;
-        public static float Distance(Vector3 a, Vector3 b) => (float)Math.Sqrt(Math.Pow(a.X-b.X,2)+Math.Pow(a.Y-b.Y,2)+Math.Pow(a.Z-b.Z,2));
+        public static Vector3 Zero => new Vector3(0, 0, 0);
+        public static Vector3 Up => new Vector3(0, 1, 0);
+        public static Vector3 Forward => new Vector3(0, 0, -1);
+        public float Length() => (float)Math.Sqrt(X * X + Y * Y + Z * Z);
+        public Vector3 Normalized => Length() > 1e-5 ? this * (1 / Length()) : Zero;
+        public static Vector3 operator +(Vector3 a, Vector3 b) => new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+        public static Vector3 operator -(Vector3 a, Vector3 b) => new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        public static Vector3 operator *(Vector3 v, float d) => new Vector3(v.X * d, v.Y * d, v.Z * d);
+        public static Vector3 operator *(float d, Vector3 v) => v * d;
+        public static float Distance(Vector3 a, Vector3 b) => (float)Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2) + Math.Pow(a.Z - b.Z, 2));
         public float magnitude => Length();
         public Vector3 normalized => Normalized;
         public static Vector3 operator -(Vector3 v) => new Vector3(-v.X, -v.Y, -v.Z);
