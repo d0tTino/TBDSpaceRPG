@@ -3,6 +3,18 @@ const { spawn } = require('child_process');
 const path = require('path');
 const assert = require('assert');
 
+function request(port, pathName = '/') {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ hostname: 'localhost', port, path: pathName }, res => {
+      let data = '';
+      res.on('data', c => { data += c; });
+      res.on('end', () => resolve(data));
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
   const env = { ...process.env, PORT: String(port), ...extraEnv };
@@ -36,6 +48,21 @@ function post(port, data, raw = false) {
   });
 }
 
+async function waitForServer(port, timeout = 5000) {
+  const start = Date.now();
+  while (true) {
+    try {
+      await request(port);
+      return;
+    } catch {
+      if (Date.now() - start > timeout) {
+        throw new Error(`Timeout waiting for server on port ${port}`);
+      }
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
+}
+
 
 (async () => {
   // Successful forwarding using endpoint URL
@@ -56,7 +83,7 @@ function post(port, data, raw = false) {
     KSA_ENGINE_ENDPOINT: `http://localhost:${enginePort}/engine`
   });
   try {
-    await new Promise(r => setTimeout(r, 100));
+    await waitForServer(adapterPort);
     const mcp = { method: 'notify_message', params: { msg: 'hello' }, id: '99' };
     const result = await post(adapterPort, mcp);
     assert.strictEqual(result.statusCode, 200);
@@ -82,7 +109,7 @@ function post(port, data, raw = false) {
     KSA_ENGINE_PORT: String(failPort)
   });
   try {
-    await new Promise(r => setTimeout(r, 100));
+    await waitForServer(adapterFailPort);
     const result = await post(adapterFailPort, { method: 'ping', id: '1' });
     assert.strictEqual(result.statusCode, 502);
   } finally {
@@ -102,7 +129,7 @@ function post(port, data, raw = false) {
     KSA_ENGINE_PORT: String(engine2Port)
   });
   try {
-    await new Promise(r => setTimeout(r, 100));
+    await waitForServer(adapterBadPort);
     const badRes = await post(adapterBadPort, '{', true);
     assert.strictEqual(badRes.statusCode, 400);
   } finally {

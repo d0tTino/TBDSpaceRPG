@@ -9,8 +9,8 @@ const logDir = path.join(__dirname, 'logs');
 fs.mkdirSync(logDir, { recursive: true });
 const logFile = path.join(logDir, 'events.log');
 
-function logEvent(event) {
-  fs.appendFileSync(logFile, `${JSON.stringify(event)}\n`);
+async function logEvent(event) {
+  await fs.promises.appendFile(logFile, `${JSON.stringify(event)}\n`);
   analytics.computeMetrics(event);
 }
 
@@ -37,7 +37,7 @@ const server = http.createServer((req, res) => {
         res.end('Invalid JSON');
         return;
       }
-      logEvent(event);
+      logEvent(event).catch(logError);
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end('Event received');
     });
