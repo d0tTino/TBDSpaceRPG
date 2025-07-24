@@ -117,6 +117,8 @@ function post(port, pathName, data) {
     assert.strictEqual(badCreate.statusCode, 400);
     const badUpdate = await send(corePort, 'PUT', '/postgres/crew/1', '{');
     assert.strictEqual(badUpdate.statusCode, 400);
+    const listAfterBad = await request(corePort, '/postgres/crew');
+    assert.deepStrictEqual(JSON.parse(listAfterBad), []);
     const telemetryResponse = await request(corePort, '/telemetry');
     assert.strictEqual(telemetryResponse, 'Telemetry server placeholder');
     const ksaResponse = await request(ksaPort);
@@ -131,6 +133,8 @@ function post(port, pathName, data) {
     assert.strictEqual(postResult.statusCode, 200);
     const badTelemetry = await post(corePort, '/telemetry/event', '{');
     assert.strictEqual(badTelemetry.statusCode, 400);
+    const telemetryHealth = await request(corePort, '/telemetry');
+    assert.strictEqual(telemetryHealth, 'Telemetry server placeholder');
 
     const genEvent = { type: 'generation_advanced', generation: 1 };
     const genResult = await post(corePort, '/telemetry/event', genEvent);
