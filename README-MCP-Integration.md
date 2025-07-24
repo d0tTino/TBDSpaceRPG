@@ -20,17 +20,17 @@ Unlike the classic **Ringworld RPG**, which focuses primarily on tabletop-style 
 
 ## Overview
 
-The TBD Space Game uses MCP (Model Context Protocol) to enable AI-assisted development workflows. The integration consists of multiple servers:
+- The TBD Space Game uses MCP (Model Context Protocol) to enable AI-assisted development workflows. Godot is the primary runtime engine, while Unity is used only for optional asset exports. The integration consists of multiple servers:
 
-- **MCP Unity Server**: Primary server for Unity integration running on port 8001
-- **MCP Unity Fallback**: Backup server running on port 8002
+- **MCP Unity Export Server (optional)**: Provides Unity-based asset exports on port 8001
+- **MCP Unity Fallback (optional)**: Backup server for asset exports on port 8002
 - **Server-Git**: Version control operations via MCP running on port 8080
 - **Server-Postgres**: Database operations via MCP running on port 8003
 - **Telemetry Server**: Collects runtime events on port 8090
 - **MCPProxy**: Routes requests to appropriate MCP servers running on port 8004
 - **KSA Adapter**: Placeholder server for the upcoming KSA engine on port 8005
 
-These servers enable AI tools to interact with the Godot project and, when needed, the optional Unity asset pipeline for glTF exports. They also handle version control operations, manage database records, and more.
+These servers enable AI tools to interact with the Godot project, which is the default runtime environment. The optional Unity asset pipeline provides glTF exports when needed. They also handle version control operations, manage database records, and more.
 
 ## Prerequisites
 
@@ -44,12 +44,12 @@ These servers enable AI tools to interact with the Godot project and, when neede
 
 ## MCP Servers Setup
 
-### Primary MCP Unity Server
+### Optional MCP Unity Export Server
 
-The primary MCP Unity server enables AI tools to interact with the Unity editor.
+This server enables asset creation and export through the Unity editor when you choose to use Unity in your pipeline.
 
 ```powershell
-# Start the primary MCP Unity server
+# Start the optional MCP Unity export server
 ./run-mcp-server.ps1
 ```
 
@@ -119,9 +119,9 @@ For convenience, a script is provided to start all MCP servers simultaneously:
 
 ## Configuration
 
-### MCP Unity Server Configuration
+### Optional Unity Server Configuration
 
-The MCP Unity server is configured in the `~/.cursor/mcp.json` file:
+The optional Unity export server is configured in the `~/.cursor/mcp.json` file:
 
 ```json
 {
@@ -148,8 +148,7 @@ The MCP Unity server is configured in the `~/.cursor/mcp.json` file:
 }
 ```
 
-You can update this configuration using the provided script. Provide the
-workspace path for the Unity fallback server with the `-Workspace` parameter:
+If you use Unity for asset exports, update this configuration with the provided script. Provide the workspace path for the Unity fallback server with the `-Workspace` parameter:
 
 ```powershell
 ./update-mcp-config.ps1 -Workspace "C:/path/to/TBD SpaceGame"
@@ -327,7 +326,7 @@ The following MCP commands can be used to test the Ship Customization System:
 
 Log files are available in the following locations:
 
-- MCP Unity Server: `TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@*/Server/logs`
+- MCP Unity Export Server: `TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@*/Server/logs`
 - Server-Git: Terminal output only
 - Server-Postgres: `servers/postgres/logs`
 - Telemetry Server: `servers/telemetry/logs`
@@ -350,15 +349,15 @@ Planned enhancements for the MCP integration:
 
 For more information about the TBD Space Game project, refer to the Gameplay System documentation.
 
-# MCP Unity Integration Guide
+# MCP Unity Integration Guide (Optional)
 
 ## Quick Start
 
 ```powershell
-# Start the MCP server
+# Start the optional MCP Unity export server
 .\run-mcp-server.ps1
 
-# Test a menu command
+# Test a menu command (Unity only)
 .\test-menu.ps1 -MenuPath "GameObject/Create Empty"
 ```
 
@@ -366,7 +365,7 @@ For more information about the TBD Space Game project, refer to the Gameplay Sys
 
 ### Starting the Server
 
-The recommended way to start the MCP server is using our custom script:
+The recommended way to start the optional Unity server is using our custom script:
 
 ```powershell
 .\run-mcp-server.ps1
@@ -470,6 +469,7 @@ These do not affect functionality and can be ignored.
 
 ## Setup for New Projects
 
+If you plan to use Unity for asset authoring, follow these steps in the Unity project:
 1. Place menu item scripts in `Assets/Plugins` for proper compilation priority
 2. Add `#if UNITY_EDITOR` guards around editor-only code
 3. Avoid namespaces in menu item scripts
@@ -479,27 +479,27 @@ These do not affect functionality and can be ignored.
 
 After setting up the MCP integration, test with a real workflow:
 
-1. Start the MCP server:
+1. If using Unity, start the optional MCP Unity export server:
    ```powershell
    .\run-mcp-server.ps1
    ```
 
-2. Create a test ship:
+2. Create a test ship (Unity only):
    ```powershell
    .\test-menu.ps1 -MenuPath "MCP/Ship/V2/Create Test Ship"
    ```
 
-3. Apply upgrades to the ship:
+3. Apply upgrades to the ship (Unity only):
    ```powershell
    .\test-menu.ps1 -MenuPath "MCP/Ship/V2/Upgrade Thrust"
    ```
 
-4. Check the results:
+4. Check the results (Unity only):
    ```powershell
    .\test-menu.ps1 -MenuPath "MCP/Ship/V2/Log Current Upgrades"
    ```
 
-This workflow verifies that menu items are found, commands are executed, and the integration is working properly from end-to-end.
+This workflow verifies that Unity menu items are found, commands are executed, and the integration is working properly from end-to-end.
 
 ## Further Reading
 
