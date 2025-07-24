@@ -21,7 +21,9 @@
     <Compile Include="../src/SimpleKeplerOrbits/*.cs" />
     <Compile Include="../src/ShipCustomization/ShipCustomizationManager.cs" />
     <Compile Include="../src/ShipCustomization/SpaceshipMovement.cs" />
+    <Compile Include="../src/ShipCustomization/ShipUpgradeMenuHelper.cs" />
     <Compile Include="test/Tests.cs" />
+    <Compile Include="test/src/ShipUpgradeMenuHelperTests.cs" />
     <Compile Include="test/src/*.cs" />
   </ItemGroup>
 </Project>

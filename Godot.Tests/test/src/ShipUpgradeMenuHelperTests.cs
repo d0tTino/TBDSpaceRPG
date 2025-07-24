@@ -39,5 +39,6 @@ public partial class ShipUpgradeMenuHelperTests : TestClass {
 
         manager.ShouldNotBeNull();
         manager.ShouldBeOfType<ShipCustomizationManager>();
+
     }
 }
