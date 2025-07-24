@@ -1,11 +1,14 @@
 # Unity-MCP Integration Manual
 
+> **Project Note**
+> Unity is retained solely for exporting glTF assets into the Godot project. All runtime features are handled by the Godot engine.
+
 ## Introduction
 
-This guide explains how to integrate the Machine Control Protocol (MCP) with Unity for the TBD Space Game project. MCP enables AI-assisted development by allowing external tools to control Unity's editor functionality.
+This guide explains how to integrate the Machine Control Protocol (MCP) with Unity to generate glTF assets for the TBD Space Game project. MCP enables AI-assisted development by allowing external tools to control Unity's editor functionality.
 
 > **Note**
-> The primary game engine is now Godot. Unity is maintained only for creating assets that are exported to `Assets_glTF/` for use in the Godot project.
+> While Unity is used for asset creation, Godot is the runtime engine. Export assets to `Assets_glTF/` for use in the Godot project.
 
 ## Setup Requirements
 
