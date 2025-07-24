@@ -4,26 +4,6 @@ const path = require('path');
 const assert = require('assert');
 const getFreePort = require('./helpers/port.cjs');
 
-function waitForServer(port, timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    (function check() {
-      const req = http.request({ hostname: 'localhost', port }, res => {
-        res.resume();
-        resolve();
-      });
-      req.on('error', err => {
-        if (Date.now() - start > timeout) {
-          reject(err);
-        } else {
-          setTimeout(check, 100);
-        }
-      });
-      req.end();
-    })();
-  });
-}
-
 function request(port, pathName = '/') {
   return new Promise((resolve, reject) => {
     const req = http.request({ hostname: 'localhost', port, path: pathName }, res => {
