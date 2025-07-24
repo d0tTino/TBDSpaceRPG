@@ -2,6 +2,27 @@ const http = require('http');
 const { spawn } = require('child_process');
 const path = require('path');
 const assert = require('assert');
+const getFreePort = require('./helpers/port.cjs');
+
+function waitForServer(port, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    (function check() {
+      const req = http.request({ hostname: 'localhost', port }, res => {
+        res.resume();
+        resolve();
+      });
+      req.on('error', err => {
+        if (Date.now() - start > timeout) {
+          reject(err);
+        } else {
+          setTimeout(check, 100);
+        }
+      });
+      req.end();
+    })();
+  });
+}
 
 function startServer(relativePath, port, extraEnv = {}) {
   const fullPath = path.join(__dirname, '..', relativePath);
@@ -39,8 +60,8 @@ function post(port, data, raw = false) {
 
 (async () => {
   // Successful forwarding using endpoint URL
-  const enginePort = 19010;
-  const adapterPort = 19011;
+  const enginePort = await getFreePort();
+  const adapterPort = await getFreePort();
   const received = [];
   const engine = http.createServer((req, res) => {
     let body = '';
@@ -56,7 +77,7 @@ function post(port, data, raw = false) {
     KSA_ENGINE_ENDPOINT: `http://localhost:${enginePort}/engine`
   });
   try {
-    await new Promise(r => setTimeout(r, 100));
+    await waitForServer(adapterPort);
     const mcp = { method: 'notify_message', params: { msg: 'hello' }, id: '99' };
     const result = await post(adapterPort, mcp);
     assert.strictEqual(result.statusCode, 200);
@@ -75,14 +96,14 @@ function post(port, data, raw = false) {
   }
 
   // Engine failure (unreachable)
-  const failPort = 19012;
-  const adapterFailPort = 19013;
+  const failPort = await getFreePort();
+  const adapterFailPort = await getFreePort();
   const adapterFail = startServer('servers/ksa/index.cjs', adapterFailPort, {
     KSA_ENGINE_HOST: 'localhost',
     KSA_ENGINE_PORT: String(failPort)
   });
   try {
-    await new Promise(r => setTimeout(r, 100));
+    await waitForServer(adapterFailPort);
     const result = await post(adapterFailPort, { method: 'ping', id: '1' });
     assert.strictEqual(result.statusCode, 502);
   } finally {
@@ -90,19 +111,19 @@ function post(port, data, raw = false) {
   }
 
   // Malformed request
-  const engine2Port = 19014;
+  const engine2Port = await getFreePort();
   const engine2 = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end('{}');
   });
   await new Promise(r => engine2.listen(engine2Port, r));
-  const adapterBadPort = 19015;
+  const adapterBadPort = await getFreePort();
   const adapterBad = startServer('servers/ksa/index.cjs', adapterBadPort, {
     KSA_ENGINE_HOST: 'localhost',
     KSA_ENGINE_PORT: String(engine2Port)
   });
   try {
-    await new Promise(r => setTimeout(r, 100));
+    await waitForServer(adapterBadPort);
     const badRes = await post(adapterBadPort, '{', true);
     assert.strictEqual(badRes.statusCode, 400);
   } finally {
