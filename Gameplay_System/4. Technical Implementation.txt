@@ -3,7 +3,7 @@
 
 4.1 Game Engine
 ---------------
-The game will be developed using Unity, selected for its robust support for both 2D and 3D game development, extensive community resources, and proven success in similar titles like *Kerbal Space Program* and *Rimworld*. Unity's flexibility enables seamless integration of the game's dual mechanics: 3D orbital navigation and 2D crew management.
+The project now targets **Godot 4 (.NET)** as the primary engine, leveraging its open-source workflow and native C# support. Early prototypes were created in Unity, and some references remain for historical context. Godot provides the flexibility needed to blend 3D orbital navigation with 2D crew management in a single environment.
 
 - **Key Features:**
   - 3D rendering for the solar system simulation.
@@ -17,7 +17,7 @@ The game will be developed using Unity, selected for its robust support for both
 
 4.2 Orbital Mechanics
 ---------------------
-Orbital mechanics will be implemented using the Simple Kepler Orbits plugin from the Unity Asset Store, which provides tools for simulating spacecraft trajectories based on Keplerian mechanics.
+Orbital mechanics will be implemented using a port of the Simple Kepler Orbits plugin for Godot, which provides tools for simulating spacecraft trajectories based on Keplerian mechanics.
 
 - **Trajectory Plotting:**
   - Players plot courses using a 3D interface, selecting pre-calculated paths or adjusting parameters (e.g., delta-v, burn timing).
@@ -537,7 +537,7 @@ The space combat system implements realistic orbital mechanics for weapons fire,
 
 4.3 Crew Management System
 --------------------------
-Crew management will be handled in a 2D top-down view of the ship's interior, leveraging Unity's 2D tools.
+Crew management will be handled in a 2D top-down view of the ship's interior, leveraging Godot 4's 2D tools.
 
 - **2D Interior View:**
   - Side-facing and back-facing sprites for a cutaway effect, similar to *Barotrauma*.
@@ -1778,7 +1778,7 @@ A save and load system will preserve game state across chapters, ensuring contin
   - Time skips update crew ages and integrate offspring based on relationships.
 
 - **Implementation:**
-  - Use Unity's serialization system (e.g., JSON or binary formats) for efficient saving and loading.
+  - Use Godot's serialization APIs (e.g., `FileAccess` with JSON or binary formats) for efficient saving and loading.
 
 4.6 Localization
 ----------------
@@ -1786,7 +1786,7 @@ Localization will support multiple languages, particularly English and Mandarin,
 
 - **Language Support:**
   - UI elements, dialogue, and audio adapt to the dominant faction (US or China).
-  - Use Unity's Localization Package for text and audio management.
+  - Use Godot's built-in localization features for text and audio management.
 
 4.7 Performance Optimization
 ----------------------------
@@ -1798,7 +1798,7 @@ Performance optimization is essential to manage the simulation of orbital mechan
   - UI batching to reduce draw calls.
 
 - **Tools:**
-  - Unity's Profiler and Frame Debugger for identifying bottlenecks.
+  - Godot's built-in profiler and monitors for identifying bottlenecks.
 
 4.8 Planet Position Calculation
 -------------------------------
@@ -2768,7 +2768,7 @@ The game implements a comprehensive medical and biological adaptation simulation
           float successChance = CalculateSuccessChance(target, medic, medBay);
           
           // Roll for success
-          result.success = UnityEngine.Random.value < successChance;
+          result.success = GD.Randf() < successChance;
           
           if (result.success)
           {
@@ -2954,8 +2954,8 @@ The game implements a comprehensive medical and biological adaptation simulation
                                    parentB.GetAdaptation(adaptationType)) / 2f;
               
               // Apply minor random variation
-              float randomFactor = UnityEngine.Random.Range(
-                  1f - ADAPTATION_VARIATION, 
+              float randomFactor = GD.RandRange(
+                  1f - ADAPTATION_VARIATION,
                   1f + ADAPTATION_VARIATION
               );
               
@@ -3067,18 +3067,18 @@ The game implements a comprehensive medical and biological adaptation simulation
 The development environment utilizes terminal-based tools to streamline debugging, monitoring, and workflow automation, enhancing productivity when working with the MCP system and complex simulation code.
 
 ### 4.10.1 Terminal Debugging
-The development workflow employs a powerful terminal-based debugging approach that complements the Unity Editor's debugging capabilities:
+The development workflow employs a powerful terminal-based debugging approach that complements the Godot Editor's debugging capabilities:
 
 - **Log Monitoring:**
   ```bash
-  # Monitor Unity logs for specific simulation events
-  tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log | grep "SIMULATION"
+  # Monitor Godot logs for specific simulation events
+  tail -f ~/.local/share/godot/app_userdata/TBDSpaceGame/console.log | grep "SIMULATION"
   
   # Monitor MCP server logs for client connections
   tail -f ~/mcp-logs/latest.log | grep "Client connected"
   
   # Filter for specific error patterns
-  tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log | grep -A 3 "ERROR"
+  tail -f ~/.local/share/godot/app_userdata/TBDSpaceGame/console.log | grep -A 3 "ERROR"
   ```
 
 - **Split-Screen Debugging:**
@@ -3090,7 +3090,7 @@ The development workflow employs a powerful terminal-based debugging approach th
   tmux split-window -v -t debug:Logs.1
   
   # Configure each pane for different log types
-  tmux send-keys -t debug:Logs.0 'tail -f ~/AppData/LocalLow/TBDSpaceGame/Player.log' C-m
+  tmux send-keys -t debug:Logs.0 'tail -f ~/.local/share/godot/app_userdata/TBDSpaceGame/console.log' C-m
   tmux send-keys -t debug:Logs.1 'tail -f ~/mcp-logs/latest.log' C-m
   tmux send-keys -t debug:Logs.2 'watch -n 1 "pwsh -Command \"Test-NetConnection -ComputerName localhost -Port 8001 -InformationLevel Quiet\""' C-m
   ```
@@ -3151,7 +3151,7 @@ The MCP server can run on either Node.js or Bun runtime environments. Extensive 
 - **Benefits for Development:**
   - Faster iteration cycles when restarting the server
   - More responsive menu commands during gameplay testing
-  - Lower resource usage when running alongside Unity Editor
+  - Lower resource usage when running alongside Godot Editor
   - Improved performance for complex ship customization calculations
   - Faster faction event generation and processing
   - Reduced latency for real-time ship control commands
@@ -3233,7 +3233,7 @@ The MCP server can run on either Node.js or Bun runtime environments. Extensive 
 
 - **Compatibility:**
   While Bun offers superior performance, some edge cases may require Node.js:
-  - Certain WebSocket extensions used by Unity's editor integration
+  - Certain WebSocket extensions used by Godot's editor integration
   - Specific debugging tools that rely on Node.js internals
   - Using npm packages without Bun equivalents
 
