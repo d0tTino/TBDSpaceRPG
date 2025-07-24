@@ -1,8 +1,8 @@
 using System;
 
-using OrbitalMechanics;
-
 using Godot;
+
+using OrbitalMechanics;
 
 namespace SimpleKeplerOrbits
 {
