@@ -10,8 +10,7 @@ param (
     [string]$Engine = "unity",
     [switch]$Monitor,
     [string]$ConfigFile = ".mcp-server-config.json",
-    [string]$EngineConfigFile = "engine-config.json",
-    [string]$ServerConfigFile = "server-config.json"
+    [string]$EngineConfigFile = "engine-config.json"
 )
 
 # Exit immediately if the provided configuration file does not exist so the
@@ -86,27 +85,13 @@ if (Test-Path $EngineConfigFile) {
             if (-not $config.serverPath -and $engineEntry.directory) {
                 $config.serverPath = Join-Path $projectRoot $engineEntry.directory
             }
+            if ($engineEntry.engine) { $config.runtime = $engineEntry.engine }
         }
     } catch {
         Write-Warning "Failed to load engine configuration from $EngineConfigFile: $_"
     }
 }
 
-# Load shared runtime/port settings from the server config file
-if (Test-Path $ServerConfigFile) {
-    try {
-        $serverData = Get-Content -Path $ServerConfigFile -Raw | ConvertFrom-Json
-        $serverEntry = $serverData.$($config.engine)
-        if ($serverEntry) {
-            if (-not $PSBoundParameters.ContainsKey('Port') -and -not $portFromConfig -and $serverEntry.port) {
-                $config.port = [int]$serverEntry.port
-            }
-            if ($serverEntry.engine) { $config.runtime = $serverEntry.engine }
-        }
-    } catch {
-        Write-Warning "Failed to load server configuration from $ServerConfigFile: $_"
-    }
-}
 
 # Ensure a valid port is set, falling back to engine defaults
 if (-not (Test-ValidPort -Port $config.port)) {

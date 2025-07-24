@@ -2,8 +2,7 @@
 param(
     [ValidateSet('unity','godot','ksa')]
     [string]$Engine = 'unity',
-    [string]$ConfigFile = 'engine-config.json',
-    [string]$ServerConfigFile = 'server-config.json'
+    [string]$ConfigFile = 'engine-config.json'
 )
 
 Write-Host "Starting All MCP Servers..." -ForegroundColor Cyan
@@ -28,16 +27,6 @@ if (Test-Path $ConfigFile) {
     }
 }
 
-# Load shared server configuration for ports and runtimes
-$serverCfg = $null
-if (Test-Path $ServerConfigFile) {
-    try {
-        $serverCfg = Get-Content -Path $ServerConfigFile -Raw | ConvertFrom-Json
-        Write-Host "Using server configuration from $ServerConfigFile" -ForegroundColor Green
-    } catch {
-        Write-Warning "Failed to load server configuration from $ServerConfigFile: $_"
-    }
-}
 
 # Determine ports
 $unityPort = 8001
@@ -56,14 +45,6 @@ if ($engineCfg) {
     if ($engineCfg.ksa.port) { $ksaPort = [int]$engineCfg.ksa.port }
 }
 
-if ($serverCfg) {
-    if ($serverCfg.unity.port) { $unityPort = [int]$serverCfg.unity.port }
-    if ($serverCfg.git.port) { $gitPort = [int]$serverCfg.git.port }
-    if ($serverCfg.postgres.port) { $postgresPort = [int]$serverCfg.postgres.port }
-    if ($serverCfg.telemetry.port) { $telemetryPort = [int]$serverCfg.telemetry.port }
-    if ($serverCfg.mcpproxy.port) { $proxyPort = [int]$serverCfg.mcpproxy.port }
-    if ($serverCfg.ksa.port) { $ksaPort = [int]$serverCfg.ksa.port }
-}
 
 # Function to check server ports
 function Test-ServerPort {
@@ -104,7 +85,7 @@ $ksaRunning = Test-ServerPort -ServerName "KSA Adapter" -Port $ksaPort
 if (-not $unityRunning) {
     Write-Host "Starting Unity MCP Server..." -ForegroundColor Green
     $unityScript = Join-Path $scriptDir "run-mcp-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$unityScript`" -Engine $Engine -Port $unityPort -EngineConfigFile $ConfigFile -ServerConfigFile $ServerConfigFile" -NoNewWindow
+    Start-Process PowerShell -ArgumentList "-File `"$unityScript`" -Engine $Engine -Port $unityPort -EngineConfigFile $ConfigFile" -NoNewWindow
 } else {
     Write-Host "Skipping Unity MCP Server (already running)" -ForegroundColor Yellow
 }

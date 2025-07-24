@@ -219,15 +219,15 @@ Write-Output "Script completed successfully"
 
 ## Server Configuration
 
-Ports and runtimes for all MCP scripts are now defined in `server-config.json`.
-Use the `-ServerConfigFile` parameter to point scripts at an alternate file.
+Ports and runtimes for all MCP scripts are now defined in `engine-config.json`.
+Use the `-EngineConfigFile` parameter to point scripts at an alternate file.
 
 ```powershell
 # Start the MCP server using settings from a custom file
-.\run-mcp-server.ps1 -ServerConfigFile custom-config.json
+.\run-mcp-server.ps1 -EngineConfigFile custom-config.json
 
 # Launch the entire stack using the same shared config
-.\run-all-mcp-servers.ps1 -ServerConfigFile custom-config.json
+.\run-all-mcp-servers.ps1 -ConfigFile custom-config.json
 ```
 
 ## Troubleshooting PowerShell Issues

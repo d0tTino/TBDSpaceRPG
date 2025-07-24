@@ -1,30 +1,37 @@
 {
   "unity": {
     "port": 8001,
-    "directory": "TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@3acfb232f564/Server"
+    "directory": "TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@3acfb232f564/Server",
+    "engine": "node"
   },
   "godot": {
     "port": 8002,
-    "directory": "servers/godot"
+    "directory": "servers/godot",
+    "engine": "dotnet"
   },
   "git": {
     "port": 8080,
-    "directory": "servers/git"
+    "directory": "servers/git",
+    "engine": "node"
   },
   "postgres": {
     "port": 8003,
-    "directory": "servers/postgres"
+    "directory": "servers/postgres",
+    "engine": "node"
   },
   "telemetry": {
     "port": 8090,
-    "directory": "servers/telemetry"
+    "directory": "servers/telemetry",
+    "engine": "node"
   },
   "mcpproxy": {
     "port": 8004,
-    "directory": "servers/mcpProxy"
+    "directory": "servers/mcpProxy",
+    "engine": "node"
   },
   "ksa": {
     "port": 8005,
-    "directory": "servers/ksa"
+    "directory": "servers/ksa",
+    "engine": "node"
   }
 }
