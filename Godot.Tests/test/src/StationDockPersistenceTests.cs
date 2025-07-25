@@ -48,12 +48,12 @@ public class StationDockPersistenceTests : TestClass
                 .Invoke(dock, null);
 
             var state = GameState.Load(gamePath);
-            state.upgradeLevel.ShouldBe(2);
-            state.shipPosition.X.ShouldBe(1);
-            state.shipPosition.Y.ShouldBe(2);
-            state.shipPosition.Z.ShouldBe(3);
-            state.crewStats.crewCount.ShouldBe(4);
-            state.crewStats.morale.ShouldBe(7);
+            state.UpgradeLevel.ShouldBe(2);
+            state.ShipPosition.X.ShouldBe(1);
+            state.ShipPosition.Y.ShouldBe(2);
+            state.ShipPosition.Z.ShouldBe(3);
+            state.CrewStats.crewCount.ShouldBe(4);
+            state.CrewStats.morale.ShouldBe(7);
 
             var upgradeJson = File.ReadAllText(upgradePath);
             upgradeJson.ShouldContain("\"upgradeLevel\":2");
