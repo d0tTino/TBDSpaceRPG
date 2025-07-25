@@ -50,8 +50,8 @@ public partial class McpClient : Control
         if (statusCode != 200)
         {
             string bodyText = string.Empty;
-            if (signalData is Godot.Collections.Array arr && arr.Count >= 4 && arr[3] is byte[] bytes)
-                bodyText = Encoding.UTF8.GetString(bytes);
+            if (signalData is Variant[] arr && arr.Length >= 4)
+                bodyText = arr[3].ToString();
             var msg = $"HTTP error {statusCode}: {bodyText}";
             GD.PrintErr(msg);
             LogError(msg);

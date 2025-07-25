@@ -40,9 +40,9 @@ public partial class StationDock : Control
     {
         var state = new GameState
         {
-            upgradeLevel = UpgradeLevel,
-            shipPosition = new Vector3Data { X = ShipPosition.X, Y = ShipPosition.Y, Z = ShipPosition.Z },
-            crewStats = CrewStats
+            UpgradeLevel = UpgradeLevel,
+            ShipPosition = new Vector3Data { X = ShipPosition.X, Y = ShipPosition.Y, Z = ShipPosition.Z },
+            CrewStats = CrewStats
         };
         state.Save(SaveFile);
         SaveUpgrade();
@@ -51,9 +51,9 @@ public partial class StationDock : Control
     private void LoadState()
     {
         var state = GameState.Load(SaveFile);
-        UpgradeLevel = state.upgradeLevel;
-        ShipPosition = new Vector3(state.shipPosition.X, state.shipPosition.Y, state.shipPosition.Z);
-        CrewStats = state.crewStats;
+        UpgradeLevel = state.UpgradeLevel;
+        ShipPosition = new Vector3(state.ShipPosition.X, state.ShipPosition.Y, state.ShipPosition.Z);
+        CrewStats = state.CrewStats;
         LoadUpgrade();
         UpdateUpgradeLabel();
     }

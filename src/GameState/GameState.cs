@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 public struct Vector3Data
 {
@@ -10,9 +11,14 @@ public struct Vector3Data
 
 public class GameState
 {
-    public int upgradeLevel { get; set; }
-    public Vector3Data shipPosition { get; set; }
-    public CrewStats crewStats { get; set; } = new CrewStats();
+    [JsonPropertyName("upgradeLevel")]
+    public int UpgradeLevel { get; set; }
+
+    [JsonPropertyName("shipPosition")]
+    public Vector3Data ShipPosition { get; set; }
+
+    [JsonPropertyName("crewStats")]
+    public CrewStats CrewStats { get; set; } = new CrewStats();
 
     public static GameState Load(string path)
     {

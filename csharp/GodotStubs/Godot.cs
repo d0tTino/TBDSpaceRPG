@@ -42,9 +42,22 @@ namespace Godot
         public virtual void QueueFree() { }
         public Node? GetParent() => Parent;
         public T? GetNodeOrNull<T>(string path) where T : class => null;
+        public T? GetNode<T>(string path) where T : class => null;
+        public Node? FindChild(string name, bool recursive, bool owned) => null;
+        public SceneTree GetTree() => new SceneTree { Root = this };
         public virtual void _Ready() { }
         public virtual void _ExitTree() { }
     }
+
+    public class SceneTree : Node
+    {
+        public Node Root { get; set; } = new Node();
+    }
+
+    public class Control : Node { }
+    public class Button : Control { public event Action? Pressed; public void EmitPressed() => Pressed?.Invoke(); }
+    public class CheckButton : Button { public event Action<bool>? Toggled; public bool ToggleValue; public void EmitToggled(bool v) { ToggleValue = v; Toggled?.Invoke(v); } }
+    public class Label : Control { public string Text { get; set; } = string.Empty; public bool Visible { get; set; } = true; }
 
     public class Node3D : Node
     {
@@ -86,5 +99,57 @@ namespace Godot
     public static class GD
     {
         public static void Print(string msg) { }
+        public static void PrintErr(string msg) { }
+    }
+
+    public enum Error { Ok }
+
+    public class HttpClient
+    {
+        public enum Method { Get, Post }
+    }
+
+    public partial class HttpRequest : Node
+    {
+        public static class SignalName
+        {
+            public const string RequestCompleted = "request_completed";
+        }
+
+        public Error Request(string url, string[] headers, HttpClient.Method method, string body) => Error.Ok;
+        public int GetResponseCode() => 200;
+    }
+
+    namespace Collections
+    {
+        public class Array : List<object> { }
+    }
+
+    public class Variant
+    {
+        public enum Type { String, StringName }
+        public Type VariantType { get; set; }
+        public object? Value { get; set; }
+        public static implicit operator string?(Variant v) => v.Value as string;
+        public static implicit operator StringName?(Variant v) => v.Value as StringName;
+    }
+
+    public class StringName
+    {
+        private readonly string _value;
+        public StringName(string value) { _value = value; }
+        public override string ToString() => _value;
+    }
+
+    public static class ProjectSettings
+    {
+        public static bool HasSetting(string name) => false;
+        public static Variant GetSetting(string name) => new Variant();
+    }
+
+    public static class GodotTaskExtensions
+    {
+        public static System.Threading.Tasks.Task<Variant[]> ToSignal(this Node node, string signal)
+            => System.Threading.Tasks.Task.FromResult(new Variant[0]);
     }
 }

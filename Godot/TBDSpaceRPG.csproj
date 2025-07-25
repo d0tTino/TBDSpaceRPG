@@ -2,9 +2,12 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-</PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="../src/GameState/GameState.cs" />
-    <Compile Include="../src/ShipCustomization/SpaceshipMovement.cs" Link="Scripts/SpaceshipMovement.cs" />
+    <Compile Include="../csharp/GodotStubs/HttpRequestExtensions.cs" />
+
   </ItemGroup>
 </Project>
