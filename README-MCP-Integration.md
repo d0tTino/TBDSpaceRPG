@@ -3,8 +3,7 @@
 This document provides comprehensive information about the Model Context Protocol (MCP) integration for the TBD Space Game project, including server setup, configuration, and tools developed to enhance AI-assisted game development.
 
 > **Note**
-> The project has moved to a **Godot-first** workflow. Unity is now used only as an optional authoring tool for meshes and animations that are exported to `Assets_glTF/` for consumption by the Godot project. Gameplay and scripting take place primarily within Godot. The Unity project files have been archived on the `unity-archive` branch for historical reference.
-
+> The project has moved to a **Godot-first** workflow. A vertical slice now runs in **Godot 4 (.NET)**. Unity is only an optional authoring tool for exporting glTF assets to `Assets_glTF/`. All Unity runtime scripts were removed and archived on the `unity-archive` branch.
 <!-- Project Comparison -->
 Unlike the classic **Ringworld RPG**, which focuses primarily on tabletop-style exploration of a single megastructure, TBD Space Game centers on managing a starship crew over multiple generations. The two projects share a sci-fi setting, but this project integrates MCP tooling and Unity-based gameplay while **Ringworld RPG** relies on a more traditional ruleset with minimal automation. These notes clarify the unique scope and workflow of this project for anyone familiar with **Ringworld RPG**.
 
@@ -511,6 +510,7 @@ This workflow verifies that Unity menu items are found, commands are executed, a
 ## Godot Integration
 
 Godot is now the main runtime engine for TBD Space Game. Assets exported from Unity or Blender should be placed in `Assets_glTF/` so the Godot project can import them automatically.
+A playable vertical slice built with **Godot 4 (.NET)** demonstrates the core systems. Unity runtime scripts were removed to focus on this workflow.
 
 ### Exporting glTF Assets
 Use a glTF exporter (such as Unity's glTFast or Blender's exporter) to convert prefabs and models. Export them into `Assets_glTF/` so both Unity and Godot consume the same files.
@@ -544,6 +544,9 @@ To import exported assets into Godot:
 1. Run `./run-exporters-to-godot.ps1`.
 2. Open the Godot project in the Godot 4 editor.
 3. Each `.gltf` file will automatically generate a scene that can be instanced in your C# scripts.
+### Running the Godot 4 (.NET) Vertical Slice
+After the servers are up, open the project in `Godot/` with the Godot 4 editor and press **Play**. The vertical slice connects to the MCP servers using the endpoint defined in `project.godot`.
+
 
 ### Configuring the MCP Endpoint
 
