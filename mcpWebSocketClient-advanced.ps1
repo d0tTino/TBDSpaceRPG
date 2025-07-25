@@ -1,5 +1,7 @@
 # Advanced MCP WebSocket Client for TBD Space Game
-# This script connects to the MCP Unity WebSocket server and can send various command types
+# This script connects to the MCP server and can send various command types
+# Example:
+#   ./mcpWebSocketClient-advanced.ps1 -commandType menu_item -menuPath "MCP/Test/Ping" -Engine unity
 
 param (
     [Parameter(Mandatory=$false)]
@@ -25,10 +27,30 @@ param (
     
     [Parameter(Mandatory=$false)]
     [string]$commandType = "menu_item",
-    
+
     [Parameter(Mandatory=$false)]
-    [string]$serverUrl = "ws://localhost:8001/McpUnity"
+    [string]$serverUrl = $null,
+
+    [ValidateSet('godot','unity')]
+    [string]$Engine = 'godot',
+
+    [string]$ConfigFile = 'engine-config.json'
+
 )
+
+if (-not $serverUrl) {
+    $port = $null
+    if (Test-Path $ConfigFile) {
+        try {
+            $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($cfg.$Engine -and $cfg.$Engine.port) { $port = [int]$cfg.$Engine.port }
+        } catch {
+            Write-Warning "Failed to load engine config from $ConfigFile: $_"
+        }
+    }
+    if (-not $port) { $port = if ($Engine -eq 'godot') { 8002 } else { 8001 } }
+    $serverUrl = if ($Engine -eq 'godot') { "ws://localhost:$port/" } else { "ws://localhost:$port/McpUnity" }
+}
 
 function Test-ValidPort {
     param([int]$Port)
@@ -228,7 +250,7 @@ $operationDesc = switch ($commandType) {
     default { "unknown operation type: $commandType" }
 }
 
-Write-Host "Connecting to MCP Unity server and performing operation: $operationDesc"
+Write-Host "Connecting to MCP server and performing operation: $operationDesc"
 
 # Connect to WebSocket
 $webSocket = Connect-ToWebSocket -url $serverUrl
@@ -246,7 +268,7 @@ if ($webSocket -ne $null) {
             if ($success) {
                 # Wait for response
                 Start-Sleep -Milliseconds 500
-                Write-Host "Command execution initiated in Unity"
+                Write-Host "Command execution initiated"
                 
                 # Optionally receive response if needed
                 # $response = Receive-WebSocketMessage -webSocket $webSocket

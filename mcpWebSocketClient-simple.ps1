@@ -1,13 +1,20 @@
-# Simplified PowerShell WebSocket client for MCP Unity server
+# Simplified PowerShell WebSocket client for the MCP server
+# Example:
+#   ./mcpWebSocketClient-simple.ps1 -menuPath "MCP/Test/Ping" -Engine unity
 param (
     [Parameter(Mandatory=$false)]
     [string]$menuPath,
-    
+
     [Parameter(Mandatory=$false)]
     [string]$message,
-    
+
     [Parameter(Mandatory=$false)]
-    [string]$logType = "Log"  # Can be: Log, Warning, Error
+    [string]$logType = "Log"  # Can be: Log, Warning, Error,
+
+    [ValidateSet('godot','unity')]
+    [string]$Engine = 'godot',
+
+    [string]$ConfigFile = 'engine-config.json'
 )
 
 function Test-ValidPort {
@@ -25,12 +32,28 @@ if (!$menuPath -and !$message) {
 $operationType = if ($menuPath) { "execute_menu_item" } else { "notify_message" }
 $targetName = if ($menuPath) { $menuPath } else { $message }
 
-Write-Host "Connecting to MCP Unity server and performing operation: $operationType with target: $targetName"
+Write-Host "Connecting to MCP server and performing operation: $operationType with target: $targetName"
 
 try {
     # Create client WebSocket
     $client = New-Object System.Net.WebSockets.ClientWebSocket
-    $uri = New-Object System.Uri("ws://localhost:8001/McpUnity")
+
+    $port = $null
+    if (Test-Path $ConfigFile) {
+        try {
+            $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($cfg.$Engine -and $cfg.$Engine.port) { $port = [int]$cfg.$Engine.port }
+        } catch {
+            Write-Warning "Failed to load engine config from $ConfigFile: $_"
+        }
+    }
+    if (-not $port) { $port = if ($Engine -eq 'godot') { 8002 } else { 8001 } }
+    $url = if ($Engine -eq 'godot') {
+        "ws://localhost:$port/"
+    } else {
+        "ws://localhost:$port/McpUnity"
+    }
+    $uri = New-Object System.Uri($url)
 
     if (-not (Test-ValidPort -Port $uri.Port)) {
         Write-Host "Invalid port in WebSocket URI: $($uri.Port)" -ForegroundColor Red
@@ -80,7 +103,7 @@ try {
         Start-Sleep -Seconds 1
         
         # No waiting for response in this simplified version
-        Write-Host "Command execution initiated in Unity" -ForegroundColor Green
+        Write-Host "Command execution initiated" -ForegroundColor Green
         
         # Close the connection
         $closeTask = $client.CloseAsync([System.Net.WebSockets.WebSocketCloseStatus]::NormalClosure, "Closing", [System.Threading.CancellationToken]::None)

@@ -1,13 +1,17 @@
-# PowerShell script to send a test message to Unity console
+# PowerShell script to send a test message to the MCP server
+# Example:
+#   ./execute-mcp-message.ps1 -message "Hello" -Engine unity
 param (
     [Parameter(Mandatory=$true)]
     [string]$message,
     [string]$Endpoint,
+    [ValidateSet('godot','unity')]
+    [string]$Engine = 'godot',
     [string]$ConfigFile = "engine-config.json"
 )
 
 # Output what we're doing
-Write-Host "Sending message to Unity: $message"
+Write-Host "Sending message to MCP server: $message"
 
 function Test-ValidPort {
     param([int]$Port)
@@ -15,25 +19,31 @@ function Test-ValidPort {
 }
 
 $uri = $null
+$port = $null
 
 if ($PSBoundParameters.ContainsKey('Endpoint')) {
     $uri = $Endpoint
-} elseif (Test-Path $ConfigFile) {
-    try {
-        $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
-        if ($cfg.unity -and $cfg.unity.port) {
-            $uri = "http://localhost:$($cfg.unity.port)/mcp"
+    $port = ([System.Uri]$uri).Port
+} else {
+    if (Test-Path $ConfigFile) {
+        try {
+            $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($cfg.$Engine -and $cfg.$Engine.port) {
+                $port = [int]$cfg.$Engine.port
+            }
+        } catch {
+            Write-Warning "Failed to load engine config from $ConfigFile: $_"
         }
-    } catch {
-        Write-Warning "Failed to load engine config from $ConfigFile: $_"
     }
+    if (-not $port) {
+        $port = if ($Engine -eq 'godot') { 8002 } else { 8001 }
+    }
+    $uri = "http://localhost:$port/mcp"
 }
 
-if (-not $uri) {
-    $uri = "http://localhost:8001/mcp"
+if (-not $port) {
+    $port = ([System.Uri]$uri).Port
 }
-
-$port = ([System.Uri]$uri).Port
 if (-not (Test-ValidPort -Port $port)) {
     Write-Error "Invalid port: $port"
     exit 1
