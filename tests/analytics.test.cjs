@@ -13,7 +13,10 @@ if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
       'not json',
       JSON.stringify({ type: 'generation_advanced', generation: 3 })
     ].join('\n');
-    fs.writeFileSync(logPath, lines);
+    await fs.promises.writeFile(logPath, lines);
+
+    const logContents = await fs.promises.readFile(logPath, 'utf8');
+    assert.ok(logContents.includes('test'));
 
     const metrics = analytics.parseLogFile(logPath);
     assert.strictEqual(metrics.totalEvents, 2);
