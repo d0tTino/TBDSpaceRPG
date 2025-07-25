@@ -5,5 +5,6 @@
 </PropertyGroup>
   <ItemGroup>
     <Compile Include="../src/GameState/GameState.cs" />
+    <Compile Include="../src/ShipCustomization/SpaceshipMovement.cs" Link="Scripts/SpaceshipMovement.cs" />
   </ItemGroup>
 </Project>
