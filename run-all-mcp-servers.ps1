@@ -16,6 +16,12 @@ if (-not $scriptDir) {
     $scriptDir = $PWD.Path
 }
 
+# Directory to store PID files for the launched servers
+$pidDir = Join-Path $scriptDir 'tmp/pids'
+if (-not (Test-Path $pidDir)) {
+    New-Item -ItemType Directory -Path $pidDir -Force | Out-Null
+}
+
 # Load engine configuration
 $engineCfg = $null
 if (Test-Path $ConfigFile) {
@@ -85,7 +91,8 @@ $ksaRunning = Test-ServerPort -ServerName "KSA Adapter" -Port $ksaPort
 if (-not $unityRunning) {
     Write-Host "Starting Unity MCP Server..." -ForegroundColor Green
     $unityScript = Join-Path $scriptDir "run-mcp-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$unityScript`" -Engine $Engine -Port $unityPort -EngineConfigFile $ConfigFile" -NoNewWindow
+    $unityProcess = Start-Process PowerShell -ArgumentList "-File `"$unityScript`" -Engine $Engine -Port $unityPort -EngineConfigFile $ConfigFile" -NoNewWindow -PassThru
+    Set-Content -Path (Join-Path $pidDir 'unity.pid') -Value $unityProcess.Id
 } else {
     Write-Host "Skipping Unity MCP Server (already running)" -ForegroundColor Yellow
 }
@@ -94,7 +101,8 @@ if (-not $unityRunning) {
 if (-not $gitRunning) {
     Write-Host "Starting Git MCP Server..." -ForegroundColor Green
     $gitScript = Join-Path $scriptDir "run-git-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$gitScript`" -Port $gitPort -ConfigFile $ConfigFile" -NoNewWindow
+    $gitProcess = Start-Process PowerShell -ArgumentList "-File `"$gitScript`" -Port $gitPort -ConfigFile $ConfigFile" -NoNewWindow -PassThru
+    Set-Content -Path (Join-Path $pidDir 'git.pid') -Value $gitProcess.Id
 } else {
     Write-Host "Skipping Git MCP Server (already running)" -ForegroundColor Yellow
 }
@@ -103,7 +111,8 @@ if (-not $gitRunning) {
 if (-not $postgresRunning) {
     Write-Host "Starting Postgres MCP Server..." -ForegroundColor Green
     $postgresScript = Join-Path $scriptDir "run-postgres-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$postgresScript`" -Port $postgresPort -ConfigFile $ConfigFile" -NoNewWindow
+    $postgresProcess = Start-Process PowerShell -ArgumentList "-File `"$postgresScript`" -Port $postgresPort -ConfigFile $ConfigFile" -NoNewWindow -PassThru
+    Set-Content -Path (Join-Path $pidDir 'postgres.pid') -Value $postgresProcess.Id
 } else {
     Write-Host "Skipping Postgres MCP Server (already running)" -ForegroundColor Yellow
 }
@@ -112,7 +121,8 @@ if (-not $postgresRunning) {
 if (-not $telemetryRunning) {
     Write-Host "Starting Telemetry Server..." -ForegroundColor Green
     $telemetryScript = Join-Path $scriptDir "run-telemetry-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$telemetryScript`" -Port $telemetryPort -ConfigFile $ConfigFile" -NoNewWindow
+    $telemetryProcess = Start-Process PowerShell -ArgumentList "-File `"$telemetryScript`" -Port $telemetryPort -ConfigFile $ConfigFile" -NoNewWindow -PassThru
+    Set-Content -Path (Join-Path $pidDir 'telemetry.pid') -Value $telemetryProcess.Id
 } else {
     Write-Host "Skipping Telemetry Server (already running)" -ForegroundColor Yellow
 }
@@ -121,7 +131,8 @@ if (-not $telemetryRunning) {
 if (-not $proxyRunning) {
     Write-Host "Starting MCP Proxy Server..." -ForegroundColor Green
     $proxyScript = Join-Path $scriptDir "run-mcpproxy-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$proxyScript`" -Port $proxyPort -ConfigFile $ConfigFile" -NoNewWindow
+    $proxyProcess = Start-Process PowerShell -ArgumentList "-File `"$proxyScript`" -Port $proxyPort -ConfigFile $ConfigFile" -NoNewWindow -PassThru
+    Set-Content -Path (Join-Path $pidDir 'proxy.pid') -Value $proxyProcess.Id
 } else {
     Write-Host "Skipping MCP Proxy Server (already running)" -ForegroundColor Yellow
 }
@@ -130,7 +141,8 @@ if (-not $proxyRunning) {
 if (-not $ksaRunning) {
     Write-Host "Starting KSA Adapter..." -ForegroundColor Green
     $ksaScript = Join-Path $scriptDir "run-ksa-server.ps1"
-    Start-Process PowerShell -ArgumentList "-File `"$ksaScript`" -Port $ksaPort -ConfigFile $ConfigFile" -NoNewWindow
+    $ksaProcess = Start-Process PowerShell -ArgumentList "-File `"$ksaScript`" -Port $ksaPort -ConfigFile $ConfigFile" -NoNewWindow -PassThru
+    Set-Content -Path (Join-Path $pidDir 'ksa.pid') -Value $ksaProcess.Id
 } else {
     Write-Host "Skipping KSA Adapter (already running)" -ForegroundColor Yellow
 }
