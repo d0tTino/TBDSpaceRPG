@@ -2,13 +2,14 @@
 # Purpose: Starts the MCP server for the selected engine with proper environment configuration.
 # The script now fails fast with clear errors if the provided configuration file
 # or resolved server path does not exist.
-# Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-Engine unity|godot] [-Monitor] [-ConfigFile <path>] [-EngineConfigFile <path>]
+# Usage: .\run-mcp-server.ps1 [-Port <port_number>] [-RandomPort] [-Engine unity|godot] [-Monitor] [-ConfigFile <path>] [-EngineConfigFile <path>]
 
 param (
     [int]$Port = 0,
     [ValidateSet("unity","godot")]
     [string]$Engine = "unity",
     [switch]$Monitor,
+    [switch]$RandomPort,
     [string]$ConfigFile = ".mcp-server-config.json",
     [string]$EngineConfigFile = "engine-config.json"
 )
@@ -24,6 +25,15 @@ if (-not (Test-Path $ConfigFile)) {
 function Test-ValidPort {
     param([int]$Port)
     return ($Port -ge 1 -and $Port -le 65535)
+}
+
+# Return a free TCP port chosen by the OS
+function Get-RandomFreePort {
+    $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+    $listener.Start()
+    $port = $listener.LocalEndpoint.Port
+    $listener.Stop()
+    return $port
 }
 
 if ($Port -ne 0 -and -not (Test-ValidPort -Port $Port)) {
@@ -92,6 +102,11 @@ if (Test-Path $EngineConfigFile) {
     }
 }
 
+# Override with a random free port if requested
+if ($RandomPort) {
+    $config.port = Get-RandomFreePort
+}
+
 
 # Ensure a valid port is set, falling back to engine defaults
 if (-not (Test-ValidPort -Port $config.port)) {
@@ -101,6 +116,9 @@ if (-not (Test-ValidPort -Port $config.port)) {
         $config.port = 8001
     }
 }
+
+# Output the selected port for consumption by tests
+Write-Host "Selected port: $($config.port)"
 
 # Use config serverPath if provided, otherwise use default
 if (-not $config.serverPath) {
