@@ -1,7 +1,7 @@
 # PowerShell script to start all MCP servers
 param(
     [ValidateSet('unity','godot','ksa')]
-    [string]$Engine = 'unity',
+    [string]$Engine = 'godot',
     [string]$ConfigFile = 'engine-config.json'
 )
 
@@ -149,7 +149,11 @@ if (-not $ksaRunning) {
 
 Write-Host "All MCP servers have been started!" -ForegroundColor Cyan
 Write-Host "Use the following servers in Cursor:" -ForegroundColor White
-Write-Host "- mcp-unity: ws://localhost:$unityPort/McpUnity" -ForegroundColor White
+if ($Engine -eq 'godot') {
+    Write-Host "- mcp-godot: ws://localhost:$unityPort/mcp" -ForegroundColor White
+} else {
+    Write-Host "- mcp-unity: ws://localhost:$unityPort/McpUnity" -ForegroundColor White
+}
 Write-Host "- git: http://localhost:$gitPort" -ForegroundColor White
 Write-Host "- postgres: http://localhost:$postgresPort" -ForegroundColor White
 Write-Host "- telemetry: http://localhost:$telemetryPort" -ForegroundColor White
