@@ -8,5 +8,6 @@
   <ItemGroup>
     <Compile Include="../src/GameState/GameState.cs" />
     <Compile Include="../csharp/GodotStubs/HttpRequestExtensions.cs" />
+
   </ItemGroup>
 </Project>
