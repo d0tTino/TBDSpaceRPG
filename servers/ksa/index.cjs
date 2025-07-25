@@ -23,7 +23,10 @@ function translateMcpToKsa(mcp) {
   };
 }
 
-function forwardToEngine(ksaRequest) {
+const maxRetries = parseInt(process.env.KSA_MAX_RETRIES || '3', 10);
+const retryDelay = parseInt(process.env.KSA_RETRY_DELAY || '100', 10);
+
+function sendOnce(ksaRequest) {
   return new Promise((resolve, reject) => {
     const httpModule = engineUrl.protocol === 'https:' ? https : http;
     const req = httpModule.request(engineUrl, {
@@ -41,6 +44,21 @@ function forwardToEngine(ksaRequest) {
     req.write(JSON.stringify(ksaRequest));
     req.end();
   });
+}
+
+async function forwardToEngine(ksaRequest) {
+  let attempt = 0;
+  let delay = retryDelay;
+  for (;;) {
+    try {
+      return await sendOnce(ksaRequest);
+    } catch (err) {
+      attempt += 1;
+      if (attempt >= maxRetries) throw err;
+      await new Promise(r => setTimeout(r, delay));
+      delay *= 2;
+    }
+  }
 }
 
 const server = http.createServer((req, res) => {

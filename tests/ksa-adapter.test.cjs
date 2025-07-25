@@ -99,6 +99,35 @@ function post(port, data, raw = false) {
     await new Promise(r => engine.close(r));
   }
 
+  // Engine starts after delay to test retry logic
+  const latePort = await getFreePort();
+  const adapterRetryPort = await getFreePort();
+  const adapterRetry = startServer('servers/ksa/index.cjs', adapterRetryPort, {
+    KSA_ENGINE_HOST: 'localhost',
+    KSA_ENGINE_PORT: String(latePort),
+    KSA_MAX_RETRIES: '5',
+    KSA_RETRY_DELAY: '100'
+  });
+  let engineLate;
+  try {
+    await waitForServer(adapterRetryPort);
+    const start = Date.now();
+    const responsePromise = post(adapterRetryPort, { method: 'ping', id: '2' });
+    await new Promise(r => setTimeout(r, 300));
+    engineLate = http.createServer((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end('{}');
+    });
+    await new Promise(r => engineLate.listen(latePort, r));
+    const result = await responsePromise;
+    const duration = Date.now() - start;
+    assert.strictEqual(result.statusCode, 200);
+    assert.ok(duration >= 300);
+  } finally {
+    if (engineLate) await new Promise(r => engineLate.close(r));
+    await stopServer(adapterRetry);
+  }
+
   // Engine failure (unreachable)
   const failPort = await getFreePort();
   const adapterFailPort = await getFreePort();
@@ -108,8 +137,11 @@ function post(port, data, raw = false) {
   });
   try {
     await waitForServer(adapterFailPort);
+    const startFail = Date.now();
     const result = await post(adapterFailPort, { method: 'ping', id: '1' });
+    const durationFail = Date.now() - startFail;
     assert.strictEqual(result.statusCode, 502);
+    assert.ok(durationFail >= 200);
   } finally {
     await stopServer(adapterFail);
   }
