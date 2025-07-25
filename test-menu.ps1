@@ -1,7 +1,7 @@
 # test-menu.ps1
 # Purpose: Test MCP menu items by sending commands to the MCP server
-# Usage: .\test-menu.ps1 -MenuPath "Path/To/Menu/Item"
-#        .\test-menu.ps1 -MenuPaths "Path1","Path2","Path3"
+# Usage: .\test-menu.ps1 -MenuPath "Path/To/Menu/Item" [-Engine godot|unity]
+#        .\test-menu.ps1 -MenuPaths "Path1","Path2","Path3" [-Engine unity]
 
 param (
     [Parameter(Mandatory=$true, ParameterSetName="SinglePath")]
@@ -10,7 +10,12 @@ param (
     [Parameter(Mandatory=$true, ParameterSetName="MultiplePaths")]
     [string[]]$MenuPaths,
     
-    [int]$Port = 8001,
+    [int]$Port = 0,
+
+    [ValidateSet('godot','unity')]
+    [string]$Engine = 'godot',
+
+    [string]$ConfigFile = 'engine-config.json',
 
     [switch]$Verbose
 )
@@ -18,6 +23,18 @@ param (
 function Test-ValidPort {
     param([int]$Port)
     return ($Port -ge 1 -and $Port -le 65535)
+}
+
+if (-not $Port) {
+    if (Test-Path $ConfigFile) {
+        try {
+            $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($cfg.$Engine -and $cfg.$Engine.port) { $Port = [int]$cfg.$Engine.port }
+        } catch {
+            Write-Warning "Failed to load engine config from $ConfigFile: $_"
+        }
+    }
+    if (-not $Port) { $Port = if ($Engine -eq 'godot') { 8002 } else { 8001 } }
 }
 
 if (-not (Test-ValidPort -Port $Port)) {
@@ -28,7 +45,11 @@ if (-not (Test-ValidPort -Port $Port)) {
 Add-Type -AssemblyName System.Net.WebSockets.Client
 
 # Define constants and variables
-$webSocketUrl = "ws://localhost:$Port/McpUnity"
+$webSocketUrl = if ($Engine -eq 'godot') {
+    "ws://localhost:$Port/"
+} else {
+    "ws://localhost:$Port/McpUnity"
+}
 $logFile = Join-Path $PSScriptRoot "mcp-client.log"
 $timeoutMs = 10000 # 10 seconds
 
@@ -186,7 +207,7 @@ function Send-WebSocketRequest {
                         Write-Log "Warning: Response ID ($($responseObj.id)) does not match request ID ($requestId)" "WARNING"
                     }
                     
-                    Write-Log "Command execution initiated in Unity (ID: $($responseObj.id))" "SUCCESS"
+                    Write-Log "Command execution initiated (ID: $($responseObj.id))" "SUCCESS"
                     Write-Log "Response: $response" "INFO"
                     return $true
                 }
@@ -296,7 +317,7 @@ if (-not (Test-Server)) {
     
     $startServer = Read-Host "Would you like to start the server now? (y/n)"
     if ($startServer -eq "y") {
-        & "$PSScriptRoot\run-mcp-server.ps1" -Port $Port
+        & "$PSScriptRoot\run-mcp-server.ps1" -Port $Port -Engine $Engine
         Start-Sleep -Seconds 2 # Give the server time to start
     }
     else {

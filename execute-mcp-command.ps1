@@ -1,8 +1,12 @@
 # PowerShell script to execute MCP commands
+# Example:
+#   ./execute-mcp-command.ps1 -menuPath "GameObject/Create Empty" -Engine unity
 param (
     [Parameter(Mandatory=$true)]
     [string]$menuPath,
     [string]$Endpoint,
+    [ValidateSet('godot','unity')]
+    [string]$Engine = 'godot',
     [string]$ConfigFile = "engine-config.json"
 )
 
@@ -15,25 +19,31 @@ function Test-ValidPort {
 }
 
 $uri = $null
+$port = $null
 
 if ($PSBoundParameters.ContainsKey('Endpoint')) {
     $uri = $Endpoint
-} elseif (Test-Path $ConfigFile) {
-    try {
-        $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
-        if ($cfg.unity -and $cfg.unity.port) {
-            $uri = "http://localhost:$($cfg.unity.port)/mcp"
+    $port = ([System.Uri]$uri).Port
+} else {
+    if (Test-Path $ConfigFile) {
+        try {
+            $cfg = Get-Content -Path $ConfigFile -Raw | ConvertFrom-Json
+            if ($cfg.$Engine -and $cfg.$Engine.port) {
+                $port = [int]$cfg.$Engine.port
+            }
+        } catch {
+            Write-Warning "Failed to load engine config from $ConfigFile: $_"
         }
-    } catch {
-        Write-Warning "Failed to load engine config from $ConfigFile: $_"
     }
+    if (-not $port) {
+        $port = if ($Engine -eq 'godot') { 8002 } else { 8001 }
+    }
+    $uri = "http://localhost:$port/mcp"
 }
 
-if (-not $uri) {
-    $uri = "http://localhost:8001/mcp"
+if (-not $port) {
+    $port = ([System.Uri]$uri).Port
 }
-
-$port = ([System.Uri]$uri).Port
 if (-not (Test-ValidPort -Port $port)) {
     Write-Error "Invalid port: $port"
     exit 1
