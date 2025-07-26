@@ -25,5 +25,24 @@ namespace OrbitalMechanics
 
             return new OrbitData { orbit = transferOrbit };
         }
+
+        /// <summary>
+        /// Creates a simple circular orbit around the specified body.
+        /// </summary>
+        public OrbitData PlanCircularOrbit(CelestialBody body, double radius)
+        {
+            var orbit = new KeplerOrbit
+            {
+                semiMajorAxis = radius,
+                eccentricity = 0,
+                inclination = 0,
+                argumentOfPeriapsis = 0,
+                longitudeOfAscendingNode = 0,
+                meanAnomalyAtEpoch = 0,
+                gravitationalParameter = body.InitialOrbit.orbit.gravitationalParameter
+            };
+
+            return new OrbitData { orbit = orbit };
+        }
     }
 }
