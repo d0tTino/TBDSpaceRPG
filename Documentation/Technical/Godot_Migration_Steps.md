@@ -11,3 +11,4 @@ These steps outline how to move existing assets and workflows to the Godot pipel
    ```
 5. Unity runtime scripts have been removed. Use the C# scripts in the Godot project to handle gameplay logic.
 6. Run the Godot project from the editor and verify that it connects to the MCP servers at startup.
+7. Open the `Flight` scene to observe the basic orbit system. The scene now contains an `OrbitManager` and a `CelestialBody`. When running the vertical slice, the ship automatically follows a circular orbit around the body.
