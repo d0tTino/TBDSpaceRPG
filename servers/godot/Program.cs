@@ -53,6 +53,8 @@ public class SimpleWebSocketServer : IDisposable
     private readonly CancellationTokenSource _cts = new();
     private Task? _listenTask;
     private readonly IDictionary<string, IMcpCommandHandler> _handlers;
+    private readonly List<WebSocket> _clients = new();
+    private readonly object _clientsLock = new();
 
     public int Port { get; }
 
@@ -96,24 +98,31 @@ public class SimpleWebSocketServer : IDisposable
             }
 
             var wsContext = await ctx.AcceptWebSocketAsync(null);
+            lock (_clientsLock)
+            {
+                _clients.Add(wsContext.WebSocket);
+            }
             _ = Task.Run(() => HandleConnection(wsContext.WebSocket, token));
         }
     }
 
     private async Task HandleConnection(WebSocket socket, CancellationToken token)
     {
-        var buffer = new byte[1024];
-        while (socket.State == WebSocketState.Open && !token.IsCancellationRequested)
+        try
         {
-            WebSocketReceiveResult result;
-            try
+            var buffer = new byte[1024];
+            while (socket.State == WebSocketState.Open && !token.IsCancellationRequested)
             {
-                result = await socket.ReceiveAsync(buffer, token);
-            }
-            catch
-            {
-                break;
-            }
+                WebSocketReceiveResult result;
+                try
+                {
+                    result = await socket.ReceiveAsync(buffer, token);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Receive failed: {ex.Message}");
+                    break;
+                }
 
             if (result.MessageType == WebSocketMessageType.Close)
             {
@@ -144,12 +153,43 @@ public class SimpleWebSocketServer : IDisposable
                 Console.Error.WriteLine($"Failed to process packet: {ex.Message}");
             }
         }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Connection error: {ex.Message}");
+        }
+        finally
+        {
+            lock (_clientsLock)
+            {
+                _clients.Remove(socket);
+            }
+            try
+            {
+                socket.Dispose();
+            }
+            catch { }
+        }
     }
 
     public void Stop()
     {
         _cts.Cancel();
         _listener.Stop();
+        List<WebSocket> clientsCopy;
+        lock (_clientsLock)
+        {
+            clientsCopy = new List<WebSocket>(_clients);
+        }
+        foreach (var ws in clientsCopy)
+        {
+            try
+            {
+                if (ws.State == WebSocketState.Open)
+                    ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Server shutting down", CancellationToken.None).Wait();
+            }
+            catch { }
+        }
         try
         {
             _listenTask?.Wait();

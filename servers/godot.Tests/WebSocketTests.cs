@@ -110,6 +110,34 @@ public class WebSocketTests
         Assert.That(ws.State, Is.EqualTo(WebSocketState.Closed));
     }
 
+    [Test]
+    public async Task TwoClientsCanReceiveResponses()
+    {
+        using var ws1 = new ClientWebSocket();
+        using var ws2 = new ClientWebSocket();
+        var uri = new Uri($"ws://localhost:{_port}/");
+        await ws1.ConnectAsync(uri, CancellationToken.None);
+        await ws2.ConnectAsync(uri, CancellationToken.None);
+
+        var req1 = Encoding.UTF8.GetBytes("{\"type\":\"execute_menu_item\",\"id\":\"1\",\"parameters\":{\"item\":\"first\"}}");
+        var req2 = Encoding.UTF8.GetBytes("{\"type\":\"execute_menu_item\",\"id\":\"2\",\"parameters\":{\"item\":\"second\"}}");
+        await ws1.SendAsync(req1, WebSocketMessageType.Text, true, CancellationToken.None);
+        await ws2.SendAsync(req2, WebSocketMessageType.Text, true, CancellationToken.None);
+
+        var buffer1 = new byte[1024];
+        var buffer2 = new byte[1024];
+        var result1Task = ws1.ReceiveAsync(buffer1, CancellationToken.None);
+        var result2Task = ws2.ReceiveAsync(buffer2, CancellationToken.None);
+        await Task.WhenAll(result1Task, result2Task);
+        var resp1 = JsonDocument.Parse(Encoding.UTF8.GetString(buffer1, 0, result1Task.Result.Count));
+        var resp2 = JsonDocument.Parse(Encoding.UTF8.GetString(buffer2, 0, result2Task.Result.Count));
+
+        Assert.That(resp1.RootElement.GetProperty("id").GetString(), Is.EqualTo("1"));
+        Assert.That(resp1.RootElement.GetProperty("result").GetProperty("executed").GetString(), Is.EqualTo("first"));
+        Assert.That(resp2.RootElement.GetProperty("id").GetString(), Is.EqualTo("2"));
+        Assert.That(resp2.RootElement.GetProperty("result").GetProperty("executed").GetString(), Is.EqualTo("second"));
+    }
+
     private static int GetFreePort()
     {
         var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
