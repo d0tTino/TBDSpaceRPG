@@ -14,5 +14,8 @@
     "globals": "^16.3.0",
     "ws": "^8.18.3"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "ajv": "^8.17.1"
+  }
 }
