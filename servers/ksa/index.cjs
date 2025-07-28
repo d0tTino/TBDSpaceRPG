@@ -8,9 +8,20 @@ const { ksa: defaultPort } = require('../ports.cjs');
 
 
 const port = process.env.PORT || defaultPort;
-const engineHost = process.env.KSA_ENGINE_HOST || 'localhost';
-const enginePort = process.env.KSA_ENGINE_PORT || 9000;
 const engineEndpoint = process.env.KSA_ENGINE_ENDPOINT;
+let engineHost = process.env.KSA_ENGINE_HOST;
+let enginePort = process.env.KSA_ENGINE_PORT;
+
+if (!engineEndpoint) {
+  if (!engineHost) {
+    console.warn('KSA_ENGINE_HOST not set, defaulting to localhost');
+    engineHost = 'localhost';
+  }
+  if (!enginePort) {
+    console.warn('KSA_ENGINE_PORT not set, defaulting to 9000');
+    enginePort = 9000;
+  }
+}
 
 let engineUrl;
 try {
@@ -33,7 +44,11 @@ function translateMcpToKsa(mcp) {
   };
 }
 
-const maxRetries = parseInt(process.env.KSA_MAX_RETRIES || '3', 10);
+let maxRetries = parseInt(process.env.KSA_MAX_RETRIES || '3', 10);
+if (!Number.isInteger(maxRetries) || maxRetries <= 0) {
+  console.warn('Invalid KSA_MAX_RETRIES, defaulting to 3');
+  maxRetries = 3;
+}
 const retryDelay = parseInt(process.env.KSA_RETRY_DELAY || '100', 10);
 
 function sendOnce(ksaRequest) {

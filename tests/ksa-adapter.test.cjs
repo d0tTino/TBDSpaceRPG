@@ -33,6 +33,15 @@ function startServer(relativePath, port, extraEnv = {}) {
   return child;
 }
 
+function startServerCapture(relativePath, port, extraEnv = {}) {
+  const fullPath = path.join(__dirname, '..', relativePath);
+  const env = { ...process.env, PORT: String(port), ...extraEnv };
+  const child = spawn('node', [fullPath], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  child.stdout.setEncoding('utf8');
+  child.stderr.setEncoding('utf8');
+  return child;
+}
+
 async function stopServer(child) {
   if (child && child.exitCode === null) {
     child.kill();
@@ -190,6 +199,51 @@ function post(port, data, raw = false) {
   } finally {
     await stopServer(adapterBad);
     await new Promise(r => engine2.close(r));
+  }
+
+  // Missing engine host/port should use defaults and warn
+  const defaultEngine = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end('{}');
+  });
+  await new Promise(r => defaultEngine.listen(9000, r));
+  const defaultAdapterPort = await getFreePort();
+  const adapterDefault = startServerCapture('servers/ksa/index.cjs', defaultAdapterPort);
+  const hostWarnings = [];
+  adapterDefault.stderr.on('data', d => hostWarnings.push(d));
+  try {
+    await waitForServer(defaultAdapterPort);
+    const resDefault = await post(defaultAdapterPort, { method: 'ping', id: '7' });
+    assert.strictEqual(resDefault.statusCode, 200);
+    const warningText = hostWarnings.join('');
+    assert.ok(/KSA_ENGINE_HOST/.test(warningText));
+    assert.ok(/KSA_ENGINE_PORT/.test(warningText));
+  } finally {
+    await stopServer(adapterDefault);
+    await new Promise(r => defaultEngine.close(r));
+  }
+
+  // Invalid KSA_MAX_RETRIES should fall back to default
+  const badRetriesPort = await getFreePort();
+  const adapterRetriesPort = await getFreePort();
+  const adapterRetries = startServerCapture('servers/ksa/index.cjs', adapterRetriesPort, {
+    KSA_ENGINE_HOST: 'localhost',
+    KSA_ENGINE_PORT: String(badRetriesPort),
+    KSA_MAX_RETRIES: 'abc',
+    KSA_RETRY_DELAY: '10'
+  });
+  const retryWarnings = [];
+  adapterRetries.stderr.on('data', d => retryWarnings.push(d));
+  try {
+    await waitForServer(adapterRetriesPort);
+    const tStart = Date.now();
+    const resultRetries = await post(adapterRetriesPort, { method: 'ping', id: '8' });
+    const dur = Date.now() - tStart;
+    assert.strictEqual(resultRetries.statusCode, 502);
+    assert.ok(dur >= 20);
+    assert.ok(retryWarnings.join('').includes('KSA_MAX_RETRIES'));
+  } finally {
+    await stopServer(adapterRetries);
   }
 
   console.log('KSA adapter tests passed');
