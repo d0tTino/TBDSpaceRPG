@@ -6,6 +6,7 @@ const Ajv = require('ajv');
 const { logError } = require('../utils.cjs');
 const { ksa: defaultPort } = require('../ports.cjs');
 
+
 const port = process.env.PORT || defaultPort;
 const engineHost = process.env.KSA_ENGINE_HOST || 'localhost';
 const enginePort = process.env.KSA_ENGINE_PORT || 9000;
@@ -75,11 +76,8 @@ const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
-      let mcp;
-      try {
-        mcp = JSON.parse(body || '{}');
-      } catch (err) {
-        console.error(err);
+      const mcp = parseJson(body);
+      if (!mcp) {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Invalid JSON');
         return;

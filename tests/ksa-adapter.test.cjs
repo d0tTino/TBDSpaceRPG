@@ -185,6 +185,8 @@ function post(port, data, raw = false) {
     const badRes = await post(adapterBadPort, '{', true);
     assert.strictEqual(badRes.statusCode, 400);
     assert.ok(/Invalid JSON/.test(badRes.body));
+    const emptyRes = await post(adapterBadPort, '', true);
+    assert.strictEqual(emptyRes.statusCode, 400);
   } finally {
     await stopServer(adapterBad);
     await new Promise(r => engine2.close(r));
