@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -59,5 +60,27 @@ public partial class McpClient : Control
         req.QueueFree();
     }
 
-    partial void LogError(string message);
+    partial void LogErrorExtra(string message);
+
+    partial void LogError(string message)
+    {
+        GD.PrintErr(message);
+        _ = SendTelemetry(message);
+        LogErrorExtra(message);
+    }
+
+    private static async Task SendTelemetry(string message)
+    {
+        try
+        {
+            using var client = new HttpClient();
+            var json = JsonSerializer.Serialize(new { type = "godot_error", message });
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            await client.PostAsync("http://localhost:8090/event", content);
+        }
+        catch (System.Exception e)
+        {
+            GD.PrintErr($"Failed to send telemetry: {e.Message}");
+        }
+    }
 }
