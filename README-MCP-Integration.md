@@ -538,7 +538,7 @@ Godot is now the main runtime engine for TBD Space Game. Assets exported from Un
 A playable vertical slice built with **Godot 4 (.NET)** demonstrates the core systems. Unity runtime scripts were removed to focus on this workflow.
 
 ### Exporting glTF Assets
-Use a glTF exporter (such as Unity's glTFast or Blender's exporter) to convert prefabs and models. Export them into `Assets_glTF/` so both Unity and Godot consume the same files.
+Run `./export-assets.ps1` (or `./export-assets.sh` on Unix) to automatically export prefabs and models using Unity or Blender. The script copies `.gltf` and `.glb` files into `Assets_glTF/` and `Godot/Assets_glTF/`.
 
 ### Command Line Asset Exporters
 The Unity project included lightweight exporters that ran without opening the editor. These files are now archived on the `unity-archive` branch. If you need them, check out that branch and run:
@@ -551,13 +551,13 @@ The exporter builds `Exporters.csproj` and writes a sample `.gltf` file to `Asse
 
 ### Unified Export Tool
 
-Run the following PowerShell script to copy exported assets into the Godot project. It will run the Unity exporters when they are available:
+Run the following script to export assets and copy them into the Godot project:
 
 ```powershell
-./run-exporters-to-godot.ps1
+./export-assets.ps1
 ```
 
-The script copies glTF files into `Godot/Assets_glTF/` and gameplay data into `Godot/Gameplay_Data/` so the assets are ready for import when you open the Godot editor. If the Unity exporters are missing, checkout the `unity-archive` branch to access them.
+For Unix systems use `./export-assets.sh`.
 
 ### Starting Servers for Godot
 Run all MCP servers configured for Godot with:

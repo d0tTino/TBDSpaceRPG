@@ -19,3 +19,9 @@ Start all MCP servers with Godot:
 ```powershell
 ./run-all-mcp-servers.ps1 -Engine godot
 ```
+
+Export glTF assets from Unity or Blender:
+```powershell
+./export-assets.ps1
+```
+For Unix systems use `./export-assets.sh` instead.

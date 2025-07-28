@@ -76,9 +76,9 @@ jobs:
     needs: unity-tests
     steps:
       - uses: actions/checkout@v3
-      - name: Run glTF export
+      - name: Export glTF assets
         shell: pwsh
-        run: ./export-gltf.ps1
+        run: ./export-assets.ps1
       - name: Archive glTF Assets
         uses: actions/upload-artifact@v3
         with:

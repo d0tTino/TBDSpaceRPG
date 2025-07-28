@@ -389,7 +389,7 @@ If Unity updates its packages, run `restart-mcp-after-unity-update.ps1`:
 ## Godot Workflow
 
 ### Exporting glTF Assets
-Use the glTFast plugin or Blender\x27s exporter to convert Unity prefabs or Blender models into `.gltf` files. Place the exports in `Assets_glTF/`.
+Run `./export-assets.ps1` (or `./export-assets.sh` on Unix) to export prefabs and models using Unity or Blender. The script places the resulting files in `Assets_glTF/` and `Godot/Assets_glTF/`.
 
 ### Launching Servers for Godot
 Start all MCP services with Godot-specific settings:
