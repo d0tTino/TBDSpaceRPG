@@ -11,20 +11,22 @@
   <ItemGroup>
     <PackageReference Include="Chickensoft.GoDotTest" Version="1.7.4" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
+    <ProjectReference Include="../servers/godot/GodotServer.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../csharp/GodotStubs/HttpRequestExtensions.cs" />
     <Compile Include="../src/OrbitalMechanics/OrbitPlanner.cs" />
+    <Compile Include="../src/OrbitalMechanics/OrbitFollower.cs" />
     <Compile Include="test/stubs/CelestialBody.cs" />
     <Compile Include="../src/OrbitalMechanics/OrbitData.cs" />
     <Compile Include="../src/OrbitalMechanics/Vector3d.cs" />
     <Compile Include="../src/SimpleKeplerOrbits/*.cs" />
     <Compile Include="../src/ShipCustomization/ShipCustomizationManager.cs" />
+    <Compile Include="../src/ShipCustomization/SpaceshipMovement.cs" />
     <Compile Include="../src/ShipCustomization/ShipUpgradeMenuHelper.cs" />
     <Compile Include="../src/GameState/GameState.cs" />
     <Compile Include="../Godot/Scripts/*.cs" />
     <Compile Include="test/Tests.cs" />
-    <Compile Include="test/src/ShipUpgradeMenuHelperTests.cs" />
     <Compile Include="test/src/*.cs" />
   </ItemGroup>
 </Project>
