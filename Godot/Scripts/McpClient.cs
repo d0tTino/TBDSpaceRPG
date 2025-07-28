@@ -1,4 +1,5 @@
 using System.Net.Http;
+using SystemHttpClient = System.Net.Http.HttpClient;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ public partial class McpClient : Control
         var json = JsonSerializer.Serialize(payload);
         var req = new HttpRequest();
         AddChild(req);
-        var err = req.Request(Endpoint, new string[] { "Content-Type: application/json" }, HttpClient.Method.Post, json);
+        var err = req.Request(Endpoint, new string[] { "Content-Type: application/json" }, Godot.HttpClient.Method.Post, json);
         if (err != Error.Ok)
         {
             GD.PrintErr($"Request failed: {err}");
@@ -73,7 +74,7 @@ public partial class McpClient : Control
     {
         try
         {
-            using var client = new HttpClient();
+            using var client = new SystemHttpClient();
             var json = JsonSerializer.Serialize(new { type = "godot_error", message });
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
             await client.PostAsync("http://localhost:8090/event", content);

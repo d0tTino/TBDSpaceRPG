@@ -6,7 +6,7 @@ namespace OrbitalMechanics
     /// Follows a predefined orbit using data from OrbitData.
     /// </summary>
 
-    public class OrbitFollower : Node3D
+    public partial class OrbitFollower : Node3D
     {
         private OrbitData _orbit;
 
