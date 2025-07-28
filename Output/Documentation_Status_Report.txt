@@ -129,9 +129,9 @@ These changes maintain our overall narrative and gameplay goals while offering g
 1. **Technical Design Document (TDD)**
    - ✅ MCP section completed
    - ✅ Terminal-based development tools documented
-   - ⚫ TODO: Complete architecture overview
-   - ⚫ TODO: System specifications
-   - ⚫ TODO: Performance requirements
+   - **[NEW - April 12, 2025]** Architecture overview finalized with diagrams of major subsystems
+   - **[NEW - April 12, 2025]** System specifications listed for hardware and software configurations
+   - **[NEW - April 12, 2025]** Performance requirements documented with target frame rates and network load limits
 
 2. **Art Bible**
    - Not yet created
