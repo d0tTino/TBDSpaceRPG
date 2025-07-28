@@ -25,3 +25,9 @@ Export glTF assets from Unity or Blender:
 ./export-assets.ps1
 ```
 For Unix systems use `./export-assets.sh` instead.
+
+Export USD assets for O3DE:
+```powershell
+./export-to-usd.ps1
+```
+For Unix systems use `./export-to-usd.sh`.
