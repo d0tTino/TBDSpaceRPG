@@ -25,13 +25,18 @@ if (fs.existsSync(emptyLogPath)) fs.unlinkSync(emptyLogPath);
     assert.strictEqual(metrics.eventCounts.test, 1);
     assert.strictEqual(metrics.eventCounts.generation_advanced, 1);
     assert.strictEqual(metrics.latestGeneration, 3);
+    assert.strictEqual(metrics.mostRecentEventType, 'generation_advanced');
+    assert.strictEqual(typeof metrics.averageEventsPerMinute, 'number');
+    assert.ok(metrics.averageEventsPerMinute > 0);
 
     const metricsAgain = analytics.parseLogFile(logPath);
     assert.deepStrictEqual(metricsAgain, metrics);
 
     analytics.resetMetrics();
     analytics.computeMetrics({ type: 'generation_advanced', generation: 5 });
-    assert.strictEqual(analytics.getMetrics().latestGeneration, 5);
+    const liveMetrics = analytics.getMetrics();
+    assert.strictEqual(liveMetrics.latestGeneration, 5);
+    assert.strictEqual(liveMetrics.mostRecentEventType, 'generation_advanced');
 
     // Parse an empty log file and ensure metrics stay zero
     await fs.promises.writeFile(emptyLogPath, '');
@@ -39,6 +44,8 @@ if (fs.existsSync(emptyLogPath)) fs.unlinkSync(emptyLogPath);
     assert.strictEqual(emptyMetrics.totalEvents, 0);
     assert.deepStrictEqual(emptyMetrics.eventCounts, {});
     assert.strictEqual(emptyMetrics.latestGeneration, null);
+    assert.strictEqual(emptyMetrics.averageEventsPerMinute, 0);
+    assert.strictEqual(emptyMetrics.mostRecentEventType, null);
     // parseLogFile resets internal metrics so getMetrics should match
     assert.deepStrictEqual(analytics.getMetrics(), emptyMetrics);
 

@@ -156,15 +156,26 @@ function post(port, pathName, data) {
     assert.strictEqual(metrics.eventCounts.test, 1);
     assert.strictEqual(metrics.eventCounts.generation_advanced, 1);
     assert.strictEqual(metrics.latestGeneration, 1);
+    assert.strictEqual(metrics.mostRecentEventType, 'generation_advanced');
+    assert.strictEqual(typeof metrics.averageEventsPerMinute, 'number');
+    assert.ok(metrics.averageEventsPerMinute > 0);
 
     const metrics2 = analytics.parseLogFile(logPath);
     assert.strictEqual(metrics2.totalEvents, 2);
     assert.strictEqual(metrics2.eventCounts.test, 1);
     assert.strictEqual(metrics2.eventCounts.generation_advanced, 1);
     assert.strictEqual(metrics2.latestGeneration, 1);
+    assert.strictEqual(metrics2.mostRecentEventType, 'generation_advanced');
+    assert.strictEqual(typeof metrics2.averageEventsPerMinute, 'number');
+    assert.ok(metrics2.averageEventsPerMinute > 0);
 
-    const metricsResult = await request(corePort, '/telemetry/metrics');
-    assert.deepStrictEqual(JSON.parse(metricsResult), metrics2);
+    const metricsResult = JSON.parse(await request(corePort, '/telemetry/metrics'));
+    assert.strictEqual(metricsResult.totalEvents, metrics2.totalEvents);
+    assert.deepStrictEqual(metricsResult.eventCounts, metrics2.eventCounts);
+    assert.strictEqual(metricsResult.latestGeneration, metrics2.latestGeneration);
+    assert.strictEqual(metricsResult.mostRecentEventType, metrics2.mostRecentEventType);
+    assert.strictEqual(typeof metricsResult.averageEventsPerMinute, 'number');
+    assert.ok(metricsResult.averageEventsPerMinute > 0);
     console.log('Tests passed');
     core.kill();
     ksa.kill();

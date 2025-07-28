@@ -7,6 +7,8 @@ module aggregates these events to provide high level metrics useful for debuggin
 - **totalEvents** – number of events processed.
 - **eventCounts** – count of each event type.
 - **latestGeneration** – highest `generation` value seen in `generation_advanced` events.
+- **averageEventsPerMinute** – events processed divided by minutes since the first event.
+- **mostRecentEventType** – `type` of the last processed event.
 
 Developers can parse a log file directly:
 

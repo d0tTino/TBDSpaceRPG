@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const Ajv = require('ajv');
-const { logError } = require('../utils.cjs');
+const { logError, parseJson } = require('../utils.cjs');
 const { ksa: defaultPort } = require('../ports.cjs');
 
 
