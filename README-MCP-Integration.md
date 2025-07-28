@@ -107,6 +107,31 @@ $env:KSA_ENGINE_ENDPOINT = 'http://my-engine.local:9100/engine'
 
 The adapter returns the engine's raw HTTP response to the caller.
 
+#### Environment Variables and Engine Responses
+
+The adapter uses the following optional variables in addition to the host and
+port settings:
+
+- `KSA_MAX_RETRIES` – number of times to retry a failed request (default: `3`)
+- `KSA_RETRY_DELAY` – initial delay in milliseconds between retries (default:
+  `100`)
+
+The engine should reply with JSON such as:
+
+```json
+{ "status": "ok", "result": { /* engine data */ } }
+```
+
+Any HTTP status code or body returned by the engine is forwarded directly to the
+MCP caller without modification.
+
+Example with a custom endpoint:
+
+```powershell
+$env:KSA_ENGINE_ENDPOINT = 'https://engine.example.com/api'
+./run-ksa-server.ps1
+```
+
 ### All Servers
 
 For convenience, a script is provided to start all MCP servers simultaneously:
