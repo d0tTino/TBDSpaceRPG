@@ -4,7 +4,9 @@ const assert = require('assert');
 const analytics = require('../servers/telemetry/analytics.cjs');
 
 const logPath = path.join(__dirname, 'analytics_test.log');
+const emptyLogPath = path.join(__dirname, 'analytics_empty.log');
 if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
+if (fs.existsSync(emptyLogPath)) fs.unlinkSync(emptyLogPath);
 
 (async () => {
   try {
@@ -31,8 +33,18 @@ if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
     analytics.computeMetrics({ type: 'generation_advanced', generation: 5 });
     assert.strictEqual(analytics.getMetrics().latestGeneration, 5);
 
+    // Parse an empty log file and ensure metrics stay zero
+    await fs.promises.writeFile(emptyLogPath, '');
+    const emptyMetrics = analytics.parseLogFile(emptyLogPath);
+    assert.strictEqual(emptyMetrics.totalEvents, 0);
+    assert.deepStrictEqual(emptyMetrics.eventCounts, {});
+    assert.strictEqual(emptyMetrics.latestGeneration, null);
+    // parseLogFile resets internal metrics so getMetrics should match
+    assert.deepStrictEqual(analytics.getMetrics(), emptyMetrics);
+
     console.log('Analytics tests passed');
   } finally {
     if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
+    if (fs.existsSync(emptyLogPath)) fs.unlinkSync(emptyLogPath);
   }
 })();
