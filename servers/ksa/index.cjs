@@ -1,5 +1,8 @@
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
+const Ajv = require('ajv');
 const { logError } = require('../utils.cjs');
 
 const port = process.env.PORT || 8005;
@@ -14,6 +17,11 @@ try {
   console.warn('Invalid KSA_ENGINE_ENDPOINT:', err);
   engineUrl = new URL(`http://${engineHost}:${enginePort}/`);
 }
+
+const schemaPath = path.join(__dirname, 'schema.json');
+const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+const ajv = new Ajv();
+const validateKsaRequest = ajv.compile(schema.definitions.request);
 
 function translateMcpToKsa(mcp) {
   return {
@@ -66,24 +74,31 @@ const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
+      let mcp;
       try {
-        const mcp = JSON.parse(body || '{}');
-        const ksaRequest = translateMcpToKsa(mcp);
-        try {
-          const engineRes = await forwardToEngine(ksaRequest);
-          res.writeHead(engineRes.statusCode || 500, engineRes.headers);
-          res.end(engineRes.body);
-        } catch (err) {
-          console.error(err);
-          res.writeHead(502, { 'Content-Type': 'text/plain' });
-          res.end('Failed to reach KSA engine');
-        }
+        mcp = JSON.parse(body || '{}');
       } catch (err) {
         console.error(err);
-
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Invalid JSON');
         return;
+      }
+
+      const ksaRequest = translateMcpToKsa(mcp);
+      if (!validateKsaRequest(ksaRequest)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid request', details: validateKsaRequest.errors }));
+        return;
+      }
+
+      try {
+        const engineRes = await forwardToEngine(ksaRequest);
+        res.writeHead(engineRes.statusCode || 500, engineRes.headers);
+        res.end(engineRes.body);
+      } catch (err) {
+        console.error(err);
+        res.writeHead(502, { 'Content-Type': 'text/plain' });
+        res.end('Failed to reach KSA engine');
       }
     });
     return;

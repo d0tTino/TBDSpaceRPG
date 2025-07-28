@@ -146,6 +146,28 @@ function post(port, data, raw = false) {
     await stopServer(adapterFail);
   }
 
+  // Invalid payload (schema validation)
+  const engine3Port = await getFreePort();
+  const engine3 = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end('{}');
+  });
+  await new Promise(r => engine3.listen(engine3Port, r));
+  const adapterInvalidPort = await getFreePort();
+  const adapterInvalid = startServer('servers/ksa/index.cjs', adapterInvalidPort, {
+    KSA_ENGINE_HOST: 'localhost',
+    KSA_ENGINE_PORT: String(engine3Port)
+  });
+  try {
+    await waitForServer(adapterInvalidPort);
+    const invalidRes = await post(adapterInvalidPort, { method: 'ping' });
+    assert.strictEqual(invalidRes.statusCode, 400);
+    assert.ok(/Invalid request/.test(invalidRes.body));
+  } finally {
+    await stopServer(adapterInvalid);
+    await new Promise(r => engine3.close(r));
+  }
+
   // Malformed request
   const engine2Port = await getFreePort();
   const engine2 = http.createServer((req, res) => {
@@ -162,6 +184,7 @@ function post(port, data, raw = false) {
     await waitForServer(adapterBadPort);
     const badRes = await post(adapterBadPort, '{', true);
     assert.strictEqual(badRes.statusCode, 400);
+    assert.ok(/Invalid JSON/.test(badRes.body));
   } finally {
     await stopServer(adapterBad);
     await new Promise(r => engine2.close(r));
