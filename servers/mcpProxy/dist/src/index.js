@@ -1,6 +1,7 @@
 const http = require('http');
+const { mcpproxy: defaultPort } = require('../../ports.cjs');
 
-const port = process.env.PORT || 8004;
+const port = process.env.PORT || defaultPort;
 
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });

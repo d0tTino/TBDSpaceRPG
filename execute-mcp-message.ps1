@@ -36,7 +36,12 @@ if ($PSBoundParameters.ContainsKey('Endpoint')) {
         }
     }
     if (-not $port) {
-        $port = if ($Engine -eq 'godot') { 8002 } else { 8001 }
+        $portsPath = Join-Path $PSScriptRoot 'servers/ports.cjs'
+        if ($Engine -eq 'godot') {
+            $port = [int](node -e "const p=require(process.argv[1]);console.log(p.godot);" $portsPath)
+        } else {
+            $port = [int](node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath)
+        }
     }
     $uri = "http://localhost:$port/mcp"
 }

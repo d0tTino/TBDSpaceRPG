@@ -1,6 +1,6 @@
 
 param(
-    [int]$Port = 8004,
+    [int]$Port,
     [string]$ProxyPath,
     [string]$ConfigFile = "engine-config.json"
 )
@@ -23,6 +23,14 @@ if (Test-Path $ConfigFile) {
         Write-Warning "Failed to load engine config from $ConfigFile: $_"
     }
 }
+if (-not $Port) {
+    $portsPath = Join-Path $scriptDir 'servers/ports.cjs'
+    $Port = [int](node -e "const p=require(process.argv[1]);console.log(p.mcpproxy);" $portsPath)
+}
+if (-not (Test-ValidPort -Port $Port)) {
+    Write-Error "Invalid port: $Port. Must be between 1 and 65535."
+    exit 1
+}
 if (-not $ProxyPath) {
     # Default to the "servers/mcpProxy" directory relative to this script
     $ProxyPath = Join-Path $scriptDir 'servers/mcpProxy'
@@ -33,7 +41,7 @@ function Test-ValidPort {
     return $Port -ge 1 -and $Port -le 65535
 }
 
-if (-not (Test-ValidPort -Port $Port)) {
+if ($PSBoundParameters.ContainsKey('Port') -and -not (Test-ValidPort -Port $Port)) {
     Write-Error "Invalid port: $Port. Must be between 1 and 65535."
     exit 1
 }

@@ -1,6 +1,7 @@
 const http = require('http');
 const { logError, parseJson } = require('../utils.cjs');
-const port = process.env.PORT || 8003;
+const { postgres: defaultPort } = require('../ports.cjs');
+const port = process.env.PORT || defaultPort;
 
 const crew = [];
 let nextId = 1;

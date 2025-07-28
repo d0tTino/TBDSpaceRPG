@@ -1,9 +1,10 @@
 const http = require('http');
 const assert = require('assert');
+const ports = require('../servers/ports.cjs');
 
 function post(body) {
   return new Promise((resolve, reject) => {
-    const req = http.request({ hostname: 'localhost', port: 8001, path: '/mcp', method: 'POST', headers: {'Content-Type':'application/json'} }, res => {
+    const req = http.request({ hostname: 'localhost', port: ports.unity, path: '/mcp', method: 'POST', headers: {'Content-Type':'application/json'} }, res => {
       res.resume();
       res.on('end', resolve);
     });
@@ -20,7 +21,7 @@ function post(body) {
     req.on('data', c => body += c);
     req.on('end', () => { received.push(JSON.parse(body)); res.end('ok'); });
   });
-  await new Promise(r => server.listen(8001, r));
+  await new Promise(r => server.listen(ports.unity, r));
   try {
     await post({ method: 'execute_menu_item', params: { menuPath: 'Test/Path' }, id: '1' });
     await post({ method: 'notify_message', params: { message: 'hi', logType: 'Log' }, id: '2' });

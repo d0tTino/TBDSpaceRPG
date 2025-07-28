@@ -3,8 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const analytics = require('./analytics.cjs');
 const { logError, parseJson } = require('../utils.cjs');
+const { telemetry: defaultPort } = require('../ports.cjs');
 
-const port = process.env.PORT || 8090;
+const port = process.env.PORT || defaultPort;
 const logDir = path.join(__dirname, 'logs');
 fs.mkdirSync(logDir, { recursive: true });
 const logFile = path.join(logDir, 'events.log');

@@ -1,7 +1,8 @@
 const http = require('http');
 const { logError, parseJson } = require('../utils.cjs');
+const { aidirector: defaultPort } = require('../ports.cjs');
 
-const port = process.env.PORT || 8100;
+const port = process.env.PORT || defaultPort || 8100;
 
 const server = http.createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/') {

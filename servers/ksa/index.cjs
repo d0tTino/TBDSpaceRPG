@@ -3,9 +3,11 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const Ajv = require('ajv');
-const { logError, parseJson } = require('../utils.cjs');
+const { logError } = require('../utils.cjs');
+const { ksa: defaultPort } = require('../ports.cjs');
 
-const port = process.env.PORT || 8005;
+
+const port = process.env.PORT || defaultPort;
 const engineHost = process.env.KSA_ENGINE_HOST || 'localhost';
 const enginePort = process.env.KSA_ENGINE_PORT || 9000;
 const engineEndpoint = process.env.KSA_ENGINE_ENDPOINT;
