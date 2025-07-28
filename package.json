@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "test:godot": "if command -v dotnet >/dev/null 2>&1 && [ -x ./godot/godot ]; then dotnet build Godot.Tests/Godot.Tests.csproj && ./godot/godot --headless --path Godot.Tests --run-tests --quit-on-finish; else echo 'dotnet or godot not found, skipping Godot tests'; fi",
-    "test": "node tests/utils.test.cjs && node tests/server.test.cjs && node tests/aidirector.test.cjs && node tests/analytics.test.cjs && node tests/ksa-adapter.test.cjs && node tests/mcp-commands.test.cjs && node tests/godot-server.test.cjs && if command -v unity-editor >/dev/null 2>&1; then unity-editor -batchmode -nographics -runTests -projectPath \"TBD SpaceGame/TBD SpaceGame\" -testResults UnityTestResults.xml; else echo 'unity-editor not found, skipping Unity tests'; fi && npm run test:godot",
+    "test": "node tests/utils.test.cjs && node tests/server.test.cjs && node tests/aidirector.test.cjs && node tests/analytics.test.cjs && node tests/ksa-adapter.test.cjs && node tests/mcp-commands.test.cjs && node tests/godot-server.test.cjs && node tests/helpers/run-all-mcp-servers.test.cjs && if command -v unity-editor >/dev/null 2>&1; then unity-editor -batchmode -nographics -runTests -projectPath \"TBD SpaceGame/TBD SpaceGame\" -testResults UnityTestResults.xml; else echo 'unity-editor not found, skipping Unity tests'; fi && npm run test:godot",
     "lint": "eslint servers tests",
     "start:core-mcp": "node servers/core-mcp/index.cjs"
   },
