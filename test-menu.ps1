@@ -34,7 +34,14 @@ if (-not $Port) {
             Write-Warning "Failed to load engine config from $ConfigFile: $_"
         }
     }
-    if (-not $Port) { $Port = if ($Engine -eq 'godot') { 8002 } else { 8001 } }
+    if (-not $Port) {
+        $portsPath = Join-Path $PSScriptRoot 'servers/ports.cjs'
+        if ($Engine -eq 'godot') {
+            $Port = [int](node -e "const p=require(process.argv[1]);console.log(p.godot);" $portsPath)
+        } else {
+            $Port = [int](node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath)
+        }
+    }
 }
 
 if (-not (Test-ValidPort -Port $Port)) {

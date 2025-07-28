@@ -7,7 +7,8 @@ Write-Host "Starting MCP server safely..."
 $serverPath = "TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@3acfb232f564/Server"
 
 # Set environment variable for the port
-$env:UNITY_PORT = "8001"
+$portsPath = Join-Path $PSScriptRoot 'servers/ports.cjs'
+$env:UNITY_PORT = node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath
 
 # Check if we're in the correct directory
 $currentDir = Get-Location
@@ -31,7 +32,7 @@ if (-not (Test-Path $serverIndex)) {
 
 Start-Process -FilePath "node" -ArgumentList "\"$serverIndex\"" -NoNewWindow
 
-Write-Host "MCP server started on port 8001. You can now reconnect from Unity."
+Write-Host "MCP server started on port $env:UNITY_PORT. You can now reconnect from Unity."
 Write-Host ""
 Write-Host "IMPORTANT: Use the V2 menu items in Unity to avoid conflicts:"
 Write-Host "- MCP/Ship/V2/Create Test Ship"

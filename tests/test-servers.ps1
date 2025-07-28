@@ -1,10 +1,13 @@
 param(
-    [int]$GitPort = 8080,
-    [int]$PostgresPort = 8003
+    [int]$GitPort,
+    [int]$PostgresPort
 )
 
 $scriptDir = $PSScriptRoot
 $root = Split-Path -Parent $scriptDir
+$portsPath = Join-Path $root 'servers/ports.cjs'
+if (-not $GitPort) { $GitPort = [int](node -e "const p=require(process.argv[1]);console.log(p.git);" $portsPath) }
+if (-not $PostgresPort) { $PostgresPort = [int](node -e "const p=require(process.argv[1]);console.log(p.postgres);" $portsPath) }
 
 $gitScript = Join-Path $root 'servers/git/index.js'
 $pgScript  = Join-Path $root 'servers/postgres/index.js'

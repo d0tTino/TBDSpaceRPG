@@ -110,10 +110,11 @@ if ($RandomPort) {
 
 # Ensure a valid port is set, falling back to engine defaults
 if (-not (Test-ValidPort -Port $config.port)) {
+    $portsPath = Join-Path $PSScriptRoot 'servers/ports.cjs'
     if ($config.engine -eq 'godot') {
-        $config.port = 8002
+        $config.port = [int](node -e "const p=require(process.argv[1]);console.log(p.godot);" $portsPath)
     } else {
-        $config.port = 8001
+        $config.port = [int](node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath)
     }
 }
 

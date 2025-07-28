@@ -219,7 +219,9 @@ Write-Host "===== MCP Server Restart After Unity Update ====="
 Stop-McpNodeProcesses
 
 # Step 2: Free up the port
-Free-Port -Port 8001
+$portsPath = Join-Path $PSScriptRoot 'servers/ports.cjs'
+$Port = [int](node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath)
+Free-Port -Port $Port
 
 # Step 3: Validate MCP configuration
 $configValid = Test-McpConfig
@@ -232,11 +234,11 @@ if (-not $configValid) {
 $serverPath = "TBD SpaceGame/TBD SpaceGame/Library/PackageCache/com.gamelovers.mcp-unity@3acfb232f564/Server"
 
 # Step 5: Start the MCP server
-$serverStarted = Start-McpServer -ServerPath $serverPath -Port 8001
+$serverStarted = Start-McpServer -ServerPath $serverPath -Port $Port
 
 if ($serverStarted) {
     # Step 6: Test the connection
-    $connected = Test-McpServerConnection -Port 8001 -Retries 10 -RetryDelay 2000
+    $connected = Test-McpServerConnection -Port $Port -Retries 10 -RetryDelay 2000
     
     if ($connected) {
         Write-Host "MCP server is now running and ready to accept connections from Unity."

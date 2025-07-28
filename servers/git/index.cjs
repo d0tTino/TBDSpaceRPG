@@ -1,6 +1,7 @@
 const http = require('http');
 const { logError } = require('../utils.cjs');
-const port = process.env.PORT || 8080;
+const { git: defaultPort } = require('../ports.cjs');
+const port = process.env.PORT || defaultPort;
 
 function sendJson(res, obj) {
   res.writeHead(200, { 'Content-Type': 'application/json' });

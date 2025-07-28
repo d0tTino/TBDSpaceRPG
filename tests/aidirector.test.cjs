@@ -26,7 +26,8 @@ function request(port, options = {}) {
 }
 
 (async () => {
-  const port = 8101;
+  const ports = require('../servers/ports.cjs');
+  const port = ports.aidirector || 8101;
   const server = startServer('servers/aidirector/index.cjs', port);
   try {
     // Wait for server to be ready

@@ -48,7 +48,14 @@ if (-not $serverUrl) {
             Write-Warning "Failed to load engine config from $ConfigFile: $_"
         }
     }
-    if (-not $port) { $port = if ($Engine -eq 'godot') { 8002 } else { 8001 } }
+    if (-not $port) {
+        $portsPath = Join-Path $PSScriptRoot 'servers/ports.cjs'
+        if ($Engine -eq 'godot') {
+            $port = [int](node -e "const p=require(process.argv[1]);console.log(p.godot);" $portsPath)
+        } else {
+            $port = [int](node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath)
+        }
+    }
     $serverUrl = if ($Engine -eq 'godot') { "ws://localhost:$port/" } else { "ws://localhost:$port/McpUnity" }
 }
 

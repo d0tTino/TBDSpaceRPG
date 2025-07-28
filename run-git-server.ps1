@@ -1,5 +1,5 @@
 param(
-    [int]$Port = 8080,
+    [int]$Port,
     [string]$ServerPath,
     [string]$ConfigFile = "engine-config.json"
 )
@@ -9,9 +9,8 @@ function Test-ValidPort {
     return ($Port -ge 1 -and $Port -le 65535)
 }
 
-if (-not (Test-ValidPort -Port $Port)) {
+if ($PSBoundParameters.ContainsKey('Port') -and -not (Test-ValidPort -Port $Port)) {
     Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
-
 }
 
 $scriptDir = $PSScriptRoot
@@ -28,6 +27,13 @@ if (Test-Path $ConfigFile) {
     } catch {
         Write-Warning "Failed to load engine config from $ConfigFile: $_"
     }
+}
+if (-not $Port) {
+    $portsPath = Join-Path $scriptDir 'servers/ports.cjs'
+    $Port = [int](node -e "const p=require(process.argv[1]);console.log(p.git);" $portsPath)
+}
+if (-not (Test-ValidPort -Port $Port)) {
+    Write-Error "Invalid port number $Port. Port must be between 1 and 65535." -ErrorAction Stop
 }
 if (-not $ServerPath) {
     $ServerPath = Join-Path $scriptDir 'servers/git'

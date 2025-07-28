@@ -3,8 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const analytics = require('../telemetry/analytics.cjs');
 const { parseJson, logError } = require('../utils.cjs');
+const { core: defaultPort } = require('../ports.cjs');
 
-const port = process.env.PORT || 8100;
+const port = process.env.PORT || defaultPort || 8100;
 
 // --- Git state ---
 

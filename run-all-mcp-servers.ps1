@@ -35,12 +35,13 @@ if (Test-Path $ConfigFile) {
 
 
 # Determine ports
-$unityPort = 8001
-$gitPort = 8080
-$postgresPort = 8003
-$telemetryPort = 8090
-$proxyPort = 8004
-$ksaPort = 8005
+$portsPath = Join-Path $scriptDir 'servers/ports.cjs'
+$unityPort = [int](node -e "const p=require(process.argv[1]);console.log(p.unity);" $portsPath)
+$gitPort = [int](node -e "const p=require(process.argv[1]);console.log(p.git);" $portsPath)
+$postgresPort = [int](node -e "const p=require(process.argv[1]);console.log(p.postgres);" $portsPath)
+$telemetryPort = [int](node -e "const p=require(process.argv[1]);console.log(p.telemetry);" $portsPath)
+$proxyPort = [int](node -e "const p=require(process.argv[1]);console.log(p.mcpproxy);" $portsPath)
+$ksaPort = [int](node -e "const p=require(process.argv[1]);console.log(p.ksa);" $portsPath)
 
 if ($engineCfg) {
     if ($engineCfg.unity.port) { $unityPort = [int]$engineCfg.unity.port }
