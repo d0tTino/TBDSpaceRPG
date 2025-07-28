@@ -116,8 +116,12 @@ function post(port, pathName, data) {
     assert.deepStrictEqual(JSON.parse(list2), []);
     const badCreate = await send(corePort, 'POST', '/postgres/crew', '{');
     assert.strictEqual(badCreate.statusCode, 400);
+    const emptyCreate = await send(corePort, 'POST', '/postgres/crew', '');
+    assert.strictEqual(emptyCreate.statusCode, 400);
     const badUpdate = await send(corePort, 'PUT', '/postgres/crew/1', '{');
     assert.strictEqual(badUpdate.statusCode, 400);
+    const emptyUpdate = await send(corePort, 'PUT', '/postgres/crew/1', '');
+    assert.strictEqual(emptyUpdate.statusCode, 400);
     const listAfterBad = await request(corePort, '/postgres/crew');
     assert.deepStrictEqual(JSON.parse(listAfterBad), []);
     const telemetryResponse = await request(corePort, '/telemetry');
@@ -134,6 +138,8 @@ function post(port, pathName, data) {
     assert.strictEqual(postResult.statusCode, 200);
     const badTelemetry = await post(corePort, '/telemetry/event', '{');
     assert.strictEqual(badTelemetry.statusCode, 400);
+    const emptyTelemetry = await post(corePort, '/telemetry/event', '');
+    assert.strictEqual(emptyTelemetry.statusCode, 400);
     const telemetryHealth = await request(corePort, '/telemetry');
     assert.strictEqual(telemetryHealth, 'Telemetry server placeholder');
 

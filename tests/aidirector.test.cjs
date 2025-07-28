@@ -49,6 +49,13 @@ function request(port, options = {}) {
       body: '{',
     });
     assert.strictEqual(bad.statusCode, 400);
+    const empty = await request(port, {
+      method: 'POST',
+      path: '/command',
+      headers: { 'Content-Type': 'application/json' },
+      body: '',
+    });
+    assert.strictEqual(empty.statusCode, 400);
 
     console.log('AI Director tests passed');
   } finally {

@@ -3,7 +3,7 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const Ajv = require('ajv');
-const { logError } = require('../utils.cjs');
+const { logError, parseJson } = require('../utils.cjs');
 
 const port = process.env.PORT || 8005;
 const engineHost = process.env.KSA_ENGINE_HOST || 'localhost';
@@ -74,11 +74,8 @@ const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
-      let mcp;
-      try {
-        mcp = JSON.parse(body || '{}');
-      } catch (err) {
-        console.error(err);
+      const mcp = parseJson(body);
+      if (!mcp) {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Invalid JSON');
         return;
