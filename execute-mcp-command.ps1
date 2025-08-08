@@ -10,6 +10,11 @@ param (
     [string]$ConfigFile = "engine-config.json"
 )
 
+if ([string]::IsNullOrWhiteSpace($menuPath)) {
+    Write-Error "menuPath cannot be empty"
+    exit 1
+}
+
 # Output what we're doing
 Write-Host "Executing MCP menu item: $menuPath"
 
@@ -55,13 +60,11 @@ if (-not (Test-ValidPort -Port $port)) {
 }
 
 # Form the JSON payload
-$payload = @{
+$payload = [PSCustomObject]@{
     method = "execute_menu_item"
-    params = @{
-        menuPath = $menuPath
-    }
+    params = @{ menuPath = [string]$menuPath }
     id = [guid]::NewGuid().ToString()
-} | ConvertTo-Json -Depth 3
+} | ConvertTo-Json -Depth 3 -Compress
 
 # Execute the command using Invoke-WebRequest
 try {

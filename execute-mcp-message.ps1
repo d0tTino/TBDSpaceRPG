@@ -10,6 +10,11 @@ param (
     [string]$ConfigFile = "engine-config.json"
 )
 
+if ([string]::IsNullOrWhiteSpace($message)) {
+    Write-Error "message cannot be empty"
+    exit 1
+}
+
 # Output what we're doing
 Write-Host "Sending message to MCP server: $message"
 
@@ -55,14 +60,11 @@ if (-not (Test-ValidPort -Port $port)) {
 }
 
 # Form the JSON payload
-$payload = @{
+$payload = [PSCustomObject]@{
     method = "notify_message"
-    params = @{
-        message = $message
-        logType = "Log"  # Can be: Log, Warning, Error
-    }
+    params = @{ message = [string]$message; logType = "Log" }
     id = [guid]::NewGuid().ToString()
-} | ConvertTo-Json -Depth 3
+} | ConvertTo-Json -Depth 3 -Compress
 
 # Execute the command using Invoke-WebRequest
 try {
